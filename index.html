@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Mishra Ventures</title>
+  <link rel="stylesheet" href="shared/global.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-base);
+      background: var(--dark-bg);
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .star {
+      position: absolute; border-radius: 50%; background: #fff;
+      animation: twinkle var(--d) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.1; transform: scale(0.8); }
+      to   { opacity: 0.9; transform: scale(1.2); }
+    }
+    .orb { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.18; pointer-events: none; z-index: 0; }
+    .orb1 { width: 520px; height: 520px; background: var(--brand-purple); top: -160px; left: -120px; animation: drift 14s ease-in-out infinite alternate; }
+    .orb2 { width: 400px; height: 400px; background: var(--brand-pink); bottom: -120px; right: -80px; animation: drift 18s ease-in-out infinite alternate-reverse; }
+    @keyframes drift { from { transform: translate(0,0); } to { transform: translate(40px, 30px); } }
+
+    .card {
+      position: relative; z-index: 1; text-align: center;
+      padding: 3rem 2.5rem 2.5rem; max-width: 640px; width: 90%;
+      background: var(--dark-surface); border: 1px solid var(--dark-border);
+      border-radius: 24px; backdrop-filter: blur(12px);
+      animation: fadeUp 1s ease both;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: translateY(0); } }
+
+    .logo-ring {
+      width: 72px; height: 72px; margin: 0 auto 1.5rem; border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-pink) 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 32px;
+      box-shadow: 0 0 0 8px rgba(108,99,255,0.15);
+    }
+    .badge {
+      display: inline-block; background: rgba(108,99,255,0.2); color: var(--brand-purple2);
+      font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 100px; border: 1px solid rgba(108,99,255,0.3);
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 700; line-height: 1.2;
+      background: linear-gradient(135deg, #fff 30%, var(--brand-purple2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+    .tagline { font-size: 1rem; color: var(--dark-muted); line-height: 1.7; margin-bottom: 2rem; }
+
+    /* Venture cards */
+    .ventures-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 2rem; }
+    @media (max-width: 480px) { .ventures-grid { grid-template-columns: 1fr; } }
+
+    .venture-card {
+      text-decoration: none; display: flex; flex-direction: column; align-items: flex-start;
+      padding: 1.25rem; border-radius: 16px; border: 1px solid var(--dark-border);
+      background: rgba(255,255,255,0.05); transition: background 0.25s, border-color 0.25s, transform 0.2s;
+      text-align: left;
+    }
+    .venture-card:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.25); transform: translateY(-3px); }
+    .vc-icon { font-size: 26px; margin-bottom: 0.7rem; }
+    .vc-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 3px; }
+    .vc-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .vc-desc { font-size: 0.8rem; color: rgba(255,255,255,0.48); line-height: 1.5; flex: 1; }
+    .vc-arrow { margin-top: 0.75rem; font-size: 0.78rem; color: rgba(255,255,255,0.28); }
+
+    .venture-card.aem { border-color: rgba(108,99,255,0.3); }
+    .venture-card.aem:hover { border-color: rgba(108,99,255,0.6); background: rgba(108,99,255,0.1); }
+    .venture-card.farm { border-color: rgba(34,197,94,0.25); }
+    .venture-card.farm:hover { border-color: rgba(34,197,94,0.55); background: rgba(34,197,94,0.07); }
+
+    .domain-tag { font-size: 0.75rem; color: rgba(255,255,255,0.18); letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="card">
+    <div class="logo-ring">🚀</div>
+    <div class="badge">Mishra Ventures</div>
+    <h1>The Mishra Ventures</h1>
+    <p class="tagline">A collective of ventures — cutting-edge tech expertise<br>meets farm-fresh goodness delivered to your door.</p>
+
+    <div class="ventures-grid">
+      <a href="aem-hub/" class="venture-card aem">
+        <div class="vc-icon">⚙️</div>
+        <div class="vc-label">Tech</div>
+        <div class="vc-title">AEM Dev Hub</div>
+        <div class="vc-desc">Tips, tricks, best practices & real-world AEM development articles.</div>
+        <div class="vc-arrow">Explore →</div>
+      </a>
+      <a href="mishra-farms/" class="venture-card farm">
+        <div class="vc-icon">🌾</div>
+        <div class="vc-label">Farm</div>
+        <div class="vc-title">Mishra Farms</div>
+        <div class="vc-desc">Organic wheat & rice, direct from our farm to your family. Pure & affordable.</div>
+        <div class="vc-arrow">Shop Fresh →</div>
+      </a>
+    </div>
+
+    <p class="domain-tag">themishraventures.com</p>
+  </div>
+
+  <script>
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 140; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.2 + 0.5;
+      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+1.5).toFixed(1)}s;animation-delay:${(Math.random()*4).toFixed(1)}s;opacity:${(Math.random()*0.6+0.1).toFixed(2)};`;
+      starsEl.appendChild(s);
+    }
+  </script>
+</body>
+</html>

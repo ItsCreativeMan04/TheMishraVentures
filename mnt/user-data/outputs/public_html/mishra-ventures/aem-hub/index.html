@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEM Dev Hub – The Mishra Ventures</title>
+  <link rel="stylesheet" href="../shared/global.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c14;
+      --surface: #0e1420;
+      --surface2: #141c2e;
+      --border: rgba(99,130,255,0.15);
+      --accent: #6382ff;
+      --accent2: #a78bfa;
+      --text: #e8eaf6;
+      --muted: rgba(232,234,246,0.45);
+      --tag-bg: rgba(99,130,255,0.12);
+      --tag-color: #a8b8ff;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; line-height: 1.7; min-height: 100vh; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: rgba(8,12,20,0.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #6382ff, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-brand-text { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .nav-brand-sub { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+    .nav-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 100px; transition: color 0.2s, border-color 0.2s; }
+    .nav-home:hover { color: var(--text); border-color: var(--accent); }
+
+    .hero { max-width: 800px; margin: 0 auto; padding: 5rem 2rem 3rem; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--tag-bg); color: var(--tag-color);
+      border: 1px solid rgba(99,130,255,0.25); border-radius: 100px;
+      padding: 5px 14px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero-badge::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: #6382ff; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+    h1.hero-title {
+      font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15;
+      background: linear-gradient(135deg, #fff 20%, #6382ff 60%, #a78bfa 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem;
+    }
+    .hero-sub { font-size: 1.05rem; color: var(--muted); max-width: 560px; margin: 0 auto 2.5rem; }
+
+    .search-bar { display: flex; max-width: 440px; margin: 0 auto 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .search-bar input { flex: 1; background: none; border: none; padding: 0.7rem 1rem; color: var(--text); font-size: 0.92rem; font-family: inherit; outline: none; }
+    .search-bar input::placeholder { color: var(--muted); }
+    .search-bar button { background: var(--accent); border: none; padding: 0.7rem 1.2rem; color: #fff; cursor: pointer; font-size: 0.85rem; font-weight: 600; font-family: inherit; transition: opacity 0.2s; }
+    .search-bar button:hover { opacity: 0.85; }
+
+    .filter-tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3rem; }
+    .tab { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; color: var(--muted); padding: 6px 18px; font-size: 0.83rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .tab:hover, .tab.active { background: var(--tag-bg); border-color: var(--accent); color: var(--accent2); }
+
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem; }
+
+    .featured-wrap { max-width: 1100px; margin: 0 auto 1rem; padding: 0 2rem; }
+    .featured-inner {
+      display: grid; grid-template-columns: 1fr 1.2fr; gap: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+    .featured-inner:hover { border-color: rgba(99,130,255,0.4); transform: translateY(-2px); }
+    .featured-code { background: #0a0f1e; padding: 2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #8899bb; line-height: 1.9; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
+    .kw { color: #a78bfa; } .fn { color: #6382ff; } .str { color: #7dd3b0; } .cm { color: rgba(136,153,187,0.45); }
+    .featured-content { padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+    .featured-tag { display: inline-block; background: var(--tag-bg); color: var(--tag-color); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 1rem; }
+    .featured-content h2 { font-size: 1.45rem; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 0.75rem; }
+    .featured-content p { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.7; }
+    .read-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: gap 0.2s; }
+    .read-link:hover { gap: 10px; }
+    .article-meta { font-size: 0.78rem; color: var(--muted); margin-top: 1rem; }
+
+    .articles-grid { max-width: 1100px; margin: 0 auto 4rem; padding: 0 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+    .article-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.25s, background 0.25s, transform 0.2s; }
+    .article-card:hover { border-color: rgba(99,130,255,0.4); background: var(--surface2); transform: translateY(-3px); }
+    .card-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 5px; margin-bottom: 4px; background: var(--tag-bg); color: var(--tag-color); }
+    .card-tag.error { background: rgba(255,100,100,0.12); color: #ff9999; }
+    .card-tag.tips { background: rgba(34,197,94,0.1); color: #86efac; }
+    .card-tag.concept { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+    .article-card h3 { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.4; }
+    .article-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .card-date { font-size: 0.75rem; color: var(--muted); }
+    .card-read { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+    .newsletter { max-width: 600px; margin: 0 auto 5rem; padding: 0 2rem; text-align: center; }
+    .newsletter-box { background: linear-gradient(135deg, rgba(99,130,255,0.08), rgba(167,139,250,0.08)); border: 1px solid rgba(99,130,255,0.25); border-radius: 20px; padding: 2.5rem 2rem; }
+    .newsletter h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .newsletter p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .nl-form input { flex: 1 1 200px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 0.65rem 1rem; color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; }
+    .nl-form input:focus { border-color: var(--accent); }
+    .nl-form input::placeholder { color: var(--muted); }
+    .nl-form button { background: linear-gradient(135deg, #6382ff, #a78bfa); border: none; border-radius: 10px; padding: 0.65rem 1.4rem; color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+    .nl-form button:hover { opacity: 0.85; }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 640px) { .featured-inner { grid-template-columns: 1fr; } .featured-code { display: none; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../" class="nav-brand">
+    <div class="nav-logo">⚙️</div>
+    <div>
+      <div class="nav-brand-text">AEM Dev Hub</div>
+      <div class="nav-brand-sub">by Mishra Ventures</div>
+    </div>
+  </a>
+  <a href="../" class="nav-home">← All Ventures</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">AEM Development</div>
+  <h1 class="hero-title">Level up your<br>AEM game</h1>
+  <p class="hero-sub">Real-world tips, frequent errors decoded, best practices & deep-dive articles for AEM developers.</p>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search articles, errors, topics…" oninput="filterArticles()" />
+    <button>Search</button>
+  </div>
+</section>
+
+<div class="filter-tabs">
+  <button class="tab active" onclick="setFilter('all',this)">All</button>
+  <button class="tab" onclick="setFilter('tips',this)">Tips & Tricks</button>
+  <button class="tab" onclick="setFilter('error',this)">Common Errors</button>
+  <button class="tab" onclick="setFilter('concept',this)">Concepts</button>
+  <button class="tab" onclick="setFilter('best-practice',this)">Best Practices</button>
+</div>
+
+<div style="max-width:1100px;margin:0 auto 0.8rem;padding:0 2rem;">
+  <div class="section-label">⭐ Featured Article</div>
+</div>
+
+<div class="featured-wrap">
+  <div class="featured-inner">
+    <div class="featured-code">
+      <div><span class="cm">// Sling Model — clean approach</span></div>
+      <div><span class="kw">@Model</span>(adaptables = Resource.<span class="kw">class</span>)</div>
+      <div><span class="kw">public class</span> <span class="fn">HeroComponent</span> {</div>
+      <div>&nbsp;&nbsp;<span class="kw">@ValueMapValue</span></div>
+      <div>&nbsp;&nbsp;<span class="kw">private</span> String <span class="fn">title</span>;</div>
+      <div>&nbsp;</div>
+      <div>&nbsp;&nbsp;<span class="kw">@ValueMapValue</span>(name = <span class="str">"jcr:description"</span>)</div>
+      <div>&nbsp;&nbsp;<span class="kw">private</span> String <span class="fn">description</span>;</div>
+      <div>&nbsp;</div>
+      <div>&nbsp;&nbsp;<span class="cm">// no boilerplate, no null checks</span></div>
+      <div>}</div>
+    </div>
+    <div class="featured-content">
+      <span class="featured-tag">Best Practice</span>
+      <h2>Sling Models Done Right: From Boilerplate to Clean Architecture</h2>
+      <p>Stop writing repetitive adaptables and resource resolver boilerplate. Learn how to structure Sling Models with proper injection, null safety, and testability in AEM 6.5 and AEMaaCS.</p>
+      <a href="articles/sling-models-done-right.html" class="read-link">Read Article →</a>
+      <div class="article-meta">April 2025 · 8 min read · Sling, Java, AEM Core</div>
+    </div>
+  </div>
+</div>
+
+<br><br>
+
+<div style="max-width:1100px;margin:0 auto 0.8rem;padding:0 2rem;">
+  <div class="section-label">📚 All Articles</div>
+</div>
+
+<div class="articles-grid" id="articlesGrid">
+
+  <a href="articles/" class="article-card" data-category="error">
+    <span class="card-tag error">Common Error</span>
+    <h3>ResourceNotFoundException: Why your component keeps throwing 404s</h3>
+    <p>One of the most frustrating AEM errors explained — resource paths, search paths, and how proxy components work.</p>
+    <div class="card-footer"><span class="card-date">Mar 2025</span><span class="card-read">5 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="tips">
+    <span class="card-tag tips">Tips & Tricks</span>
+    <h3>HTL (Sightly) tricks that will save you hours every week</h3>
+    <p>Lesser-known HTL expressions, data-sly-use tricks, and how to avoid the "expression too complex" anti-pattern.</p>
+    <div class="card-footer"><span class="card-date">Mar 2025</span><span class="card-read">6 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="concept">
+    <span class="card-tag concept">Concept</span>
+    <h3>Dispatcher Caching Explained: TTL, Flush Agents & Gotchas</h3>
+    <p>A visual deep-dive into how AEM Dispatcher caches responses, when to flush, and common misconfigurations teams make in production.</p>
+    <div class="card-footer"><span class="card-date">Feb 2025</span><span class="card-read">10 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="best-practice">
+    <span class="card-tag">Best Practice</span>
+    <h3>OSGi Configuration: Stop hardcoding, start using Sling CA Configs</h3>
+    <p>How to externalize environment-specific configuration properly using Sling Context-Aware Configuration instead of runmode folders.</p>
+    <div class="card-footer"><span class="card-date">Feb 2025</span><span class="card-read">7 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="error">
+    <span class="card-tag error">Common Error</span>
+    <h3>CRX PackageManager Upload Fails — 5 Causes & Fixes</h3>
+    <p>From file size limits to dependency conflicts and wrong content package versions — a checklist to debug your next stuck package deploy.</p>
+    <div class="card-footer"><span class="card-date">Jan 2025</span><span class="card-read">4 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="tips">
+    <span class="card-tag tips">Tips & Tricks</span>
+    <h3>AEM Query Builder: Write smarter JCR queries that don't kill performance</h3>
+    <p>Understand predicates, offset pagination, and why orderby on a non-indexed property will bring your author instance to a halt.</p>
+    <div class="card-footer"><span class="card-date">Jan 2025</span><span class="card-read">8 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="concept">
+    <span class="card-tag concept">Concept</span>
+    <h3>Content Fragments vs Experience Fragments: When to use which</h3>
+    <p>A practical guide with real scenarios — CFs for structured content reuse, XFs for layout reuse. The decision framework you actually need.</p>
+    <div class="card-footer"><span class="card-date">Dec 2024</span><span class="card-read">6 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="best-practice">
+    <span class="card-tag">Best Practice</span>
+    <h3>Unit Testing AEM Components with AEM Mocks & JUnit 5</h3>
+    <p>Skip the integration test pain. How to write fast, isolated unit tests for Sling Models using io.wcm's AEM Mocks library.</p>
+    <div class="card-footer"><span class="card-date">Dec 2024</span><span class="card-read">9 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="tips">
+    <span class="card-tag tips">Tips & Tricks</span>
+    <h3>AEM Local Dev Setup in 2025: Docker, SDK & RDE tips</h3>
+    <p>Fastest path to a working AEMaaCS local environment — from SDK download to your first RDE push, with pitfalls called out.</p>
+    <div class="card-footer"><span class="card-date">Nov 2024</span><span class="card-read">7 min →</span></div>
+  </a>
+
+</div>
+
+<div class="newsletter">
+  <div class="newsletter-box">
+    <h3>Get articles in your inbox</h3>
+    <p>New AEM articles, error breakdowns & tips — delivered when published. No spam.</p>
+    <div class="nl-form">
+      <input type="email" placeholder="your@email.com" />
+      <button>Subscribe</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; AEM Dev Hub &nbsp;·&nbsp; themishraventures.com/mishra-ventures/aem-hub/
+</footer>
+
+<script>
+  let activeFilter = 'all';
+  function setFilter(cat, el) {
+    activeFilter = cat;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    filterArticles();
+  }
+  function filterArticles() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.article-card').forEach(card => {
+      const matchFilter = activeFilter === 'all' || card.dataset.category === activeFilter;
+      const matchSearch = !q || card.innerText.toLowerCase().includes(q);
+      card.style.display = matchFilter && matchSearch ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

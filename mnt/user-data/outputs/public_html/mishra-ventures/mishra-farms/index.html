@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mishra Farms – Farm Fresh, Direct to You</title>
+  <link rel="stylesheet" href="../shared/global.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf8f3;
+      --surface: #ffffff;
+      --surface2: #f3ede0;
+      --green: #2d6a4f;
+      --green-l: #52b788;
+      --green-pale: #d8f3dc;
+      --amber: #b5451b;
+      --amber-l: #e07b3f;
+      --amber-pale: #fde8d8;
+      --text: #1a1a14;
+      --muted: #6b6b55;
+      --border: rgba(45,106,79,0.12);
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; line-height: 1.7; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 64px;
+      background: rgba(250,248,243,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-icon { font-size: 26px; }
+    .nav-brand-text { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--green); font-weight: 700; }
+    .nav-brand-sub { font-size: 0.68rem; color: var(--muted); }
+    .nav-links { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .nav-links a { font-size: 0.83rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--green); }
+    .nav-btn { background: var(--green); color: #fff !important; border-radius: 100px; padding: 7px 18px; font-weight: 700; }
+    .nav-btn:hover { background: #1e4d39 !important; }
+
+    /* HERO */
+    .hero { display: grid; grid-template-columns: 1fr 1fr; min-height: 82vh; max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; gap: 3rem; align-items: center; }
+    @media (max-width: 768px) { .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem; min-height: auto; } .hero-visual { display: none; } }
+
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: var(--green-pale); color: var(--green); border: 1px solid rgba(45,106,79,0.2); border-radius: 100px; padding: 6px 16px; font-size: 0.8rem; font-weight: 700; margin-bottom: 1.5rem; }
+    h1.hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 800; line-height: 1.1; color: var(--text); margin-bottom: 1.2rem; }
+    h1.hero-title span { color: var(--green); }
+    .hero-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 2rem; max-width: 480px; }
+
+    .trust-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+    .trust-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+
+    .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+    .cta-primary { background: var(--green); color: #fff; border-radius: 12px; padding: 0.85rem 2rem; font-size: 0.95rem; font-weight: 700; text-decoration: none; transition: background 0.2s, transform 0.15s; display: inline-block; }
+    .cta-primary:hover { background: #1e4d39; transform: translateY(-2px); }
+    .cta-secondary { background: transparent; color: var(--green); border: 2px solid var(--green); border-radius: 12px; padding: 0.85rem 2rem; font-size: 0.95rem; font-weight: 700; text-decoration: none; transition: background 0.2s; display: inline-block; }
+    .cta-secondary:hover { background: var(--green-pale); }
+
+    /* HERO VISUAL */
+    .hero-visual { display: flex; align-items: center; justify-content: center; }
+    .field-art { width: 100%; max-width: 440px; background: linear-gradient(160deg, #d8f3dc 0%, #b7e4c7 40%, #74c69d 100%); border-radius: 32px; padding: 2.5rem; position: relative; overflow: hidden; }
+    .field-art::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: repeating-linear-gradient(90deg, rgba(45,106,79,0.08) 0px, rgba(45,106,79,0.08) 12px, transparent 12px, transparent 28px); }
+    .product-float { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .pfloat-card { background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border-radius: 16px; padding: 1rem; text-align: center; border: 1px solid rgba(255,255,255,0.6); }
+    .pfloat-card .pf-emoji { font-size: 32px; display: block; margin-bottom: 4px; }
+    .pfloat-card .pf-name { font-size: 0.82rem; font-weight: 700; color: var(--green); }
+    .pfloat-card .pf-price { font-size: 0.75rem; color: var(--muted); }
+    .badge-float { position: absolute; top: -16px; right: -8px; z-index: 2; background: var(--amber); color: #fff; border-radius: 100px; padding: 6px 14px; font-size: 0.78rem; font-weight: 700; box-shadow: 0 4px 12px rgba(181,69,27,0.3); }
+
+    /* WHY */
+    .why-section { background: var(--green); padding: 5rem 2rem; }
+    .why-inner { max-width: 1100px; margin: 0 auto; text-align: center; }
+    .why-inner h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 0.75rem; }
+    .why-inner > p { color: rgba(255,255,255,0.7); font-size: 0.95rem; max-width: 540px; margin: 0 auto 3rem; }
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .why-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.75rem 1.5rem; text-align: left; }
+    .why-icon { font-size: 26px; margin-bottom: 0.75rem; display: block; }
+    .why-card h3 { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.4rem; }
+    .why-card p { font-size: 0.83rem; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+    /* STORY */
+    .story-section { max-width: 1100px; margin: 0 auto; padding: 5rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    @media (max-width: 768px) { .story-section { grid-template-columns: 1fr; gap: 2rem; } }
+    .story-tag { display: inline-block; background: var(--amber-pale); color: var(--amber); font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 12px; border-radius: 6px; margin-bottom: 1rem; }
+    .story-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 3.5vw, 2.2rem); line-height: 1.2; margin-bottom: 1rem; }
+    .story-section p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }
+    .story-section p strong { color: var(--text); }
+    .highlight-box { background: var(--amber-pale); border-left: 4px solid var(--amber-l); border-radius: 0 12px 12px 0; padding: 1rem 1.25rem; margin-top: 1.5rem; }
+    .highlight-box p { color: var(--amber); font-weight: 600; font-size: 0.88rem; margin: 0; }
+    .story-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.25rem; text-align: center; }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 800; color: var(--green); display: block; }
+    .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+
+    /* PRODUCTS */
+    .products-section { background: var(--surface2); padding: 5rem 2rem; }
+    .products-inner { max-width: 1100px; margin: 0 auto; }
+    .section-heading { text-align: center; margin-bottom: 3rem; }
+    .section-heading h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 0.5rem; }
+    .section-heading p { color: var(--muted); font-size: 0.92rem; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(45,106,79,0.12); }
+    .product-img { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+    .img-wheat { background: linear-gradient(135deg, #fde8d8, #f3a46a22); }
+    .img-rice  { background: linear-gradient(135deg, #d8f3dc, #52b78822); }
+    .img-atta  { background: linear-gradient(135deg, #fff3cd, #ffc10722); }
+    .img-combo { background: linear-gradient(135deg, #e9d8fd, #a855f722); }
+    .product-body { padding: 1.25rem; }
+    .product-badge { display: inline-block; background: var(--green-pale); color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 9px; border-radius: 5px; margin-bottom: 0.6rem; }
+    .product-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .product-body p { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-weight: 800; font-size: 1.05rem; color: var(--green); }
+    .product-price .unit { font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+    .product-mkt { font-size: 0.75rem; color: var(--muted); text-decoration: line-through; }
+    .add-btn { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 7px 16px; font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+    .add-btn:hover { background: #1e4d39; }
+
+    /* HOW */
+    .how-section { max-width: 900px; margin: 0 auto; padding: 5rem 2rem; text-align: center; }
+    .how-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 0.5rem; }
+    .how-section > p { color: var(--muted); font-size: 0.92rem; margin-bottom: 3rem; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; }
+    .step { padding: 1.5rem 1rem; }
+    .step-num { width: 48px; height: 48px; border-radius: 50%; background: var(--green-pale); border: 2px solid var(--green-l); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 800; color: var(--green); margin: 0 auto 1rem; }
+    .step h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .step p { font-size: 0.8rem; color: var(--muted); }
+
+    /* ORDER */
+    .notify-section { background: var(--green); padding: 5rem 2rem; text-align: center; }
+    .notify-inner { max-width: 580px; margin: 0 auto; }
+    .notify-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.4rem); color: #fff; margin-bottom: 0.75rem; }
+    .notify-section p { color: rgba(255,255,255,0.7); font-size: 0.92rem; margin-bottom: 2rem; }
+    .notify-form { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 1.2rem; }
+    .notify-form input { flex: 1 1 220px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 0.8rem 1.2rem; color: #fff; font-size: 0.92rem; font-family: inherit; outline: none; }
+    .notify-form input::placeholder { color: rgba(255,255,255,0.45); }
+    .notify-form input:focus { border-color: rgba(255,255,255,0.5); }
+    .notify-form button { background: #fff; color: var(--green); border: none; border-radius: 12px; padding: 0.8rem 1.8rem; font-size: 0.92rem; font-weight: 800; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+    .notify-form button:hover { opacity: 0.9; }
+    .notify-success { display: none; color: rgba(255,255,255,0.9); font-size: 0.9rem; margin-top: 0.5rem; }
+    .wa-link { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px 20px; color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-top: 1rem; transition: background 0.2s; }
+    .wa-link:hover { background: rgba(255,255,255,0.2); }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../" class="nav-brand">
+    <span class="nav-icon">🌾</span>
+    <div>
+      <div class="nav-brand-text">Mishra Farms</div>
+      <div class="nav-brand-sub">by Mishra Ventures</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#products">Products</a>
+    <a href="#story">Our Story</a>
+    <a href="#how">How It Works</a>
+    <a href="../">← All Ventures</a>
+    <a href="#notify" class="nav-btn">Order Now</a>
+  </div>
+</nav>
+
+<section style="max-width:1200px;margin:0 auto;padding:0 2rem;">
+  <div class="hero">
+    <div>
+      <div class="hero-badge">🌱 Direct from our fields</div>
+      <h1 class="hero-title">Farm Fresh<br><span>Wheat & Rice</span><br>At Your Door</h1>
+      <p class="hero-sub">We grow it. We pack it. We ship it to you — cutting out middlemen and mandis. Pure, organic, affordable.</p>
+      <div class="trust-row">
+        <span class="trust-item">✅ No chemicals</span>
+        <span class="trust-item">📦 Branded packaging</span>
+        <span class="trust-item">💰 30% cheaper than market</span>
+        <span class="trust-item">🚚 Doorstep delivery</span>
+      </div>
+      <div class="hero-ctas">
+        <a href="#products" class="cta-primary">View Products</a>
+        <a href="#story" class="cta-secondary">Our Story</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="field-art">
+        <div class="badge-float">🌟 Farm Direct</div>
+        <div class="product-float">
+          <div class="pfloat-card"><span class="pf-emoji">🌾</span><div class="pf-name">Desi Wheat</div><div class="pf-price">₹28/kg</div></div>
+          <div class="pfloat-card"><span class="pf-emoji">🍚</span><div class="pf-name">Basmati Rice</div><div class="pf-price">₹62/kg</div></div>
+          <div class="pfloat-card"><span class="pf-emoji">🫘</span><div class="pf-name">Gehun Atta</div><div class="pf-price">₹34/kg</div></div>
+          <div class="pfloat-card"><span class="pf-emoji">🎁</span><div class="pf-name">Family Pack</div><div class="pf-price">₹499</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why-section">
+  <div class="why-inner">
+    <h2>Why buy direct from us?</h2>
+    <p>The mandi system cuts your farmer's earnings and inflates your grocery bill. We fix that.</p>
+    <div class="why-grid">
+      <div class="why-card"><span class="why-icon">🌿</span><h3>100% Organic Growth</h3><p>No synthetic fertilizers. Traditional farming methods passed down through generations.</p></div>
+      <div class="why-card"><span class="why-icon">💰</span><h3>Fair Price, Both Ways</h3><p>You pay less than retail. We earn more than the mandi rate. No dalal, no ardhat — just direct value.</p></div>
+      <div class="why-card"><span class="why-icon">📦</span><h3>Properly Packed</h3><p>Food-grade sealed packaging with weight, harvest date, and origin labelled. Clean and traceable.</p></div>
+      <div class="why-card"><span class="why-icon">🚚</span><h3>Doorstep Delivery</h3><p>Order online, pay on delivery. We ship across the region — no minimum order hassle.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="story-section" id="story">
+  <div>
+    <span class="story-tag">Our Story</span>
+    <h2>We grow the food your family eats — but no one knew us.</h2>
+    <p>Our family has farmed wheat and rice for generations in UP. Every season we'd load up our harvest and take it to the nearest <strong>gola bazar or ardhat</strong> — only to get paid whatever price the dalal decided.</p>
+    <p>We got tired of selling 40 quintals of wheat for ₹1,400/quintal when the same wheat sat on your grocery shelf at ₹35/kg. We decided to bridge that gap ourselves.</p>
+    <div class="highlight-box">
+      <p>🎯 Our mission: Give every Indian family access to real farm food at honest prices — and give our farm a fair income in return.</p>
+    </div>
+  </div>
+  <div>
+    <div class="story-stats">
+      <div class="stat-card"><span class="stat-num">3rd</span><span class="stat-label">Generation farming family</span></div>
+      <div class="stat-card"><span class="stat-num">12+</span><span class="stat-label">Acres under cultivation</span></div>
+      <div class="stat-card"><span class="stat-num">0</span><span class="stat-label">Chemical fertilizers used</span></div>
+      <div class="stat-card"><span class="stat-num">30%</span><span class="stat-label">Cheaper than retail price</span></div>
+    </div>
+    <div style="background:var(--green-pale);border-radius:16px;padding:1.5rem;border:1px solid rgba(45,106,79,0.12);margin-top:12px;">
+      <p style="font-size:0.85rem;color:var(--green);font-weight:600;margin-bottom:0.3rem;">📍 Located in</p>
+      <p style="font-size:0.9rem;color:var(--text);">Uttar Pradesh — heartland of India's wheat & rice belt, near the fertile Gangetic plains.</p>
+    </div>
+  </div>
+</section>
+
+<section class="products-section" id="products">
+  <div class="products-inner">
+    <div class="section-heading"><h2>Our Products</h2><p>Straight from our farm, cleaned and packed fresh every batch.</p></div>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-img img-wheat">🌾</div>
+        <div class="product-body">
+          <span class="product-badge">Bestseller</span>
+          <h3>Desi Wheat Grains (Gehun)</h3>
+          <p>Traditional hard wheat variety. Ideal for chakki grinding at home.</p>
+          <div class="product-footer"><div><div class="product-price">₹28 <span class="unit">/ kg</span></div><div class="product-mkt">Retail: ₹40/kg</div></div><button class="add-btn" onclick="document.getElementById('notify').scrollIntoView({behavior:'smooth'})">Inquire →</button></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img img-rice">🍚</div>
+        <div class="product-body">
+          <span class="product-badge">New</span>
+          <h3>Basmati Rice (Long Grain)</h3>
+          <p>Aromatic long-grain basmati, sun-dried naturally. No artificial polish.</p>
+          <div class="product-footer"><div><div class="product-price">₹62 <span class="unit">/ kg</span></div><div class="product-mkt">Retail: ₹90/kg</div></div><button class="add-btn" onclick="document.getElementById('notify').scrollIntoView({behavior:'smooth'})">Inquire →</button></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img img-atta">🫘</div>
+        <div class="product-body">
+          <span class="product-badge">Ready to Cook</span>
+          <h3>Whole Wheat Atta (Stone Ground)</h3>
+          <p>Chakki-ground from our own wheat. No maida mixed. Full bran intact.</p>
+          <div class="product-footer"><div><div class="product-price">₹34 <span class="unit">/ kg</span></div><div class="product-mkt">Retail: ₹52/kg</div></div><button class="add-btn" onclick="document.getElementById('notify').scrollIntoView({behavior:'smooth'})">Inquire →</button></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img img-combo">🎁</div>
+        <div class="product-body">
+          <span class="product-badge">Best Value</span>
+          <h3>Monthly Family Bundle</h3>
+          <p>10kg atta + 5kg basmati + 5kg wheat. Perfect for a family of 4 for a month.</p>
+          <div class="product-footer"><div><div class="product-price">₹499 <span class="unit">/ bundle</span></div><div class="product-mkt">Retail: ₹720+</div></div><button class="add-btn" onclick="document.getElementById('notify').scrollIntoView({behavior:'smooth'})">Inquire →</button></div>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--muted);">💡 Bulk orders (25kg+) get additional discount. Contact us directly.</p>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <h2>How It Works</h2>
+  <p>Simple, transparent, no middlemen involved.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><h3>Place Your Order</h3><p>Fill the form below or WhatsApp us directly.</p></div>
+    <div class="step"><div class="step-num">2</div><h3>We Pack Fresh</h3><p>Cleaned, weighed, and sealed in food-grade packaging.</p></div>
+    <div class="step"><div class="step-num">3</div><h3>Shipped to You</h3><p>Dispatched in 2–3 days, delivered in 5–7 days.</p></div>
+    <div class="step"><div class="step-num">4</div><h3>Pay on Delivery</h3><p>Cash on delivery, UPI, and bank transfer accepted.</p></div>
+  </div>
+</section>
+
+<section class="notify-section" id="notify">
+  <div class="notify-inner">
+    <h2>Place Your Order</h2>
+    <p>Drop your details below and we'll reach out within 24 hours with availability and a delivery quote for your area.</p>
+    <div class="notify-form" id="orderForm">
+      <input type="text" id="nameInput" placeholder="Your name" />
+      <input type="tel" id="phoneInput" placeholder="WhatsApp / Phone number" />
+      <button onclick="submitOrder()">Send Inquiry</button>
+    </div>
+    <p class="notify-success" id="orderSuccess">✅ Received! We'll WhatsApp you within 24 hours with your order details.</p>
+    <!-- TODO: Update the WhatsApp number below to your actual number -->
+    <a href="https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20order%20from%20Mishra%20Farms" class="wa-link" target="_blank">💬 Or WhatsApp us directly</a>
+  </div>
+</section>
+
+<footer>
+  <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Mishra Farms &nbsp;·&nbsp; themishraventures.com/mishra-ventures/mishra-farms/ &nbsp;·&nbsp; Organic. Honest. Direct.
+</footer>
+
+<script>
+  function submitOrder() {
+    const name = document.getElementById('nameInput').value.trim();
+    const phone = document.getElementById('phoneInput').value.trim();
+    if (!name || !phone) { alert('Please enter your name and phone number.'); return; }
+    document.getElementById('orderForm').style.display = 'none';
+    document.getElementById('orderSuccess').style.display = 'block';
+  }
+</script>
+</body>
+</html>
