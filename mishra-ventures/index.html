@@ -65,7 +65,7 @@
     .tagline { font-size: 1rem; color: var(--dark-muted); line-height: 1.7; margin-bottom: 2rem; }
 
     /* Venture cards */
-    .ventures-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 2rem; }
+    .ventures-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 2rem; }
     @media (max-width: 480px) { .ventures-grid { grid-template-columns: 1fr; } }
 
     .venture-card {
@@ -85,6 +85,8 @@
     .venture-card.aem:hover { border-color: rgba(108,99,255,0.6); background: rgba(108,99,255,0.1); }
     .venture-card.farm { border-color: rgba(34,197,94,0.25); }
     .venture-card.farm:hover { border-color: rgba(34,197,94,0.55); background: rgba(34,197,94,0.07); }
+    .venture-card.finance { border-color: rgba(234,179,8,0.25); }
+    .venture-card.finance:hover { border-color: rgba(234,179,8,0.6); background: rgba(234,179,8,0.1); }
 
     .domain-tag { font-size: 0.75rem; color: rgba(255,255,255,0.18); letter-spacing: 1px; }
   </style>
@@ -114,6 +116,13 @@
         <div class="vc-title">Mishra Farms</div>
         <div class="vc-desc">Organic wheat & rice, direct from our farm to your family. Pure & affordable.</div>
         <div class="vc-arrow">Shop Fresh →</div>
+      </a>
+      <a href="wealth-insights/" class="venture-card finance">
+        <div class="vc-icon">📈</div>
+        <div class="vc-label">Finance</div>
+        <div class="vc-title">Wealth Insights</div>
+        <div class="vc-desc">Financial tips, savings best practices, and stock market investing guides.</div>
+        <div class="vc-arrow">Read Articles →</div>
       </a>
     </div>
 

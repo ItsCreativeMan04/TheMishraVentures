@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wealth Insights – The Mishra Ventures</title>
+  <link rel="stylesheet" href="../shared/global.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0a00;
+      --surface: #141205;
+      --surface2: #1f1b0a;
+      --border: rgba(234, 179, 8, 0.15);
+      --accent: #eab308;
+      --accent2: #fde047;
+      --text: #fefce8;
+      --muted: rgba(254, 252, 232, 0.45);
+      --tag-bg: rgba(234, 179, 8, 0.12);
+      --tag-color: #fef08a;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; line-height: 1.7; min-height: 100vh; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: rgba(12, 10, 0, 0.88); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .nav-brand-text { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+    .nav-brand-sub { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+    .nav-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 100px; transition: color 0.2s, border-color 0.2s; }
+    .nav-home:hover { color: var(--text); border-color: var(--accent); }
+
+    .hero { max-width: 800px; margin: 0 auto; padding: 5rem 2rem 3rem; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--tag-bg); color: var(--tag-color);
+      border: 1px solid rgba(234, 179, 8, 0.25); border-radius: 100px;
+      padding: 5px 14px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero-badge::before { content: ''; display: block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+    h1.hero-title {
+      font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15;
+      background: linear-gradient(135deg, #fff 20%, var(--accent) 60%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 1rem;
+    }
+    .hero-sub { font-size: 1.05rem; color: var(--muted); max-width: 560px; margin: 0 auto 2.5rem; }
+
+    .search-bar { display: flex; max-width: 440px; margin: 0 auto 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .search-bar input { flex: 1; background: none; border: none; padding: 0.7rem 1rem; color: var(--text); font-size: 0.92rem; font-family: inherit; outline: none; }
+    .search-bar input::placeholder { color: var(--muted); }
+    .search-bar button { background: var(--accent); border: none; padding: 0.7rem 1.2rem; color: #111; cursor: pointer; font-size: 0.85rem; font-weight: 700; font-family: inherit; transition: opacity 0.2s; }
+    .search-bar button:hover { opacity: 0.85; }
+
+    .filter-tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3rem; }
+    .tab { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; color: var(--muted); padding: 6px 18px; font-size: 0.83rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .tab:hover, .tab.active { background: var(--tag-bg); border-color: var(--accent); color: var(--accent); }
+
+    .section-label { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem; }
+
+    .featured-wrap { max-width: 1100px; margin: 0 auto 1rem; padding: 0 2rem; }
+    .featured-inner {
+      display: grid; grid-template-columns: 1fr 1.2fr; gap: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden;
+      transition: border-color 0.25s, transform 0.2s;
+    }
+    .featured-inner:hover { border-color: rgba(234, 179, 8, 0.4); transform: translateY(-2px); }
+    .featured-image { background: linear-gradient(45deg, #1f1b0a, #332b10); border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 4rem; min-height: 200px; }
+    .featured-content { padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+    .featured-tag { display: inline-block; background: var(--tag-bg); color: var(--tag-color); font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 1rem; }
+    .featured-content h2 { font-size: 1.45rem; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 0.75rem; }
+    .featured-content p { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.7; }
+    .read-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 0.88rem; font-weight: 600; transition: gap 0.2s; }
+    .read-link:hover { gap: 10px; }
+    .article-meta { font-size: 0.78rem; color: var(--muted); margin-top: 1rem; }
+
+    .articles-grid { max-width: 1100px; margin: 0 auto 4rem; padding: 0 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+    .article-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.25s, background 0.25s, transform 0.2s; }
+    .article-card:hover { border-color: rgba(234, 179, 8, 0.4); background: var(--surface2); transform: translateY(-3px); }
+    .card-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 5px; margin-bottom: 4px; background: var(--tag-bg); color: var(--tag-color); }
+    .card-tag.investing { background: rgba(59, 130, 246, 0.12); color: #93c5fd; }
+    .card-tag.saving { background: rgba(34,197,94,0.1); color: #86efac; }
+    .card-tag.concept { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+    .article-card h3 { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.4; }
+    .article-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .card-date { font-size: 0.75rem; color: var(--muted); }
+    .card-read { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+    .newsletter { max-width: 600px; margin: 0 auto 5rem; padding: 0 2rem; text-align: center; }
+    .newsletter-box { background: linear-gradient(135deg, rgba(234, 179, 8, 0.08), rgba(253, 224, 71, 0.08)); border: 1px solid rgba(234, 179, 8, 0.25); border-radius: 20px; padding: 2.5rem 2rem; }
+    .newsletter h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .newsletter p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .nl-form { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .nl-form input { flex: 1 1 200px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 0.65rem 1rem; color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; }
+    .nl-form input:focus { border-color: var(--accent); }
+    .nl-form input::placeholder { color: var(--muted); }
+    .nl-form button { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 10px; padding: 0.65rem 1.4rem; color: #111; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+    .nl-form button:hover { opacity: 0.85; }
+
+    footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 640px) { .featured-inner { grid-template-columns: 1fr; } .featured-image { display: none; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="../" class="nav-brand">
+    <div class="nav-logo">📈</div>
+    <div>
+      <div class="nav-brand-text">Wealth Insights</div>
+      <div class="nav-brand-sub">by Mishra Ventures</div>
+    </div>
+  </a>
+  <a href="../" class="nav-home">← All Ventures</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">Financial Mastery</div>
+  <h1 class="hero-title">Master your<br>financial future</h1>
+  <p class="hero-sub">Real-world tips, investing guides, savings strategies & deep-dive articles for building long-term wealth.</p>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search articles, strategies, concepts…" oninput="filterArticles()" />
+    <button>Search</button>
+  </div>
+</section>
+
+<div class="filter-tabs">
+  <button class="tab active" onclick="setFilter('all',this)">All</button>
+  <button class="tab" onclick="setFilter('investing',this)">Investing</button>
+  <button class="tab" onclick="setFilter('saving',this)">Saving Tips</button>
+  <button class="tab" onclick="setFilter('concept',this)">Financial Concepts</button>
+  <button class="tab" onclick="setFilter('best-practice',this)">Best Practices</button>
+</div>
+
+<div style="max-width:1100px;margin:0 auto 0.8rem;padding:0 2rem;">
+  <div class="section-label">⭐ Featured Article</div>
+</div>
+
+<div class="featured-wrap">
+  <div class="featured-inner">
+    <div class="featured-image">
+      🌱
+    </div>
+    <div class="featured-content">
+      <span class="featured-tag">Concept</span>
+      <h2>The Power of Compound Interest: The 8th Wonder of the World</h2>
+      <p>Discover how starting early can exponentially increase your wealth over time. We break down the math behind compound interest and how to leverage it to build a massive portfolio.</p>
+      <a href="articles/compound-interest.html" class="read-link">Read Article →</a>
+      <div class="article-meta">April 2026 · 6 min read · Investing, Fundamentals</div>
+    </div>
+  </div>
+</div>
+
+<br><br>
+
+<div style="max-width:1100px;margin:0 auto 0.8rem;padding:0 2rem;">
+  <div class="section-label">📚 All Articles</div>
+</div>
+
+<div class="articles-grid" id="articlesGrid">
+
+  <a href="articles/" class="article-card" data-category="investing">
+    <span class="card-tag investing">Investing</span>
+    <h3>Beginner's Guide to the Stock Market</h3>
+    <p>Everything you need to know before buying your first stock. We cover index funds, ETFs, and how to avoid common pitfalls.</p>
+    <div class="card-footer"><span class="card-date">Mar 2026</span><span class="card-read">8 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="saving">
+    <span class="card-tag saving">Saving Tips</span>
+    <h3>Top 10 Ways to Reduce Monthly Expenses</h3>
+    <p>Practical advice on trimming your budget without sacrificing your lifestyle. Small changes that add up to thousands a year.</p>
+    <div class="card-footer"><span class="card-date">Mar 2026</span><span class="card-read">5 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="best-practice">
+    <span class="card-tag">Best Practice</span>
+    <h3>The 50/30/20 Rule: Budgeting Made Simple</h3>
+    <p>How to automatically split your income between needs, wants, and savings. A foolproof system for financial stability.</p>
+    <div class="card-footer"><span class="card-date">Feb 2026</span><span class="card-read">4 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="concept">
+    <span class="card-tag concept">Concept</span>
+    <h3>Understanding Inflation and Your Purchasing Power</h3>
+    <p>Why leaving cash under the mattress is actually losing you money. A deep dive into inflation and asset protection.</p>
+    <div class="card-footer"><span class="card-date">Feb 2026</span><span class="card-read">7 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="investing">
+    <span class="card-tag investing">Investing</span>
+    <h3>Index Funds vs. Mutual Funds: Which is Better?</h3>
+    <p>Comparing fees, performance, and management styles to help you choose the right vehicle for your retirement portfolio.</p>
+    <div class="card-footer"><span class="card-date">Jan 2026</span><span class="card-read">6 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="saving">
+    <span class="card-tag saving">Saving Tips</span>
+    <h3>Building an Emergency Fund Step-by-Step</h3>
+    <p>How much should you save? Where should you keep it? We break down the essentials of building a solid financial safety net.</p>
+    <div class="card-footer"><span class="card-date">Jan 2026</span><span class="card-read">5 min →</span></div>
+  </a>
+
+</div>
+
+<div class="newsletter">
+  <div class="newsletter-box">
+    <h3>Get wealth insights in your inbox</h3>
+    <p>New financial articles, investing strategies & money-saving tips — delivered when published. No spam.</p>
+    <div class="nl-form">
+      <input type="email" placeholder="your@email.com" />
+      <button>Subscribe</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Wealth Insights &nbsp;·&nbsp; themishraventures.com/mishra-ventures/wealth-insights/
+</footer>
+
+<script>
+  let activeFilter = 'all';
+  function setFilter(cat, el) {
+    activeFilter = cat;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    filterArticles();
+  }
+  function filterArticles() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.article-card').forEach(card => {
+      const matchFilter = activeFilter === 'all' || card.dataset.category === activeFilter;
+      const matchSearch = !q || card.innerText.toLowerCase().includes(q);
+      card.style.display = matchFilter && matchSearch ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
