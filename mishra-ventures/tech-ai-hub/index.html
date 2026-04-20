@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AEM Dev Hub – The Mishra Ventures</title>
+  <title>Tech & AI Hub – The Mishra Ventures</title>
   <link rel="stylesheet" href="../shared/global.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -88,9 +88,9 @@
     .article-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.25s, background 0.25s, transform 0.2s; }
     .article-card:hover { border-color: rgba(99,130,255,0.4); background: var(--surface2); transform: translateY(-3px); }
     .card-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 9px; border-radius: 5px; margin-bottom: 4px; background: var(--tag-bg); color: var(--tag-color); }
-    .card-tag.error { background: rgba(255,100,100,0.12); color: #ff9999; }
-    .card-tag.tips { background: rgba(34,197,94,0.1); color: #86efac; }
-    .card-tag.concept { background: rgba(167,139,250,0.12); color: #c4b5fd; }
+    .card-tag.ai { background: rgba(255,100,100,0.12); color: #ff9999; }
+    .card-tag.aem { background: rgba(34,197,94,0.1); color: #86efac; }
+    
     .article-card h3 { font-size: 1rem; font-weight: 700; color: #fff; line-height: 1.4; }
     .article-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; flex: 1; }
     .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
@@ -119,9 +119,9 @@
 
 <nav>
   <a href="../" class="nav-brand">
-    <div class="nav-logo">⚙️</div>
+    <div class="nav-logo">🤖</div>
     <div>
-      <div class="nav-brand-text">AEM Dev Hub</div>
+      <div class="nav-brand-text">Tech & AI Hub</div>
       <div class="nav-brand-sub">by Mishra Ventures</div>
     </div>
   </a>
@@ -129,21 +129,19 @@
 </nav>
 
 <section class="hero">
-  <div class="hero-badge">AEM Development</div>
-  <h1 class="hero-title">Level up your<br>AEM game</h1>
-  <p class="hero-sub">Real-world tips, frequent errors decoded, best practices & deep-dive articles for AEM developers.</p>
+  <div class="hero-badge">Tech & Artificial Intelligence</div>
+  <h1 class="hero-title">The Frontier of<br>Tech & AI</h1>
+  <p class="hero-sub">Artificial Intelligence breakthroughs, practical tech insights, and deep-dive AEM development expertise.</p>
   <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search articles, errors, topics…" oninput="filterArticles()" />
+    <input type="text" id="searchInput" placeholder="Search articles, topics, tech…" oninput="filterArticles()" />
     <button>Search</button>
   </div>
 </section>
 
 <div class="filter-tabs">
   <button class="tab active" onclick="setFilter('all',this)">All</button>
-  <button class="tab" onclick="setFilter('tips',this)">Tips & Tricks</button>
-  <button class="tab" onclick="setFilter('error',this)">Common Errors</button>
-  <button class="tab" onclick="setFilter('concept',this)">Concepts</button>
-  <button class="tab" onclick="setFilter('best-practice',this)">Best Practices</button>
+  <button class="tab" onclick="setFilter('ai',this)">Artificial Intelligence</button>
+  <button class="tab" onclick="setFilter('aem',this)">AEM Development</button>
 </div>
 
 <div style="max-width:1100px;margin:0 auto 0.8rem;padding:0 2rem;">
@@ -166,11 +164,11 @@
       <div>}</div>
     </div>
     <div class="featured-content">
-      <span class="featured-tag">Best Practice</span>
+      <span class="featured-tag">AEM Development</span>
       <h2>Sling Models Done Right: From Boilerplate to Clean Architecture</h2>
       <p>Stop writing repetitive adaptables and resource resolver boilerplate. Learn how to structure Sling Models with proper injection, null safety, and testability in AEM 6.5 and AEMaaCS.</p>
       <a href="articles/sling-models-done-right.html" class="read-link">Read Article →</a>
-      <div class="article-meta">April 2025 · 8 min read · Sling, Java, AEM Core</div>
+      <div class="article-meta">April 2026 · 8 min read · Sling, Java, AEM Core</div>
     </div>
   </div>
 </div>
@@ -183,75 +181,54 @@
 
 <div class="articles-grid" id="articlesGrid">
 
-  <a href="articles/" class="article-card" data-category="error">
-    <span class="card-tag error">Common Error</span>
-    <h3>ResourceNotFoundException: Why your component keeps throwing 404s</h3>
-    <p>One of the most frustrating AEM errors explained — resource paths, search paths, and how proxy components work.</p>
-    <div class="card-footer"><span class="card-date">Mar 2025</span><span class="card-read">5 min →</span></div>
+  <a href="articles/" class="article-card" data-category="ai">
+    <span class="card-tag ai">AI</span>
+    <h3>How Large Language Models are changing Enterprise Tech</h3>
+    <p>A deep dive into how LLMs are being integrated into enterprise CMS platforms to automate content authoring.</p>
+    <div class="card-footer"><span class="card-date">Apr 2026</span><span class="card-read">6 min →</span></div>
   </a>
 
-  <a href="articles/" class="article-card" data-category="tips">
-    <span class="card-tag tips">Tips & Tricks</span>
+  <a href="articles/" class="article-card" data-category="aem">
+    <span class="card-tag aem">AEM</span>
     <h3>HTL (Sightly) tricks that will save you hours every week</h3>
     <p>Lesser-known HTL expressions, data-sly-use tricks, and how to avoid the "expression too complex" anti-pattern.</p>
-    <div class="card-footer"><span class="card-date">Mar 2025</span><span class="card-read">6 min →</span></div>
+    <div class="card-footer"><span class="card-date">Mar 2026</span><span class="card-read">6 min →</span></div>
   </a>
 
-  <a href="articles/" class="article-card" data-category="concept">
-    <span class="card-tag concept">Concept</span>
+  <a href="articles/" class="article-card" data-category="ai">
+    <span class="card-tag ai">AI</span>
+    <h3>Getting Started with RAG (Retrieval-Augmented Generation)</h3>
+    <p>Understand the fundamentals of RAG and how it prevents AI hallucination by using your own documentation.</p>
+    <div class="card-footer"><span class="card-date">Feb 2026</span><span class="card-read">10 min →</span></div>
+  </a>
+
+  <a href="articles/" class="article-card" data-category="aem">
+    <span class="card-tag aem">AEM</span>
     <h3>Dispatcher Caching Explained: TTL, Flush Agents & Gotchas</h3>
-    <p>A visual deep-dive into how AEM Dispatcher caches responses, when to flush, and common misconfigurations teams make in production.</p>
-    <div class="card-footer"><span class="card-date">Feb 2025</span><span class="card-read">10 min →</span></div>
+    <p>A visual deep-dive into how AEM Dispatcher caches responses, when to flush, and common misconfigurations.</p>
+    <div class="card-footer"><span class="card-date">Feb 2026</span><span class="card-read">10 min →</span></div>
   </a>
 
-  <a href="articles/" class="article-card" data-category="best-practice">
-    <span class="card-tag">Best Practice</span>
-    <h3>OSGi Configuration: Stop hardcoding, start using Sling CA Configs</h3>
-    <p>How to externalize environment-specific configuration properly using Sling Context-Aware Configuration instead of runmode folders.</p>
-    <div class="card-footer"><span class="card-date">Feb 2025</span><span class="card-read">7 min →</span></div>
+  <a href="articles/" class="article-card" data-category="aem">
+    <span class="card-tag aem">AEM</span>
+    <h3>OSGi Configuration: Stop hardcoding, start using Context-Aware</h3>
+    <p>How to externalize environment-specific configuration properly using Sling Context-Aware Configuration.</p>
+    <div class="card-footer"><span class="card-date">Jan 2026</span><span class="card-read">7 min →</span></div>
   </a>
 
-  <a href="articles/" class="article-card" data-category="error">
-    <span class="card-tag error">Common Error</span>
-    <h3>CRX PackageManager Upload Fails — 5 Causes & Fixes</h3>
-    <p>From file size limits to dependency conflicts and wrong content package versions — a checklist to debug your next stuck package deploy.</p>
-    <div class="card-footer"><span class="card-date">Jan 2025</span><span class="card-read">4 min →</span></div>
-  </a>
-
-  <a href="articles/" class="article-card" data-category="tips">
-    <span class="card-tag tips">Tips & Tricks</span>
-    <h3>AEM Query Builder: Write smarter JCR queries that don't kill performance</h3>
-    <p>Understand predicates, offset pagination, and why orderby on a non-indexed property will bring your author instance to a halt.</p>
-    <div class="card-footer"><span class="card-date">Jan 2025</span><span class="card-read">8 min →</span></div>
-  </a>
-
-  <a href="articles/" class="article-card" data-category="concept">
-    <span class="card-tag concept">Concept</span>
-    <h3>Content Fragments vs Experience Fragments: When to use which</h3>
-    <p>A practical guide with real scenarios — CFs for structured content reuse, XFs for layout reuse. The decision framework you actually need.</p>
-    <div class="card-footer"><span class="card-date">Dec 2024</span><span class="card-read">6 min →</span></div>
-  </a>
-
-  <a href="articles/" class="article-card" data-category="best-practice">
-    <span class="card-tag">Best Practice</span>
-    <h3>Unit Testing AEM Components with AEM Mocks & JUnit 5</h3>
-    <p>Skip the integration test pain. How to write fast, isolated unit tests for Sling Models using io.wcm's AEM Mocks library.</p>
-    <div class="card-footer"><span class="card-date">Dec 2024</span><span class="card-read">9 min →</span></div>
-  </a>
-
-  <a href="articles/" class="article-card" data-category="tips">
-    <span class="card-tag tips">Tips & Tricks</span>
-    <h3>AEM Local Dev Setup in 2025: Docker, SDK & RDE tips</h3>
-    <p>Fastest path to a working AEMaaCS local environment — from SDK download to your first RDE push, with pitfalls called out.</p>
-    <div class="card-footer"><span class="card-date">Nov 2024</span><span class="card-read">7 min →</span></div>
+  <a href="articles/" class="article-card" data-category="ai">
+    <span class="card-tag ai">AI</span>
+    <h3>Prompt Engineering 101 for Software Engineers</h3>
+    <p>Stop writing bad prompts. Learn how to structure requests to get the exact code or analysis you need from Claude and GPT-4.</p>
+    <div class="card-footer"><span class="card-date">Jan 2026</span><span class="card-read">5 min →</span></div>
   </a>
 
 </div>
 
 <div class="newsletter">
   <div class="newsletter-box">
-    <h3>Get articles in your inbox</h3>
-    <p>New AEM articles, error breakdowns & tips — delivered when published. No spam.</p>
+    <h3>Get updates in your inbox</h3>
+    <p>New Tech & AI articles, error breakdowns & tips — delivered when published. No spam.</p>
     <div class="nl-form">
       <input type="email" placeholder="your@email.com" />
       <button>Subscribe</button>
@@ -260,7 +237,7 @@
 </div>
 
 <footer>
-  <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; AEM Dev Hub &nbsp;·&nbsp; themishraventures.com/mishra-ventures/aem-hub/
+  <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Tech & AI Hub &nbsp;·&nbsp; themishraventures.com/mishra-ventures/tech-ai-hub/
 </footer>
 
 <script>
