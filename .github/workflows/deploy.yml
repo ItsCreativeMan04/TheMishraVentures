@@ -15,6 +15,13 @@ jobs:
       # Hostinger shared hosting only exposes FTP (no SSH on this plan), so
       # deployment goes over FTP. Uses a sync (not a full re-upload) that
       # tracks a state file on the server, so only changed files transfer.
+      #
+      # This account (deploybot) is scoped directly to this domain's docroot
+      # (Directory: /public_html under /home/.../domains/themishraventures.com/),
+      # so its FTP login root already IS public_html -- server-dir is "./",
+      # not "./public_html/". A prior attempt used account-root FTP creds
+      # whose login landed above all domains, silently writing to an
+      # unrelated empty folder instead of this site.
       - name: Deploy over FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -22,7 +29,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
-          server-dir: ./public_html/
+          server-dir: ./
           exclude: |
             **/.git*
             **/.git*/**
