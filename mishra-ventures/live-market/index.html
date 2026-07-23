@@ -81,32 +81,35 @@
 
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
-    .oi-vchart { display: flex; align-items: flex-end; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; }
-    .oi-vcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
+    .oi-vchart { display: flex; align-items: stretch; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; }
+    .oi-vcol { display: flex; flex-direction: column; align-items: center; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
     .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
     .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
-    .oi-vcol-bars { display: flex; align-items: flex-end; gap: 5px; height: 100%; }
+    .oi-vcol-bars { display: flex; justify-content: center; gap: 5px; height: 100%; width: 100%; }
     .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
-    .oi-vstack { width: 14px; height: 100%; display: flex; flex-direction: column-reverse; align-items: stretch; }
+    /* Total-OI bars: single value, always >=0, so a plain bottom-anchored bar. */
+    .oi-vstack { width: 14px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
     .oi-vfill { width: 100%; min-height: 2px; border-radius: 2px 2px 0 0; }
     .oi-vfill.put { background: var(--green); }
     .oi-vfill.call { background: var(--red); }
-    /* Decrease = same put/call color with a diagonal-stripe overlay, so
-       direction reads at a glance without needing a whole extra bar or
-       color -- an original pattern treatment, not a copy of any specific
-       reference chart's hatch style. */
-    .oi-vfill.decrease {
-      background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 6px);
-    }
+
+    /* Change bars: diverge from a shared zero line at mid-height -- above
+       for a buildup, below for an unwind -- so direction reads from bar
+       position alone, no hatching needed. */
+    .oi-vslot { width: 14px; height: 100%; position: relative; }
+    .oi-vslot::before { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 1px; background: var(--border); }
+    .oi-vslot-fill { position: absolute; left: 0; right: 0; border-radius: 2px; }
+    .oi-vslot-fill.put { background: var(--green); }
+    .oi-vslot-fill.call { background: var(--red); }
     /* The "empty box": when a strike built up to a peak and has since
-       partially unwound (still net same-direction, just smaller), the
-       retraced portion is drawn as a hollow outline above the solid/hatched
-       fill instead of a text label -- the bar's true peak height minus its
-       current height reads as an obvious "give-back" at a glance. */
-    .oi-vshadow { width: 100%; border: 1px dashed currentColor; border-bottom: none; box-sizing: border-box; opacity: 0.55; border-radius: 2px 2px 0 0; }
-    .oi-vshadow.put { color: var(--green); }
-    .oi-vshadow.call { color: var(--red); }
+       partially unwound (still net same direction, just smaller), the
+       retraced portion is drawn as a hollow outline extending further from
+       the zero line than the solid fill -- above it for a buildup, below it
+       for an unwind -- instead of a text label. */
+    .oi-vslot-shadow { position: absolute; left: 0; right: 0; border: 1px dashed currentColor; box-sizing: border-box; opacity: 0.55; border-radius: 2px; }
+    .oi-vslot-shadow.put { color: var(--green); }
+    .oi-vslot-shadow.call { color: var(--red); }
 
     .oi-legend { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 1.1rem; font-size: 0.74rem; color: var(--muted); }
     .oi-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
@@ -192,7 +195,7 @@
     <div class="oi-legend" id="oiLegend">
       <span><span class="oi-legend-dot pe"></span>Put OI change</span>
       <span><span class="oi-legend-dot ce"></span>Call OI change</span>
-      <span class="oi-legend-note">solid = increase · hatched = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>
+      <span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>
     </div>
   </div>
 
@@ -256,7 +259,7 @@
           '<span class="oi-legend-note">bar height = current OI level · hover a bar for exact figures</span>'
         : '<span><span class="oi-legend-dot pe"></span>Put OI change</span>' +
           '<span><span class="oi-legend-dot ce"></span>Call OI change</span>' +
-          '<span class="oi-legend-note">solid = increase · hatched = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>';
+          '<span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>';
       renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
     });
   });
@@ -284,23 +287,42 @@
     return rows.reduce((a, b) => Math.abs(b.strike - currentPrice) < Math.abs(a.strike - currentPrice) ? b : a).strike;
   }
 
-  // Builds one bar's markup: a solid/hatched fill sized to the current value,
-  // topped with a hollow dashed "shadow" sized to the gap between the peak
-  // and the current value (empty when there's been no meaningful pullback).
-  function renderVBar(side, current, peak, maxAbs, valueFmt) {
+  // Total-OI bar: a single non-negative value, so a plain bottom-anchored fill.
+  function renderVBar(side, current, maxAbs, valueFmt) {
+    const cur = current || 0;
+    const curPct = maxAbs > 0 ? Math.max(cur !== 0 ? 2 : 0, cur / maxAbs * 100) : 0;
+    return `
+      <div class="oi-vstack" title="${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}">
+        <div class="oi-vfill ${side}" style="height:${curPct}%"></div>
+      </div>`;
+  }
+
+  // Change bar: diverges from a shared zero line -- up for a buildup, down
+  // for an unwind -- with a hollow dashed "shadow" extending further from
+  // zero than the solid fill, sized to the gap between the session peak and
+  // the current value (empty when there's been no meaningful pullback).
+  function renderVSlot(side, current, peak, maxAbs, valueFmt) {
     const cur = current || 0;
     const curAbs = Math.abs(cur);
-    const peakAbs = peak != null && (peak >= 0) === (cur >= 0) ? Math.max(Math.abs(peak), curAbs) : curAbs;
-    const curPct = maxAbs > 0 ? Math.max(cur !== 0 ? 2 : 0, curAbs / maxAbs * 100) : 0;
-    const shadowPct = maxAbs > 0 ? Math.max(0, (peakAbs - curAbs) / maxAbs * 100) : 0;
-    const fillCls = `oi-vfill ${side}` + (cur < 0 ? ' decrease' : '');
-    const title = shadowPct > 0
+    const peakValid = peak != null && (peak >= 0) === (cur >= 0);
+    const peakAbs = peakValid ? Math.max(Math.abs(peak), curAbs) : curAbs;
+    const curPct = maxAbs > 0 ? Math.min(50, cur !== 0 ? Math.max(2, curAbs / maxAbs * 50) : 0) : 0;
+    const peakPct = maxAbs > 0 ? Math.min(50, peakAbs / maxAbs * 50) : 0;
+    const shadowPct = Math.max(0, peakPct - curPct);
+    const isPos = cur >= 0;
+    const fillStyle = isPos ? `bottom:50%;height:${curPct}%;` : `top:50%;height:${curPct}%;`;
+    const shadowHtml = shadowPct > 0.3
+      ? `<div class="oi-vslot-shadow ${side}" style="${isPos
+          ? `bottom:calc(50% + ${curPct}%);height:${shadowPct}%;border-bottom:none;`
+          : `top:calc(50% + ${curPct}%);height:${shadowPct}%;border-top:none;`}"></div>`
+      : '';
+    const title = shadowPct > 0.3
       ? `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)} (peaked ${valueFmt(peak)})`
       : `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}`;
     return `
-      <div class="oi-vstack" title="${title}">
-        ${shadowPct > 0 ? `<div class="oi-vshadow ${side}" style="height:${shadowPct}%"></div>` : ''}
-        <div class="${fillCls}" style="height:${curPct}%"></div>
+      <div class="oi-vslot" title="${title}">
+        ${shadowHtml}
+        <div class="oi-vslot-fill ${side}" style="${fillStyle}"></div>
       </div>`;
   }
 
@@ -330,8 +352,8 @@
         return `
           <div class="oi-vcol${isAtm ? ' atm' : ''}">
             <div class="oi-vcol-bars">
-              ${renderVBar('put', r.pe_oi, null, maxAbs, fmtOiAbs)}
-              ${renderVBar('call', r.ce_oi, null, maxAbs, fmtOiAbs)}
+              ${renderVBar('put', r.pe_oi, maxAbs, fmtOiAbs)}
+              ${renderVBar('call', r.ce_oi, maxAbs, fmtOiAbs)}
             </div>
             <div class="oi-vstrike-label">${r.strike}</div>
           </div>`;
@@ -339,8 +361,9 @@
       return;
     }
 
-    // 'change' mode: bar height = magnitude of change since session open,
-    // hatched fill = decrease, hollow shadow on top = pulled back from peak.
+    // 'change' mode: bars diverge from a shared zero line -- up for a
+    // buildup, down for an unwind -- with a hollow shadow extending further
+    // from zero when a strike has pulled back from its session peak.
     const maxAbs = Math.max(1, ...rows.map(r => Math.max(
       Math.abs(r.ce_oi_peak_change != null ? r.ce_oi_peak_change : (r.ce_oi_change || 0)),
       Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
@@ -351,8 +374,8 @@
       return `
         <div class="oi-vcol${isAtm ? ' atm' : ''}">
           <div class="oi-vcol-bars">
-            ${renderVBar('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
-            ${renderVBar('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
+            ${renderVSlot('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
+            ${renderVSlot('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
           </div>
           <div class="oi-vstrike-label">${r.strike}</div>
         </div>`;
