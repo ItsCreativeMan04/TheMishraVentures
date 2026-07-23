@@ -1,0 +1,52 @@
+/*
+ * Shared structural components used across sub-pages (nav bar, live-status
+ * badge, stat tiles, footer). Pages define their own color palette as CSS
+ * custom properties in their own <style> block (--bg, --surface, --border,
+ * --accent, --accent2, --text, --muted, --green, --red, --yellow) --
+ * these rules just consume those variables, so each venture keeps its own
+ * accent color while sharing the same shapes/layout.
+ */
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ── Nav bar ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 60px;
+  background: rgba(6, 10, 20, 0.88); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.nav-logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.nav-brand-text { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.nav-brand-sub { font-size: 0.7rem; color: var(--muted); font-weight: 400; }
+.nav-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 100px; transition: color 0.2s, border-color 0.2s; }
+.nav-home:hover { color: var(--text); border-color: var(--accent); }
+
+/* ── Live status badge (pulsing dot + label) ── */
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(59,130,246,0.12); color: var(--accent2);
+  border: 1px solid rgba(59,130,246,0.3); border-radius: 100px;
+  padding: 5px 14px; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.live-dot { display: block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+.live-dot.offline { background: var(--muted); animation: none; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Stat tiles (used by any dashboard-style page) ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.2rem; }
+.stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; }
+.stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.stat-value { font-size: 1.15rem; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+.stat-value.bullish { color: var(--green); }
+.stat-value.bearish { color: var(--red); }
+.stat-value.neutral { color: var(--yellow); }
+
+/* ── Sub-page footer (distinct class from the hub's own footer style) ── */
+footer.sub-footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; font-size: 0.78rem; color: var(--muted); }
+footer.sub-footer a { color: var(--muted); text-decoration: none; }
+footer.sub-footer a:hover { color: var(--accent); }
+
+.disclaimer { font-size: 0.78rem; color: var(--muted); text-align: center; line-height: 1.6; padding: 1rem 0; }
