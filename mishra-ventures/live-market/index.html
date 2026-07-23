@@ -64,10 +64,18 @@
        a deliberately different structure, not just a re-skin. */
     .oi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
     .oi-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1.1rem; }
+    .oi-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .oi-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .oi-tab { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s, color 0.2s; }
     .oi-tab:hover { color: var(--text); }
     .oi-tab.active { background: rgba(59,130,246,0.15); border-color: var(--accent); color: var(--accent2); }
+
+    .oi-view-toggle { display: flex; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
+    .oi-view-btn { background: none; border: none; color: var(--muted); font-size: 0.74rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
+    .oi-view-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); }
+
+    .oi-totals-row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
+    .oi-totals-row b { color: #fff; font-family: 'JetBrains Mono', monospace; }
 
     .oi-chart { display: flex; flex-direction: column; gap: 3px; }
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
@@ -83,6 +91,13 @@
     .oi-bar { height: 13px; border-radius: 3px; min-width: 3px; flex-shrink: 0; }
     .oi-bar.put { background: var(--green); }
     .oi-bar.call { background: var(--red); }
+    /* Decrease = same put/call color with a diagonal-stripe overlay, so
+       direction reads at a glance without needing a whole extra bar or
+       color -- an original pattern treatment, not a copy of any specific
+       reference chart's hatch style. */
+    .oi-bar.decrease {
+      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 6px);
+    }
     .oi-value { font-size: 0.66rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
     .oi-side.put .oi-value { margin-right: 6px; }
     .oi-side.call .oi-value { margin-left: 6px; }
@@ -156,16 +171,22 @@
 
   <div class="oi-card">
     <div class="oi-header">
-      <div class="narrative-label" style="margin-bottom: 0;">OI Change by Strike</div>
-      <div class="oi-tabs" id="oiTabs"></div>
+      <div class="narrative-label" style="margin-bottom: 0;" id="oiSectionLabel">OI Change by Strike</div>
+      <div class="oi-header-controls">
+        <div class="oi-view-toggle" id="oiViewToggle">
+          <button class="oi-view-btn active" data-view="change">Change</button>
+          <button class="oi-view-btn" data-view="total">Total OI</button>
+        </div>
+        <div class="oi-tabs" id="oiTabs"></div>
+      </div>
     </div>
     <div class="oi-chart" id="oiChart">
       <div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>
     </div>
-    <div class="oi-legend">
+    <div class="oi-legend" id="oiLegend">
       <span><span class="oi-legend-dot pe"></span>Put OI change</span>
       <span><span class="oi-legend-dot ce"></span>Call OI change</span>
-      <span class="oi-legend-note">bar length = magnitude · label = signed change since session start</span>
+      <span class="oi-legend-note">solid = increase · hatched = decrease · label = signed change since session start</span>
     </div>
   </div>
 
@@ -182,18 +203,42 @@
 
   // Indian-convention magnitude labels (L = lakh), matching how OI is
   // normally read here, e.g. 1230000 -> "12.3L", 45200 -> "45.2K".
+  function fmtOiAbs(v) {
+    if (v == null) return '–';
+    const abs = Math.abs(v);
+    if (abs >= 100000) return (abs / 100000).toFixed(1) + 'L';
+    if (abs >= 1000) return (abs / 1000).toFixed(1) + 'K';
+    return String(abs);
+  }
+
+  // Same, but signed (+/−) -- for OI CHANGE values, where direction matters.
   function fmtOi(v) {
     if (v == null) return '–';
     const sign = v > 0 ? '+' : v < 0 ? '−' : '';
-    const abs = Math.abs(v);
-    if (abs >= 100000) return sign + (abs / 100000).toFixed(1) + 'L';
-    if (abs >= 1000) return sign + (abs / 1000).toFixed(1) + 'K';
-    return sign + abs;
+    return sign + fmtOiAbs(v);
   }
 
   let oiChainsCache = {};
   let oiActiveExpiry = null;
   let oiCurrentPrice = null;
+  let oiViewMode = 'change'; // 'change' | 'total'
+
+  document.getElementById('oiViewToggle').querySelectorAll('.oi-view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      oiViewMode = btn.dataset.view;
+      document.querySelectorAll('.oi-view-btn').forEach(b => b.classList.toggle('active', b === btn));
+      document.getElementById('oiSectionLabel').textContent =
+        oiViewMode === 'total' ? 'Open Interest by Strike' : 'OI Change by Strike';
+      document.getElementById('oiLegend').innerHTML = oiViewMode === 'total'
+        ? '<span><span class="oi-legend-dot pe"></span>Put OI</span>' +
+          '<span><span class="oi-legend-dot ce"></span>Call OI</span>' +
+          '<span class="oi-legend-note">bar length = current OI level near ATM</span>'
+        : '<span><span class="oi-legend-dot pe"></span>Put OI change</span>' +
+          '<span><span class="oi-legend-dot ce"></span>Call OI change</span>' +
+          '<span class="oi-legend-note">solid = increase · hatched = decrease · label = signed change since session start</span>';
+      renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
+    });
+  });
 
   function renderOiTabs(chains) {
     const tabsEl = document.getElementById('oiTabs');
@@ -213,34 +258,75 @@
     });
   }
 
+  function findAtmStrike(rows, currentPrice) {
+    if (typeof currentPrice !== 'number') return null;
+    return rows.reduce((a, b) => Math.abs(b.strike - currentPrice) < Math.abs(a.strike - currentPrice) ? b : a).strike;
+  }
+
   function renderOiChart(rows, currentPrice) {
     const chartEl = document.getElementById('oiChart');
     if (!rows || rows.length === 0) {
       chartEl.innerHTML = '<div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>';
       return;
     }
+    const atmStrike = findAtmStrike(rows, currentPrice);
 
+    if (oiViewMode === 'total') {
+      const maxAbs = Math.max(1, ...rows.map(r => Math.max(r.ce_oi || 0, r.pe_oi || 0)));
+      const totalCe = rows.reduce((s, r) => s + (r.ce_oi || 0), 0);
+      const totalPe = rows.reduce((s, r) => s + (r.pe_oi || 0), 0);
+      const pcr = totalCe ? (totalPe / totalCe).toFixed(2) : '–';
+
+      const totalsHtml = `
+        <div class="oi-totals-row">
+          <span>Call OI (in view): <b>${fmtOiAbs(totalCe)}</b></span>
+          <span>Put OI (in view): <b>${fmtOiAbs(totalPe)}</b></span>
+          <span>PCR (in view): <b>${pcr}</b></span>
+        </div>`;
+
+      chartEl.innerHTML = totalsHtml + rows.map(r => {
+        const putPct = Math.max(2, (r.pe_oi || 0) / maxAbs * 100);
+        const callPct = Math.max(2, (r.ce_oi || 0) / maxAbs * 100);
+        const isAtm = r.strike === atmStrike;
+        return `
+          <div class="oi-row${isAtm ? ' atm' : ''}">
+            <div class="oi-side put">
+              <span class="oi-value">${fmtOiAbs(r.pe_oi)}</span>
+              <div class="oi-bar put" style="width:${putPct}%"></div>
+            </div>
+            <div class="oi-strike-label">${r.strike}</div>
+            <div class="oi-side call">
+              <div class="oi-bar call" style="width:${callPct}%"></div>
+              <span class="oi-value">${fmtOiAbs(r.ce_oi)}</span>
+            </div>
+          </div>`;
+      }).join('');
+      return;
+    }
+
+    // 'change' mode: bar length = magnitude, hatched fill = decrease.
     const maxAbs = Math.max(1, ...rows.map(r =>
       Math.max(Math.abs(r.ce_oi_change || 0), Math.abs(r.pe_oi_change || 0))
     ));
-    const atmStrike = (typeof currentPrice === 'number')
-      ? rows.reduce((a, b) => Math.abs(b.strike - currentPrice) < Math.abs(a.strike - currentPrice) ? b : a).strike
-      : null;
 
     chartEl.innerHTML = rows.map(r => {
-      const putPct = Math.max(2, Math.abs(r.pe_oi_change || 0) / maxAbs * 100);
-      const callPct = Math.max(2, Math.abs(r.ce_oi_change || 0) / maxAbs * 100);
+      const putVal = r.pe_oi_change || 0;
+      const callVal = r.ce_oi_change || 0;
+      const putPct = Math.max(2, Math.abs(putVal) / maxAbs * 100);
+      const callPct = Math.max(2, Math.abs(callVal) / maxAbs * 100);
       const isAtm = r.strike === atmStrike;
+      const putCls = 'oi-bar put' + (putVal < 0 ? ' decrease' : '');
+      const callCls = 'oi-bar call' + (callVal < 0 ? ' decrease' : '');
       return `
         <div class="oi-row${isAtm ? ' atm' : ''}">
           <div class="oi-side put">
-            <span class="oi-value">${fmtOi(r.pe_oi_change)}</span>
-            <div class="oi-bar put" style="width:${putPct}%"></div>
+            <span class="oi-value">${fmtOi(putVal)}</span>
+            <div class="${putCls}" style="width:${putPct}%"></div>
           </div>
           <div class="oi-strike-label">${r.strike}</div>
           <div class="oi-side call">
-            <div class="oi-bar call" style="width:${callPct}%"></div>
-            <span class="oi-value">${fmtOi(r.ce_oi_change)}</span>
+            <div class="${callCls}" style="width:${callPct}%"></div>
+            <span class="oi-value">${fmtOi(callVal)}</span>
           </div>
         </div>`;
     }).join('');
