@@ -67,6 +67,7 @@
     .oi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
     .oi-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1.1rem; }
     .oi-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .oi-summary-pill { font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
     .oi-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .oi-tab { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s, color 0.2s; }
     .oi-tab:hover { color: var(--text); }
@@ -81,7 +82,7 @@
 
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
-    .oi-vchart-wrap { display: flex; gap: 8px; padding-top: 26px; }
+    .oi-vchart-wrap { display: flex; gap: 8px; padding-top: 48px; }
     /* Left value scale -- evenly spaced ticks from +max down to -max, so the
        zero line's vertical centering is legible instead of implicit. */
     .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: 230px; padding-bottom: 30px; flex: 0 0 auto; min-width: 34px; text-align: right; }
@@ -102,6 +103,16 @@
       content: attr(data-atm-price); position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
       background: var(--surface2); border: 1px solid var(--accent); color: var(--accent2);
       font-size: 0.62rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px; white-space: nowrap;
+    }
+    /* Max Pain marker: real elements (not a pseudo-element like the ATM
+       marker above) so the two can coexist on the same column without one
+       overwriting the other's ::before/::after. */
+    .oi-maxpain-line { position: absolute; top: 0; bottom: 22px; left: 50%; width: 0; border-left: 1px dashed var(--yellow); opacity: 0.55; }
+    .oi-maxpain-pill {
+      position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--yellow); color: var(--yellow);
+      font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
       padding: 2px 8px; border-radius: 6px; white-space: nowrap;
     }
     .oi-vcol-bars { display: flex; justify-content: center; gap: 5px; height: 100%; width: 100%; }
@@ -216,7 +227,10 @@
 
   <div class="oi-card">
     <div class="oi-header">
-      <div class="narrative-label" style="margin-bottom: 0;" id="oiSectionLabel">OI Change by Strike</div>
+      <div>
+        <div class="narrative-label" style="margin-bottom: 0;" id="oiSectionLabel">OI Change by Strike</div>
+        <div class="oi-summary-pill" id="oiSummaryPill"></div>
+      </div>
       <div class="oi-header-controls">
         <div class="oi-view-toggle" id="oiViewToggle">
           <button class="oi-view-btn active" data-view="change">Change</button>
@@ -283,6 +297,7 @@
   let oiActiveExpiry = null;
   let oiCurrentPrice = null;
   let oiOpenPrice = null;
+  let oiSummary = null;
   let oiViewMode = 'change'; // 'change' | 'total'
 
   document.getElementById('oiViewToggle').querySelectorAll('.oi-view-btn').forEach(btn => {
@@ -337,9 +352,16 @@
     });
   }
 
-  function findAtmStrike(rows, currentPrice) {
-    if (typeof currentPrice !== 'number') return null;
-    return rows.reduce((a, b) => Math.abs(b.strike - currentPrice) < Math.abs(a.strike - currentPrice) ? b : a).strike;
+  function findNearestStrike(rows, targetPrice) {
+    if (typeof targetPrice !== 'number') return null;
+    return rows.reduce((a, b) => Math.abs(b.strike - targetPrice) < Math.abs(a.strike - targetPrice) ? b : a).strike;
+  }
+
+  // Max Pain marker: real elements rather than a pseudo-element (like the ATM
+  // marker) so the two can land on the same column without one clobbering
+  // the other's ::before/::after.
+  function renderMaxPainMarker(isMaxPain) {
+    return isMaxPain ? '<div class="oi-maxpain-line"></div><div class="oi-maxpain-pill">Max Pain</div>' : '';
   }
 
   // Total-OI bar: a single non-negative value, so a plain bottom-anchored fill.
@@ -387,7 +409,8 @@
       chartEl.innerHTML = '<div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>';
       return;
     }
-    const atmStrike = findAtmStrike(rows, currentPrice);
+    const atmStrike = findNearestStrike(rows, currentPrice);
+    const maxPainStrike = oiSummary && oiSummary.max_pain != null ? findNearestStrike(rows, oiSummary.max_pain) : null;
 
     if (oiViewMode === 'total') {
       const maxAbs = Math.max(1, ...rows.map(r => Math.max(r.ce_oi || 0, r.pe_oi || 0)));
@@ -405,8 +428,10 @@
       const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
       const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
         const isAtm = r.strike === atmStrike;
+        const isMaxPain = r.strike === maxPainStrike;
         return `
           <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
+            ${renderMaxPainMarker(isMaxPain)}
             <div class="oi-vcol-bars">
               ${renderVBar('put', r.pe_oi, maxAbs, fmtOiAbs)}
               ${renderVBar('call', r.ce_oi, maxAbs, fmtOiAbs)}
@@ -434,8 +459,10 @@
     const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
     const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
       const isAtm = r.strike === atmStrike;
+      const isMaxPain = r.strike === maxPainStrike;
       return `
         <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
+          ${renderMaxPainMarker(isMaxPain)}
           <div class="oi-vcol-bars">
             ${renderVSlot('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
             ${renderVSlot('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
@@ -487,6 +514,13 @@
         oiChainsCache = data.oi_chains;
         oiCurrentPrice = data.current_price;
         oiOpenPrice = data.session_open_price;
+        oiSummary = data.oi_summary || null;
+        const pcrText = oiSummary && oiSummary.pcr != null ? oiSummary.pcr : null;
+        const maxPainText = oiSummary && oiSummary.max_pain != null ? fmtLivePrice(oiSummary.max_pain) : null;
+        document.getElementById('oiSummaryPill').textContent =
+          (pcrText != null || maxPainText != null)
+            ? [pcrText != null ? `PCR ${pcrText}` : null, maxPainText != null ? `Max Pain ${maxPainText}` : null].filter(Boolean).join(' · ')
+            : '';
         renderOiTabs(oiChainsCache);
         renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
       }
