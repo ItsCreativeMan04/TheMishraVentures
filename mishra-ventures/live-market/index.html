@@ -166,7 +166,11 @@
 </footer>
 
 <script>
-  const STATUS_URL = 'https://raw.githubusercontent.com/ItsCreativeMan04/live-market-status/main/status.json';
+  // jsDelivr, not raw.githubusercontent.com: GitHub's raw content CDN caches
+  // ~5 minutes and largely ignores cache-busting query strings. jsDelivr
+  // caches too, but the publisher explicitly purges it after every push, so
+  // this stays fresh within seconds instead of stalling on a fixed TTL.
+  const STATUS_URL = 'https://cdn.jsdelivr.net/gh/ItsCreativeMan04/live-market-status@main/status.json';
   const REFRESH_MS = 30000;
   const STALE_AFTER_MIN = 5;
 
