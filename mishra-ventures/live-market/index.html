@@ -59,9 +59,11 @@
     .narrative-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.7rem; }
     .narrative-text { font-size: 0.95rem; color: var(--text); line-height: 1.7; }
 
-    /* OI-by-strike: a horizontal diverging chart (puts left, calls right,
-       centered on strike) rather than Sensibull's vertical grouped bars --
-       a deliberately different structure, not just a re-skin. */
+    /* OI-by-strike: vertical grouped bars (Put + Call per strike, growing
+       from a shared baseline). Own color convention (green=put, red=call,
+       carried over from the site's existing bias language) and an outlined
+       "shadow" segment for peak-and-unwind -- not a copy of any single
+       reference chart's exact treatment. */
     .oi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
     .oi-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1.1rem; }
     .oi-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -77,36 +79,34 @@
     .oi-totals-row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
     .oi-totals-row b { color: #fff; font-family: 'JetBrains Mono', monospace; }
 
-    .oi-chart { display: flex; flex-direction: column; gap: 3px; }
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
-    .oi-row { display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 2px; min-height: 22px; }
-    .oi-row.atm { background: rgba(59,130,246,0.06); border-radius: 6px; }
-    .oi-row.atm .oi-strike-label { color: var(--accent2); font-weight: 700; }
-    .oi-strike-label { text-align: center; font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .oi-vchart { display: flex; align-items: flex-end; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; }
+    .oi-vcol { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
+    .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
+    .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
+    .oi-vcol-bars { display: flex; align-items: flex-end; gap: 5px; height: 100%; }
+    .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
-    .oi-side { display: flex; align-items: center; height: 100%; }
-    .oi-side.put { justify-content: flex-end; }
-    .oi-side.call { justify-content: flex-start; }
-    .oi-bar { height: 13px; border-radius: 3px; min-width: 3px; flex-shrink: 0; }
-    .oi-bar.put { background: var(--green); }
-    .oi-bar.call { background: var(--red); }
+    .oi-vstack { width: 14px; height: 100%; display: flex; flex-direction: column-reverse; align-items: stretch; }
+    .oi-vfill { width: 100%; min-height: 2px; border-radius: 2px 2px 0 0; }
+    .oi-vfill.put { background: var(--green); }
+    .oi-vfill.call { background: var(--red); }
     /* Decrease = same put/call color with a diagonal-stripe overlay, so
        direction reads at a glance without needing a whole extra bar or
        color -- an original pattern treatment, not a copy of any specific
        reference chart's hatch style. */
-    .oi-bar.decrease {
-      background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 6px);
+    .oi-vfill.decrease {
+      background-image: repeating-linear-gradient(135deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 6px);
     }
-    .oi-value { font-size: 0.66rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-    .oi-value-col { display: flex; flex-direction: column; line-height: 1.25; }
-    .oi-side.put .oi-value-col { align-items: flex-end; margin-right: 6px; }
-    .oi-side.call .oi-value-col { align-items: flex-start; margin-left: 6px; }
-    /* Shown only when a strike has retraced from its session high while still
-       net positive/negative overall -- e.g. built up to +62K, now +42K. Kept
-       visually quiet (smaller, dimmer) since it's a secondary detail, not the
-       headline number. */
-    .oi-peak-note { font-size: 0.56rem; color: var(--muted); opacity: 0.6; white-space: nowrap; }
+    /* The "empty box": when a strike built up to a peak and has since
+       partially unwound (still net same-direction, just smaller), the
+       retraced portion is drawn as a hollow outline above the solid/hatched
+       fill instead of a text label -- the bar's true peak height minus its
+       current height reads as an obvious "give-back" at a glance. */
+    .oi-vshadow { width: 100%; border: 1px dashed currentColor; border-bottom: none; box-sizing: border-box; opacity: 0.55; border-radius: 2px 2px 0 0; }
+    .oi-vshadow.put { color: var(--green); }
+    .oi-vshadow.call { color: var(--red); }
 
     .oi-legend { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 1.1rem; font-size: 0.74rem; color: var(--muted); }
     .oi-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
@@ -186,13 +186,13 @@
         <div class="oi-tabs" id="oiTabs"></div>
       </div>
     </div>
-    <div class="oi-chart" id="oiChart">
+    <div id="oiChart">
       <div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>
     </div>
     <div class="oi-legend" id="oiLegend">
       <span><span class="oi-legend-dot pe"></span>Put OI change</span>
       <span><span class="oi-legend-dot ce"></span>Call OI change</span>
-      <span class="oi-legend-note">solid = increase · hatched = decrease · label = signed change since session start</span>
+      <span class="oi-legend-note">solid = increase · hatched = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>
     </div>
   </div>
 
@@ -253,10 +253,10 @@
       document.getElementById('oiLegend').innerHTML = oiViewMode === 'total'
         ? '<span><span class="oi-legend-dot pe"></span>Put OI</span>' +
           '<span><span class="oi-legend-dot ce"></span>Call OI</span>' +
-          '<span class="oi-legend-note">bar length = current OI level near ATM</span>'
+          '<span class="oi-legend-note">bar height = current OI level · hover a bar for exact figures</span>'
         : '<span><span class="oi-legend-dot pe"></span>Put OI change</span>' +
           '<span><span class="oi-legend-dot ce"></span>Call OI change</span>' +
-          '<span class="oi-legend-note">solid = increase · hatched = decrease · label = signed change since session start</span>';
+          '<span class="oi-legend-note">solid = increase · hatched = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>';
       renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
     });
   });
@@ -284,6 +284,26 @@
     return rows.reduce((a, b) => Math.abs(b.strike - currentPrice) < Math.abs(a.strike - currentPrice) ? b : a).strike;
   }
 
+  // Builds one bar's markup: a solid/hatched fill sized to the current value,
+  // topped with a hollow dashed "shadow" sized to the gap between the peak
+  // and the current value (empty when there's been no meaningful pullback).
+  function renderVBar(side, current, peak, maxAbs, valueFmt) {
+    const cur = current || 0;
+    const curAbs = Math.abs(cur);
+    const peakAbs = peak != null && (peak >= 0) === (cur >= 0) ? Math.max(Math.abs(peak), curAbs) : curAbs;
+    const curPct = maxAbs > 0 ? Math.max(cur !== 0 ? 2 : 0, curAbs / maxAbs * 100) : 0;
+    const shadowPct = maxAbs > 0 ? Math.max(0, (peakAbs - curAbs) / maxAbs * 100) : 0;
+    const fillCls = `oi-vfill ${side}` + (cur < 0 ? ' decrease' : '');
+    const title = shadowPct > 0
+      ? `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)} (peaked ${valueFmt(peak)})`
+      : `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}`;
+    return `
+      <div class="oi-vstack" title="${title}">
+        ${shadowPct > 0 ? `<div class="oi-vshadow ${side}" style="height:${shadowPct}%"></div>` : ''}
+        <div class="${fillCls}" style="height:${curPct}%"></div>
+      </div>`;
+  }
+
   function renderOiChart(rows, currentPrice) {
     const chartEl = document.getElementById('oiChart');
     if (!rows || rows.length === 0) {
@@ -305,60 +325,38 @@
           <span>PCR (in view): <b>${pcr}</b></span>
         </div>`;
 
-      chartEl.innerHTML = totalsHtml + rows.map(r => {
-        const putPct = Math.max(2, (r.pe_oi || 0) / maxAbs * 100);
-        const callPct = Math.max(2, (r.ce_oi || 0) / maxAbs * 100);
+      chartEl.innerHTML = totalsHtml + '<div class="oi-vchart">' + rows.map(r => {
         const isAtm = r.strike === atmStrike;
         return `
-          <div class="oi-row${isAtm ? ' atm' : ''}">
-            <div class="oi-side put">
-              <span class="oi-value">${fmtOiAbs(r.pe_oi)}</span>
-              <div class="oi-bar put" style="width:${putPct}%"></div>
+          <div class="oi-vcol${isAtm ? ' atm' : ''}">
+            <div class="oi-vcol-bars">
+              ${renderVBar('put', r.pe_oi, null, maxAbs, fmtOiAbs)}
+              ${renderVBar('call', r.ce_oi, null, maxAbs, fmtOiAbs)}
             </div>
-            <div class="oi-strike-label">${r.strike}</div>
-            <div class="oi-side call">
-              <div class="oi-bar call" style="width:${callPct}%"></div>
-              <span class="oi-value">${fmtOiAbs(r.ce_oi)}</span>
-            </div>
+            <div class="oi-vstrike-label">${r.strike}</div>
           </div>`;
-      }).join('');
+      }).join('') + '</div>';
       return;
     }
 
-    // 'change' mode: bar length = magnitude, hatched fill = decrease.
-    const maxAbs = Math.max(1, ...rows.map(r =>
-      Math.max(Math.abs(r.ce_oi_change || 0), Math.abs(r.pe_oi_change || 0))
-    ));
+    // 'change' mode: bar height = magnitude of change since session open,
+    // hatched fill = decrease, hollow shadow on top = pulled back from peak.
+    const maxAbs = Math.max(1, ...rows.map(r => Math.max(
+      Math.abs(r.ce_oi_peak_change != null ? r.ce_oi_peak_change : (r.ce_oi_change || 0)),
+      Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
+    )));
 
-    chartEl.innerHTML = rows.map(r => {
-      const putVal = r.pe_oi_change || 0;
-      const callVal = r.ce_oi_change || 0;
-      const putPct = Math.max(2, Math.abs(putVal) / maxAbs * 100);
-      const callPct = Math.max(2, Math.abs(callVal) / maxAbs * 100);
+    chartEl.innerHTML = '<div class="oi-vchart">' + rows.map(r => {
       const isAtm = r.strike === atmStrike;
-      const putCls = 'oi-bar put' + (putVal < 0 ? ' decrease' : '');
-      const callCls = 'oi-bar call' + (callVal < 0 ? ' decrease' : '');
-      const putPeakNote = fmtPeakNote(r.pe_oi_change, r.pe_oi_peak_change);
-      const callPeakNote = fmtPeakNote(r.ce_oi_change, r.ce_oi_peak_change);
       return `
-        <div class="oi-row${isAtm ? ' atm' : ''}">
-          <div class="oi-side put">
-            <div class="oi-value-col">
-              <span class="oi-value">${fmtOi(putVal)}</span>
-              ${putPeakNote}
-            </div>
-            <div class="${putCls}" style="width:${putPct}%"></div>
+        <div class="oi-vcol${isAtm ? ' atm' : ''}">
+          <div class="oi-vcol-bars">
+            ${renderVBar('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
+            ${renderVBar('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
           </div>
-          <div class="oi-strike-label">${r.strike}</div>
-          <div class="oi-side call">
-            <div class="${callCls}" style="width:${callPct}%"></div>
-            <div class="oi-value-col">
-              <span class="oi-value">${fmtOi(callVal)}</span>
-              ${callPeakNote}
-            </div>
-          </div>
+          <div class="oi-vstrike-label">${r.strike}</div>
         </div>`;
-    }).join('');
+    }).join('') + '</div>';
   }
 
   async function refresh() {
