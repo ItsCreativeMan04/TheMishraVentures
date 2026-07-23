@@ -81,12 +81,36 @@
 
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
-    .oi-vchart { display: flex; align-items: stretch; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; }
+    .oi-vchart-wrap { display: flex; gap: 8px; padding-top: 26px; }
+    /* Left value scale -- evenly spaced ticks from +max down to -max, so the
+       zero line's vertical centering is legible instead of implicit. */
+    .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: 230px; padding-bottom: 30px; flex: 0 0 auto; min-width: 34px; text-align: right; }
+    .oi-vaxis span { font-size: 0.6rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+
+    .oi-vchart { display: flex; align-items: stretch; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; flex: 1 1 auto; position: relative; }
     .oi-vcol { display: flex; flex-direction: column; align-items: center; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
     .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
     .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
+    /* ATM marker: a dashed vertical line through the column plus a floating
+       price pill above the chart, both driven off data-atm-price so no
+       per-column JS wiring is needed beyond setting that one attribute. */
+    .oi-vcol.atm::before {
+      content: ''; position: absolute; top: 0; bottom: 22px; left: 50%; width: 0;
+      border-left: 1px dashed var(--accent2); opacity: 0.55;
+    }
+    .oi-vcol.atm::after {
+      content: attr(data-atm-price); position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
+      background: var(--surface2); border: 1px solid var(--accent); color: var(--accent2);
+      font-size: 0.62rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px; white-space: nowrap;
+    }
     .oi-vcol-bars { display: flex; justify-content: center; gap: 5px; height: 100%; width: 100%; }
     .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+    .oi-vsummary { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
+    .oi-vsummary b { color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .oi-vsummary b.up { color: var(--green); }
+    .oi-vsummary b.down { color: var(--red); }
 
     /* Total-OI bars: single value, always >=0, so a plain bottom-anchored bar. */
     .oi-vstack { width: 14px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
@@ -245,6 +269,7 @@
   let oiChainsCache = {};
   let oiActiveExpiry = null;
   let oiCurrentPrice = null;
+  let oiOpenPrice = null;
   let oiViewMode = 'change'; // 'change' | 'total'
 
   document.getElementById('oiViewToggle').querySelectorAll('.oi-view-btn').forEach(btn => {
@@ -347,10 +372,11 @@
           <span>PCR (in view): <b>${pcr}</b></span>
         </div>`;
 
-      chartEl.innerHTML = totalsHtml + '<div class="oi-vchart">' + rows.map(r => {
+      const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
+      const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
         const isAtm = r.strike === atmStrike;
         return `
-          <div class="oi-vcol${isAtm ? ' atm' : ''}">
+          <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
             <div class="oi-vcol-bars">
               ${renderVBar('put', r.pe_oi, maxAbs, fmtOiAbs)}
               ${renderVBar('call', r.ce_oi, maxAbs, fmtOiAbs)}
@@ -358,6 +384,8 @@
             <div class="oi-vstrike-label">${r.strike}</div>
           </div>`;
       }).join('') + '</div>';
+
+      chartEl.innerHTML = totalsHtml + '<div class="oi-vchart-wrap">' + barsHtml + '</div>';
       return;
     }
 
@@ -369,10 +397,15 @@
       Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
     )));
 
-    chartEl.innerHTML = '<div class="oi-vchart">' + rows.map(r => {
+    const axisHtml = '<div class="oi-vaxis">' +
+      [maxAbs, maxAbs / 2, 0, -maxAbs / 2, -maxAbs].map(v => `<span>${v === 0 ? '0' : fmtOi(v)}</span>`).join('') +
+      '</div>';
+
+    const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
+    const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
       const isAtm = r.strike === atmStrike;
       return `
-        <div class="oi-vcol${isAtm ? ' atm' : ''}">
+        <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
           <div class="oi-vcol-bars">
             ${renderVSlot('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
             ${renderVSlot('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
@@ -380,6 +413,20 @@
           <div class="oi-vstrike-label">${r.strike}</div>
         </div>`;
     }).join('') + '</div>';
+
+    const totalCeChange = rows.reduce((s, r) => s + (r.ce_oi_change || 0), 0);
+    const totalPeChange = rows.reduce((s, r) => s + (r.pe_oi_change || 0), 0);
+    const priceHtml = (typeof oiOpenPrice === 'number' && typeof currentPrice === 'number')
+      ? `<span>Price: <b>${fmtLivePrice(oiOpenPrice)}</b> → <b>${fmtLivePrice(currentPrice)}</b></span>`
+      : '';
+    const summaryHtml = `
+      <div class="oi-vsummary">
+        <span>Call OI change (in view): <b class="${totalCeChange < 0 ? 'down' : 'up'}">${fmtOi(totalCeChange)}</b></span>
+        <span>Put OI change (in view): <b class="${totalPeChange < 0 ? 'down' : 'up'}">${fmtOi(totalPeChange)}</b></span>
+        ${priceHtml}
+      </div>`;
+
+    chartEl.innerHTML = '<div class="oi-vchart-wrap">' + axisHtml + barsHtml + '</div>' + summaryHtml;
   }
 
   async function refresh() {
@@ -409,6 +456,7 @@
       if (data.oi_chains && Object.keys(data.oi_chains).length > 0) {
         oiChainsCache = data.oi_chains;
         oiCurrentPrice = data.current_price;
+        oiOpenPrice = data.session_open_price;
         renderOiTabs(oiChainsCache);
         renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
       }
