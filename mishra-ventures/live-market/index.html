@@ -77,6 +77,12 @@
     .oi-view-btn { background: none; border: none; color: var(--muted); font-size: 0.74rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
     .oi-view-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); }
 
+    .oi-range-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .oi-range-label { font-size: 0.72rem; color: var(--muted); }
+    .oi-range-toggle { display: flex; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
+    .oi-range-btn { background: none; border: none; color: var(--muted); font-size: 0.72rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
+    .oi-range-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); }
+
     .oi-totals-row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
     .oi-totals-row b { color: #fff; font-family: 'JetBrains Mono', monospace; }
 
@@ -88,7 +94,7 @@
     .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: 230px; padding-bottom: 30px; flex: 0 0 auto; min-width: 34px; text-align: right; }
     .oi-vaxis span { font-size: 0.6rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1; }
 
-    .oi-vchart { display: flex; align-items: stretch; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; flex: 1 1 auto; position: relative; }
+    .oi-vchart { display: flex; align-items: stretch; justify-content: center; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; flex: 1 1 auto; position: relative; }
     .oi-vcol { display: flex; flex-direction: column; align-items: center; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
     .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
     .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
@@ -163,6 +169,9 @@
     .oi-legend-dot.pe { background: var(--green); }
     .oi-legend-dot.ce { background: var(--red); }
     .oi-legend-note { font-size: 0.7rem; opacity: 0.75; }
+    .oi-legend-line { display: inline-block; width: 14px; border-top: 2px dashed currentColor; margin-right: 5px; vertical-align: middle; }
+    .oi-legend-line.atm { color: var(--accent2); }
+    .oi-legend-line.maxpain { color: var(--yellow); }
   </style>
 </head>
 <body>
@@ -240,12 +249,22 @@
       </div>
       <div class="oi-tooltip" id="oiTooltip"></div>
     </div>
+    <div class="oi-range-row">
+      <span class="oi-range-label">Strikes from ATM</span>
+      <div class="oi-range-toggle" id="oiRangeToggle">
+        <button class="oi-range-btn" data-range="3">±3</button>
+        <button class="oi-range-btn" data-range="5">±5</button>
+        <button class="oi-range-btn active" data-range="10">±10</button>
+      </div>
+    </div>
     <div id="oiChart">
       <div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>
     </div>
     <div class="oi-legend" id="oiLegend">
       <span><span class="oi-legend-dot pe"></span>Put OI change</span>
       <span><span class="oi-legend-dot ce"></span>Call OI change</span>
+      <span><span class="oi-legend-line atm"></span>ATM</span>
+      <span><span class="oi-legend-line maxpain"></span>Max Pain</span>
       <span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>
     </div>
   </div>
@@ -298,6 +317,19 @@
   let oiCurrentPrice = null;
   let oiOpenPrice = null;
   let oiSummary = null;
+  // How many strikes each side of ATM to display -- a view-only filter on
+  // top of whatever the agent already fetched (fixed at +/-10 server-side),
+  // not a request for more data. NIFTY's fixed strike spacing.
+  let oiStrikeRange = 10;
+  const OI_STRIKE_STEP = 50;
+
+  document.getElementById('oiRangeToggle').querySelectorAll('.oi-range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      oiStrikeRange = parseInt(btn.dataset.range, 10);
+      document.querySelectorAll('.oi-range-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
+    });
+  });
   let oiViewMode = 'change'; // 'change' | 'total'
 
   document.getElementById('oiViewToggle').querySelectorAll('.oi-view-btn').forEach(btn => {
@@ -306,12 +338,16 @@
       document.querySelectorAll('.oi-view-btn').forEach(b => b.classList.toggle('active', b === btn));
       document.getElementById('oiSectionLabel').textContent =
         oiViewMode === 'total' ? 'Open Interest by Strike' : 'OI Change by Strike';
+      const legendMarkers = '<span><span class="oi-legend-line atm"></span>ATM</span>' +
+        '<span><span class="oi-legend-line maxpain"></span>Max Pain</span>';
       document.getElementById('oiLegend').innerHTML = oiViewMode === 'total'
         ? '<span><span class="oi-legend-dot pe"></span>Put OI</span>' +
           '<span><span class="oi-legend-dot ce"></span>Call OI</span>' +
+          legendMarkers +
           '<span class="oi-legend-note">bar height = current OI level · hover a bar for exact figures</span>'
         : '<span><span class="oi-legend-dot pe"></span>Put OI change</span>' +
           '<span><span class="oi-legend-dot ce"></span>Call OI change</span>' +
+          legendMarkers +
           '<span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>';
       renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
     });
@@ -411,11 +447,17 @@
     }
     const atmStrike = findNearestStrike(rows, currentPrice);
     const maxPainStrike = oiSummary && oiSummary.max_pain != null ? findNearestStrike(rows, oiSummary.max_pain) : null;
+    // ATM/Max Pain are found against the full fetched set (so they stay
+    // correct references even if narrowed out of view), but the bars
+    // themselves render only the strikes within the selected range.
+    const displayRows = oiStrikeRange >= 10 ? rows : rows.filter(r =>
+      atmStrike == null || Math.abs(r.strike - atmStrike) <= oiStrikeRange * OI_STRIKE_STEP
+    );
 
     if (oiViewMode === 'total') {
-      const maxAbs = Math.max(1, ...rows.map(r => Math.max(r.ce_oi || 0, r.pe_oi || 0)));
-      const totalCe = rows.reduce((s, r) => s + (r.ce_oi || 0), 0);
-      const totalPe = rows.reduce((s, r) => s + (r.pe_oi || 0), 0);
+      const maxAbs = Math.max(1, ...displayRows.map(r => Math.max(r.ce_oi || 0, r.pe_oi || 0)));
+      const totalCe = displayRows.reduce((s, r) => s + (r.ce_oi || 0), 0);
+      const totalPe = displayRows.reduce((s, r) => s + (r.pe_oi || 0), 0);
       const pcr = totalCe ? (totalPe / totalCe).toFixed(2) : '–';
 
       const totalsHtml = `
@@ -426,7 +468,7 @@
         </div>`;
 
       const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
-      const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
+      const barsHtml = '<div class="oi-vchart">' + displayRows.map(r => {
         const isAtm = r.strike === atmStrike;
         const isMaxPain = r.strike === maxPainStrike;
         return `
@@ -447,7 +489,7 @@
     // 'change' mode: bars diverge from a shared zero line -- up for a
     // buildup, down for an unwind -- with a hollow shadow extending further
     // from zero when a strike has pulled back from its session peak.
-    const maxAbs = Math.max(1, ...rows.map(r => Math.max(
+    const maxAbs = Math.max(1, ...displayRows.map(r => Math.max(
       Math.abs(r.ce_oi_peak_change != null ? r.ce_oi_peak_change : (r.ce_oi_change || 0)),
       Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
     )));
@@ -457,7 +499,7 @@
       '</div>';
 
     const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
-    const barsHtml = '<div class="oi-vchart">' + rows.map(r => {
+    const barsHtml = '<div class="oi-vchart">' + displayRows.map(r => {
       const isAtm = r.strike === atmStrike;
       const isMaxPain = r.strike === maxPainStrike;
       return `
@@ -471,8 +513,8 @@
         </div>`;
     }).join('') + '</div>';
 
-    const totalCeChange = rows.reduce((s, r) => s + (r.ce_oi_change || 0), 0);
-    const totalPeChange = rows.reduce((s, r) => s + (r.pe_oi_change || 0), 0);
+    const totalCeChange = displayRows.reduce((s, r) => s + (r.ce_oi_change || 0), 0);
+    const totalPeChange = displayRows.reduce((s, r) => s + (r.pe_oi_change || 0), 0);
     const priceHtml = (typeof oiOpenPrice === 'number' && typeof currentPrice === 'number')
       ? `<span>Price: <b>${fmtLivePrice(oiOpenPrice)}</b> → <b>${fmtLivePrice(currentPrice)}</b></span>`
       : '';
