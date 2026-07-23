@@ -2,8 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Normally never reached -- .htaccess redirects the bare domain at the
+       server level before this file would even be served. This only shows
+       up as a fallback if that redirect isn't honored for some reason, so
+       it's styled to match the site instead of a plain white flash. -->
   <meta http-equiv="refresh" content="0; url=mishra-ventures/" />
   <title>The Mishra Ventures</title>
+  <style>
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #0f172a; color: rgba(255,255,255,0.7);
+      font-family: system-ui, -apple-system, sans-serif; font-size: 0.95rem;
+    }
+    a { color: #b3b2ff; }
+  </style>
 </head>
 <body>
   <p>Redirecting… <a href="mishra-ventures/">Click here if not redirected.</a></p>

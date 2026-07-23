@@ -1,0 +1,6 @@
+# Redirect the bare domain straight to the ventures hub at the server level
+# (HTTP redirect, before any page renders) instead of the old client-side
+# meta-refresh in index.html, which showed a visible white "Redirecting…"
+# flash. ^/$ matches only the exact root path -- everything else
+# (mishra-ventures/live-market/, etc.) is left untouched.
+RedirectMatch 301 ^/$ /mishra-ventures/
