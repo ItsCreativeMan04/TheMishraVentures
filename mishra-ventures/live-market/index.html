@@ -135,6 +135,18 @@
     .oi-vslot-shadow.put { color: var(--green); }
     .oi-vslot-shadow.call { color: var(--red); }
 
+    /* Custom hover tooltip: native `title` attributes have a slow, browser
+       controlled delay and no styling, so exact figures on a busy dark chart
+       were easy to miss. This shows immediately, follows the cursor, and
+       matches the rest of the UI. */
+    .oi-tooltip {
+      position: fixed; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.08s;
+      background: var(--surface2); border: 1px solid var(--accent); color: var(--text);
+      font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; padding: 5px 9px; border-radius: 6px;
+      white-space: nowrap; transform: translate(-50%, -130%);
+    }
+    .oi-tooltip.show { opacity: 1; }
+
     .oi-legend { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 1.1rem; font-size: 0.74rem; color: var(--muted); }
     .oi-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
     .oi-legend-dot.pe { background: var(--green); }
@@ -212,6 +224,7 @@
         </div>
         <div class="oi-tabs" id="oiTabs"></div>
       </div>
+      <div class="oi-tooltip" id="oiTooltip"></div>
     </div>
     <div id="oiChart">
       <div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>
@@ -289,6 +302,23 @@
     });
   });
 
+  // Delegated on #oiChart (which persists across renders even though its
+  // innerHTML is fully replaced each refresh) so this only needs wiring once,
+  // not re-attached after every renderOiChart() call.
+  (function initOiTooltip() {
+    const chartEl = document.getElementById('oiChart');
+    const tipEl = document.getElementById('oiTooltip');
+    chartEl.addEventListener('mousemove', (e) => {
+      const bar = e.target.closest('[data-tip]');
+      if (!bar) { tipEl.classList.remove('show'); return; }
+      tipEl.textContent = bar.dataset.tip;
+      tipEl.style.left = e.clientX + 'px';
+      tipEl.style.top = e.clientY + 'px';
+      tipEl.classList.add('show');
+    });
+    chartEl.addEventListener('mouseleave', () => tipEl.classList.remove('show'));
+  })();
+
   function renderOiTabs(chains) {
     const tabsEl = document.getElementById('oiTabs');
     const expiries = Object.keys(chains);
@@ -317,7 +347,7 @@
     const cur = current || 0;
     const curPct = maxAbs > 0 ? Math.max(cur !== 0 ? 2 : 0, cur / maxAbs * 100) : 0;
     return `
-      <div class="oi-vstack" title="${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}">
+      <div class="oi-vstack" data-tip="${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}">
         <div class="oi-vfill ${side}" style="height:${curPct}%"></div>
       </div>`;
   }
@@ -345,7 +375,7 @@
       ? `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)} (peaked ${valueFmt(peak)})`
       : `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}`;
     return `
-      <div class="oi-vslot" title="${title}">
+      <div class="oi-vslot" data-tip="${title}">
         ${shadowHtml}
         <div class="oi-vslot-fill ${side}" style="${fillStyle}"></div>
       </div>`;
