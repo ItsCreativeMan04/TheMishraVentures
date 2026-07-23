@@ -3,13 +3,15 @@
  * ticker and the live-market dashboard page, so the fetch/staleness/format
  * logic lives in exactly one place instead of being copy-pasted per page.
  *
- * jsDelivr, not raw.githubusercontent.com: GitHub's raw content CDN caches
- * ~5 minutes and largely ignores cache-busting query strings. jsDelivr
- * caches too, but the publisher (Trading Research Platform's
- * StatusPublisher) explicitly purges it after every push, so this stays
- * fresh within seconds instead of stalling on a fixed TTL.
+ * Cloudflare Worker + KV, not jsDelivr: jsDelivr's purge API silently
+ * rate-limits at this feed's ~60-70s update frequency, leaving the site
+ * stuck on stale data for 20+ minutes at a time once throttled --
+ * fundamentally the wrong tool for near-real-time updates. The Worker
+ * (see Trading Research Platform's cloudflare/live_status_worker.js)
+ * serves straight from KV with Cache-Control: no-store, so there's no
+ * CDN caching layer to fight with at all.
  */
-const LIVE_STATUS_URL = 'https://cdn.jsdelivr.net/gh/ItsCreativeMan04/live-market-status@main/status.json';
+const LIVE_STATUS_URL = 'https://live-market-status.itscreativeman04.workers.dev';
 const LIVE_STATUS_STALE_AFTER_MIN = 5;
 
 /**
@@ -19,7 +21,7 @@ const LIVE_STATUS_STALE_AFTER_MIN = 5;
  * offline/no-data state.
  */
 async function fetchLiveStatus() {
-  const res = await fetch(`${LIVE_STATUS_URL}?t=${Date.now()}`, { cache: 'no-store' });
+  const res = await fetch(LIVE_STATUS_URL, { cache: 'no-store' });
   if (!res.ok) throw new Error('No status file yet');
   const data = await res.json();
 
