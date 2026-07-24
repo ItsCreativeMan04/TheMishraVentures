@@ -173,12 +173,31 @@
     .oi-legend-line.atm { color: var(--accent2); }
     .oi-legend-line.maxpain { color: var(--yellow); }
 
-    /* Morning Plan / Decision Support / Session Timeline -- reuse the
-       narrative-card shell for visual consistency, own inner elements. */
     .status-badge { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-badge.ok { background: rgba(74,222,128,0.15); color: var(--green); }
     .status-badge.warn { background: rgba(251,191,36,0.15); color: var(--yellow); }
     .status-badge.bad { background: rgba(248,113,113,0.15); color: var(--red); }
+
+    /* Morning Plan + Decision Support merged into one two-column card (they're
+       "where things stand" and "what to do about it" -- a natural pair, not
+       two separate boxes) with a colored left accent for at-a-glance health,
+       so it reads as a single designed panel rather than a repeat of the
+       plain narrative-card shell. */
+    .plan-decision-card {
+      background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--border);
+      border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem;
+      display: grid; grid-template-columns: 1fr 1px 1fr; gap: 1.6rem; align-items: start;
+      transition: border-left-color 0.2s;
+    }
+    .plan-decision-card.status-ok { border-left-color: var(--green); }
+    .plan-decision-card.status-warn { border-left-color: var(--yellow); }
+    .plan-decision-card.status-bad { border-left-color: var(--red); }
+    .plan-decision-divider { background: var(--border); align-self: stretch; }
+    @media (max-width: 720px) {
+      .plan-decision-card { grid-template-columns: 1fr; }
+      .plan-decision-divider { display: none; }
+      .plan-decision-col:first-child { padding-bottom: 1.4rem; border-bottom: 1px solid var(--border); }
+    }
 
     .plan-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.9rem; flex-wrap: wrap; }
     .plan-conditions-text { font-size: 0.85rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
@@ -190,15 +209,29 @@
     .decision-detail { font-size: 0.88rem; color: var(--text); margin-bottom: 0.4rem; line-height: 1.5; }
     .decision-detail.muted { color: var(--muted); font-size: 0.82rem; margin-bottom: 0; }
 
-    .timeline-item { display: flex; align-items: baseline; gap: 12px; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
-    .timeline-item:last-child { border-bottom: none; }
-    .timeline-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; min-width: 48px; flex-shrink: 0; }
-    .timeline-sev { font-size: 0.64rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; flex-shrink: 0; }
+    /* Session Timeline: an actual vertical timeline (dots + connecting line)
+       instead of a bordered box of rows -- the one section that's genuinely
+       a sequence, not a status readout, so it should look like one. */
+    .timeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
+    .timeline-track { position: relative; padding-left: 24px; }
+    .timeline-track::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; padding-bottom: 1.2rem; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -24px; top: 3px; width: 10px; height: 10px;
+      border-radius: 50%; background: var(--surface); border: 2px solid var(--accent2);
+    }
+    .timeline-item.watch::before { border-color: var(--yellow); }
+    .timeline-item.important::before { border-color: #a78bfa; }
+    .timeline-item.critical::before { border-color: var(--red); }
+    .timeline-head { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
+    .timeline-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+    .timeline-sev { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 100px; }
     .timeline-sev.info { background: rgba(59,130,246,0.15); color: var(--accent2); }
     .timeline-sev.watch { background: rgba(251,191,36,0.15); color: var(--yellow); }
     .timeline-sev.important { background: rgba(167,139,250,0.15); color: #a78bfa; }
     .timeline-sev.critical { background: rgba(248,113,113,0.15); color: var(--red); }
-    .timeline-message { color: var(--text); flex: 1; }
+    .timeline-message { color: var(--text); font-size: 0.85rem; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -273,28 +306,30 @@
     <div class="narrative-text" id="narrativeText">No commentary yet — check back once the session starts.</div>
   </div>
 
-  <div class="narrative-card">
-    <div class="narrative-label">Morning Plan</div>
-    <div class="plan-row">
-      <span class="status-badge" id="planStatusBadge">–</span>
-      <span class="plan-conditions-text" id="planConditions"></span>
+  <div class="plan-decision-card" id="planDecisionCard">
+    <div class="plan-decision-col">
+      <div class="narrative-label">Morning Plan</div>
+      <div class="plan-row">
+        <span class="status-badge" id="planStatusBadge">–</span>
+        <span class="plan-conditions-text" id="planConditions"></span>
+      </div>
+      <ul class="reason-list" id="planReasons"></ul>
     </div>
-    <ul class="reason-list" id="planReasons"></ul>
+    <div class="plan-decision-divider"></div>
+    <div class="plan-decision-col">
+      <div class="narrative-label">Decision Support</div>
+      <div class="plan-row">
+        <span class="decision-focus" id="decisionFocus">–</span>
+        <span class="status-badge" id="decisionUrgencyBadge"></span>
+      </div>
+      <div class="decision-detail" id="decisionReason"></div>
+      <div class="decision-detail muted" id="decisionNextEvent"></div>
+    </div>
   </div>
 
-  <div class="narrative-card">
-    <div class="narrative-label">Decision Support</div>
-    <div class="plan-row">
-      <span class="decision-focus" id="decisionFocus">–</span>
-      <span class="status-badge" id="decisionUrgencyBadge"></span>
-    </div>
-    <div class="decision-detail" id="decisionReason"></div>
-    <div class="decision-detail muted" id="decisionNextEvent"></div>
-  </div>
-
-  <div class="narrative-card">
+  <div class="timeline-card">
     <div class="narrative-label">Session Timeline</div>
-    <div id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
+    <div class="timeline-track" id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
   </div>
 
   <div class="oi-card">
@@ -618,12 +653,19 @@
       document.getElementById('statRegime').textContent = data.morning_regime || '–';
       document.getElementById('narrativeText').textContent = data.narrative || 'No commentary yet.';
 
-      // Morning Plan
+      // Morning Plan + Decision Support (one merged card, colored by combined health)
+      const planStatusCls = data.thesis_status === 'VALID' ? 'ok' : data.thesis_status === 'WEAKENING' ? 'warn' : 'bad';
+      const urgency = data.decision_urgency || 'LOW';
+      const urgencyCls = urgency === 'HIGH' ? 'bad' : urgency === 'MEDIUM' ? 'warn' : 'ok';
+      // Card accent reflects whichever side is worse -- a valid thesis with a
+      // high-urgency event still deserves a red edge, not a green one.
+      const rank = { ok: 0, warn: 1, bad: 2 };
+      const cardCls = rank[urgencyCls] > rank[planStatusCls] ? urgencyCls : planStatusCls;
+      document.getElementById('planDecisionCard').className = 'plan-decision-card status-' + cardCls;
+
       const planBadge = document.getElementById('planStatusBadge');
       planBadge.textContent = data.thesis_status || '–';
-      planBadge.className = 'status-badge ' + (
-        data.thesis_status === 'VALID' ? 'ok' : data.thesis_status === 'WEAKENING' ? 'warn' : 'bad'
-      );
+      planBadge.className = 'status-badge ' + planStatusCls;
       document.getElementById('planConditions').textContent = data.thesis_conditions_met
         ? `Conditions met: ${data.thesis_conditions_met}` : '';
       const reasons = data.thesis_reasons || [];
@@ -631,28 +673,32 @@
         ? reasons.map(r => `<li>${r}</li>`).join('')
         : '<li>Evaluating…</li>';
 
-      // Decision Support
       document.getElementById('decisionFocus').textContent = data.decision_focus || 'WAIT';
       const urgBadge = document.getElementById('decisionUrgencyBadge');
-      const urgency = data.decision_urgency || 'LOW';
       urgBadge.textContent = urgency;
-      urgBadge.className = 'status-badge ' + (urgency === 'HIGH' ? 'bad' : urgency === 'MEDIUM' ? 'warn' : 'ok');
+      urgBadge.className = 'status-badge ' + urgencyCls;
       document.getElementById('decisionReason').textContent = data.decision_reason || 'No active setup yet.';
       const nextEventParts = [];
       if (data.decision_next_event) nextEventParts.push(`Next: ${data.decision_next_event}`);
       if (data.decision_distance != null) nextEventParts.push(`${data.decision_distance.toFixed(1)} pts away`);
       document.getElementById('decisionNextEvent').textContent = nextEventParts.join(' · ');
 
-      // Session Timeline (last 5 events, newest first)
+      // Session Timeline (last 5 events, newest first) -- rendered as an
+      // actual vertical timeline: one dot+line item per event.
       const timelineEl = document.getElementById('timelineList');
       const events = data.timeline || [];
       timelineEl.innerHTML = events.length
-        ? events.slice().reverse().map(ev => `
-            <div class="timeline-item">
-              <span class="timeline-time">${ev.time || ''}</span>
-              <span class="timeline-sev ${(ev.severity || 'info').toLowerCase()}">${ev.severity || 'INFO'}</span>
-              <span class="timeline-message">${ev.message || ''}</span>
-            </div>`).join('')
+        ? events.slice().reverse().map(ev => {
+            const sev = (ev.severity || 'INFO').toUpperCase();
+            return `
+            <div class="timeline-item ${sev.toLowerCase()}">
+              <div class="timeline-head">
+                <span class="timeline-time">${ev.time || ''}</span>
+                <span class="timeline-sev ${sev.toLowerCase()}">${sev}</span>
+              </div>
+              <div class="timeline-message">${ev.message || ''}</div>
+            </div>`;
+          }).join('')
         : '<div class="oi-empty">No events logged yet this session.</div>';
 
       if (data.oi_chains && Object.keys(data.oi_chains).length > 0) {
