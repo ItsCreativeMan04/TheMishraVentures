@@ -299,6 +299,14 @@
       <div class="stat-label">Morning Regime</div>
       <div class="stat-value" id="statRegime">–</div>
     </div>
+    <div class="stat-tile">
+      <div class="stat-label">CPR</div>
+      <div class="stat-value" id="statCpr">–</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Trend Confluence</div>
+      <div class="stat-value" id="statConfluence">–</div>
+    </div>
   </div>
 
   <div class="narrative-card">
@@ -645,12 +653,34 @@
       biasEl.textContent = data.bias || '–';
       biasEl.className = 'stat-value ' + liveBiasClass(data.bias);
       document.getElementById('statCondition').textContent = data.condition || '–';
-      document.getElementById('statSupport').textContent = data.nearest_support != null ? fmtLivePrice(data.nearest_support) : '–';
-      document.getElementById('statResistance').textContent = data.nearest_resistance != null ? fmtLivePrice(data.nearest_resistance) : '–';
+      // "Open air" (price beyond every mapped level) is a real, honest state
+      // -- not the same as "no data yet" -- so it gets its own label rather
+      // than falling into the same '–' placeholder.
+      document.getElementById('statSupport').textContent = data.nearest_support != null
+        ? fmtLivePrice(data.nearest_support) : data.support_open_air ? 'OPEN AIR' : '–';
+      document.getElementById('statResistance').textContent = data.nearest_resistance != null
+        ? fmtLivePrice(data.nearest_resistance) : data.resistance_open_air ? 'OPEN AIR' : '–';
       document.getElementById('statThesis').textContent = data.thesis_status || '–';
       document.getElementById('statVwap').textContent = data.vwap != null ? fmtLivePrice(data.vwap) : '–';
       document.getElementById('statAtr').textContent = data.atr_utilization != null ? `${data.atr_utilization.toFixed(1)}%` : '–';
       document.getElementById('statRegime').textContent = data.morning_regime || '–';
+
+      const cprEl = document.getElementById('statCpr');
+      if (data.cpr && data.price_vs_cpr) {
+        cprEl.textContent = `${data.price_vs_cpr} · ${data.cpr.cpr_low.toFixed(0)}-${data.cpr.cpr_high.toFixed(0)}`;
+        cprEl.className = 'stat-value ' + (
+          data.price_vs_cpr === 'above' ? 'bullish' : data.price_vs_cpr === 'below' ? 'bearish' : 'neutral'
+        );
+      } else {
+        cprEl.textContent = '–';
+        cprEl.className = 'stat-value';
+      }
+
+      const confEl = document.getElementById('statConfluence');
+      confEl.textContent = data.confluence_summary || '–';
+      confEl.className = 'stat-value ' + (
+        data.confluence_side === 'Bullish' ? 'bullish' : data.confluence_side === 'Bearish' ? 'bearish' : 'neutral'
+      );
       document.getElementById('narrativeText').textContent = data.narrative || 'No commentary yet.';
 
       // Morning Plan + Decision Support (one merged card, colored by combined health)
