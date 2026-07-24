@@ -49,6 +49,7 @@
       padding: 2rem; text-align: center; margin-bottom: 1.2rem;
     }
     .price-symbol { font-size: 0.85rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .price-contract { font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; opacity: 0.7; margin-top: -0.3rem; margin-bottom: 0.5rem; }
     .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #fff; }
     .price-updated { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
 
@@ -212,6 +213,22 @@
     /* Session Timeline: an actual vertical timeline (dots + connecting line)
        instead of a bordered box of rows -- the one section that's genuinely
        a sequence, not a status readout, so it should look like one. */
+    /* Active Trap Signal: the trap detector's currently-armed state (not
+       just the one-shot ARMED/TRIGGERED timeline events) so a live setup
+       stays visible instead of scrolling out of the timeline. */
+    .trap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
+    .trap-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; }
+    .trap-item + .trap-item { margin-top: 0.7rem; }
+    .trap-item.long { background: rgba(74,222,128,0.06); border-left-color: var(--green); }
+    .trap-item.short { background: rgba(248,113,113,0.06); border-left-color: var(--red); }
+    .trap-head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
+    .trap-dir-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.5px; }
+    .trap-dir-badge.long { background: rgba(74,222,128,0.2); color: var(--green); }
+    .trap-dir-badge.short { background: rgba(248,113,113,0.2); color: var(--red); }
+    .trap-zone { font-size: 0.82rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .trap-detail { font-size: 0.85rem; color: var(--text); }
+    .trap-detail b { font-family: 'JetBrains Mono', monospace; color: #fff; }
+
     .timeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
     .timeline-track { position: relative; padding-left: 24px; }
     .timeline-track::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
@@ -258,6 +275,7 @@
 
   <div class="price-card">
     <div class="price-symbol" id="symbol">NIFTY</div>
+    <div class="price-contract" id="priceContract"></div>
     <div class="price-value mono" id="priceValue">–</div>
     <div class="price-updated" id="priceUpdated">Waiting for data…</div>
   </div>
@@ -335,6 +353,11 @@
     </div>
   </div>
 
+  <div class="trap-card" id="trapCard" style="display: none;">
+    <div class="narrative-label">Active Trap Signal</div>
+    <div id="trapList"></div>
+  </div>
+
   <div class="timeline-card">
     <div class="narrative-label">Session Timeline</div>
     <div class="timeline-track" id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
@@ -401,6 +424,21 @@
     if (v == null) return '–';
     const sign = v > 0 ? '+' : v < 0 ? '−' : '';
     return sign + fmtOiAbs(v);
+  }
+
+  const MONTHS = { JAN: 'Jan', FEB: 'Feb', MAR: 'Mar', APR: 'Apr', MAY: 'May', JUN: 'Jun',
+                   JUL: 'Jul', AUG: 'Aug', SEP: 'Sep', OCT: 'Oct', NOV: 'Nov', DEC: 'Dec' };
+  // The live agent now trades the near-month future by default (e.g.
+  // "NIFTY28JUL26FUT") rather than the spot index, so its price differs from
+  // spot by the basis. Split that into a clean "NIFTY FUT" headline plus the
+  // exact contract/expiry as a small subtext, instead of showing the raw
+  // code as the primary label.
+  function fmtSymbolLabel(symbol) {
+    const m = /^([A-Z]+)(\d{2})([A-Z]{3})(\d{2})FUT$/.exec(symbol || '');
+    if (!m) return { main: symbol || 'NIFTY', sub: '' };
+    const [, index, dd, mon, yy] = m;
+    const monName = MONTHS[mon] || mon;
+    return { main: `${index} FUT`, sub: `${symbol} · expires ${dd} ${monName} 20${yy}` };
   }
 
   // A strike can still be net-positive/negative overall while having pulled
@@ -644,7 +682,9 @@
 
       const ago = fmtLiveAgo(data.updated_at);
 
-      document.getElementById('symbol').textContent = data.symbol || 'NIFTY';
+      const symLabel = fmtSymbolLabel(data.symbol);
+      document.getElementById('symbol').textContent = symLabel.main;
+      document.getElementById('priceContract').textContent = symLabel.sub;
       document.getElementById('priceValue').textContent = fmtLivePrice(data.current_price);
       document.getElementById('priceUpdated').textContent = ago ? `Last updated ${ago}` : '';
 
@@ -712,6 +752,25 @@
       if (data.decision_next_event) nextEventParts.push(`Next: ${data.decision_next_event}`);
       if (data.decision_distance != null) nextEventParts.push(`${data.decision_distance.toFixed(1)} pts away`);
       document.getElementById('decisionNextEvent').textContent = nextEventParts.join(' · ');
+
+      // Active Trap Signal(s) -- the detector's live armed state, not just
+      // the one-shot ARMED/TRIGGERED timeline events, so a setup stays
+      // visible for as long as it's actually live.
+      const trapCard = document.getElementById('trapCard');
+      const traps = data.active_traps || [];
+      if (traps.length) {
+        trapCard.style.display = '';
+        document.getElementById('trapList').innerHTML = traps.map(t => `
+          <div class="trap-item ${t.dir}">
+            <div class="trap-head">
+              <span class="trap-dir-badge ${t.dir}">${t.dir.toUpperCase()}</span>
+              <span class="trap-zone">Zone ${t.zone} (${t.rating || 'Unrated'})</span>
+            </div>
+            <div class="trap-detail">Entry ${t.dir === 'long' ? 'above' : 'below'} <b>${fmtLivePrice(t.trigger)}</b> · Stop <b>${fmtLivePrice(t.stop)}</b> · ${t.vol_x}x avg vol</div>
+          </div>`).join('');
+      } else {
+        trapCard.style.display = 'none';
+      }
 
       // Session Timeline (last 5 events, newest first) -- rendered as an
       // actual vertical timeline: one dot+line item per event.
