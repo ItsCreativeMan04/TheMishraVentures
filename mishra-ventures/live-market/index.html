@@ -89,21 +89,60 @@
 
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
-    .oi-vchart-wrap { display: flex; gap: 8px; padding-top: 48px; }
+    /* Sizing knobs live on the wrap so the axis (a sibling of the chart)
+       inherits the same label-height and can stay pixel-aligned with it. */
+    .oi-vchart-wrap {
+      /* --oi-bar-gap (inside a strike) must stay clearly SMALLER than the
+         chart's column gap (between strikes), or the put/call pair stops
+         reading as a pair -- Gestalt proximity is doing the grouping here,
+         there's no other separator. */
+      --oi-col-min: 34px; --oi-col-max: 72px; --oi-bar-w: 14px; --oi-bar-gap: 2px;
+      --oi-chart-h: 230px; --oi-label-h: 22px;
+      display: flex; gap: 8px; padding-top: 48px; position: relative;
+    }
+    /* Shown only when the strike row genuinely overflows (JS adds the class
+       after measuring), so the swipe affordance never lies about scrollability. */
+    .oi-scroll-hint { display: none; }
+    .oi-vchart-wrap.is-scrollable .oi-scroll-hint {
+      display: block; position: absolute; right: 2px; top: 6px;
+      font-size: 0.6rem; color: var(--muted); opacity: 0.7; letter-spacing: 0.5px;
+    }
     /* Left value scale -- evenly spaced ticks from +max down to -max, so the
        zero line's vertical centering is legible instead of implicit. */
-    .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: 230px; padding-bottom: 30px; flex: 0 0 auto; min-width: 34px; text-align: right; }
+    .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: var(--oi-chart-h); padding-bottom: calc(var(--oi-label-h) + 8px); flex: 0 0 auto; min-width: 34px; text-align: right; }
     .oi-vaxis span { font-size: 0.6rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1; }
 
-    .oi-vchart { display: flex; align-items: stretch; justify-content: center; gap: 18px; height: 230px; padding: 0 6px 30px; overflow-x: auto; flex: 1 1 auto; position: relative; }
-    .oi-vcol { display: flex; flex-direction: column; align-items: center; height: 100%; flex: 0 0 auto; min-width: 38px; position: relative; }
+    .oi-vchart {
+      /* Deliberately tight: the columns are the flexible element, so the gap
+         only needs a floor. A generous gap here was what forced 21 strikes
+         past the card width and made it scroll on a desktop that had room. */
+      display: flex; align-items: stretch; gap: clamp(2px, 0.5vw, 12px);
+      height: var(--oi-chart-h); padding: 0 6px calc(var(--oi-label-h) + 8px);
+      flex: 1 1 auto; min-width: 0; position: relative;
+      overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      /* `center` alone makes the LEFT overflow unreachable in Chrome/Safari --
+         the overflow is pushed into the start margin, which has no scroll
+         range. `safe center` centers only while everything fits and falls back
+         to start alignment the moment it overflows, so both ends stay
+         scrollable. flex-start is the fallback for engines without `safe`. */
+      justify-content: flex-start;
+      justify-content: safe center;
+    }
+    /* Columns FLEX instead of being fixed at 38px: 21 strikes now share the
+       available width and fit without scrolling at all on a desktop card. */
+    .oi-vcol {
+      display: flex; flex-direction: column; align-items: center; height: 100%;
+      flex: 1 1 auto; min-width: var(--oi-col-min); max-width: var(--oi-col-max);
+      position: relative;
+    }
     .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
     .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
     /* ATM marker: a dashed vertical line through the column plus a floating
        price pill above the chart, both driven off data-atm-price so no
        per-column JS wiring is needed beyond setting that one attribute. */
     .oi-vcol.atm::before {
-      content: ''; position: absolute; top: 0; bottom: 22px; left: 50%; width: 0;
+      content: ''; position: absolute; top: 0; bottom: var(--oi-label-h); left: 50%; width: 0;
       border-left: 1px dashed var(--accent2); opacity: 0.55;
     }
     .oi-vcol.atm::after {
@@ -115,14 +154,14 @@
     /* Max Pain marker: real elements (not a pseudo-element like the ATM
        marker above) so the two can coexist on the same column without one
        overwriting the other's ::before/::after. */
-    .oi-maxpain-line { position: absolute; top: 0; bottom: 22px; left: 50%; width: 0; border-left: 1px dashed var(--yellow); opacity: 0.55; }
+    .oi-maxpain-line { position: absolute; top: 0; bottom: var(--oi-label-h); left: 50%; width: 0; border-left: 1px dashed var(--yellow); opacity: 0.55; }
     .oi-maxpain-pill {
       position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
       background: var(--surface2); border: 1px solid var(--yellow); color: var(--yellow);
       font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
       padding: 2px 8px; border-radius: 6px; white-space: nowrap;
     }
-    .oi-vcol-bars { display: flex; justify-content: center; gap: 5px; height: 100%; width: 100%; }
+    .oi-vcol-bars { display: flex; justify-content: center; gap: var(--oi-bar-gap); height: 100%; width: 100%; }
     .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
     .oi-vsummary { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
@@ -131,7 +170,7 @@
     .oi-vsummary b.down { color: var(--red); }
 
     /* Total-OI bars: single value, always >=0, so a plain bottom-anchored bar. */
-    .oi-vstack { width: 14px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+    .oi-vstack { width: var(--oi-bar-w); height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
     .oi-vfill { width: 100%; min-height: 2px; border-radius: 2px 2px 0 0; }
     .oi-vfill.put { background: var(--green); }
     .oi-vfill.call { background: var(--red); }
@@ -139,7 +178,7 @@
     /* Change bars: diverge from a shared zero line at mid-height -- above
        for a buildup, below for an unwind -- so direction reads from bar
        position alone, no hatching needed. */
-    .oi-vslot { width: 14px; height: 100%; position: relative; }
+    .oi-vslot { width: var(--oi-bar-w); height: 100%; position: relative; }
     .oi-vslot::before { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 1px; background: var(--border); }
     .oi-vslot-fill { position: absolute; left: 0; right: 0; border-radius: 2px; }
     .oi-vslot-fill.put { background: var(--green); }
@@ -173,6 +212,44 @@
     .oi-legend-line { display: inline-block; width: 14px; border-top: 2px dashed currentColor; margin-right: 5px; vertical-align: middle; }
     .oi-legend-line.atm { color: var(--accent2); }
     .oi-legend-line.maxpain { color: var(--yellow); }
+
+    /* A visible (but quiet) scrollbar is itself the honest affordance: if the
+       strike row can scroll, you can see that it can. */
+    .oi-vchart::-webkit-scrollbar { height: 6px; }
+    .oi-vchart::-webkit-scrollbar-track { background: transparent; }
+    .oi-vchart::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .oi-vchart::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* --- OI chart on small screens ---------------------------------------
+       Previously nothing here touched the chart, so a phone got 21 columns at
+       a fixed 38px inside a ~340px viewport. Now: narrower columns and bars,
+       a shorter plot, and angled strike labels so every strike stays readable
+       instead of colliding. Whatever still overflows scrolls properly, and JS
+       parks the ATM strike in the middle of the viewport on render. */
+    @media (max-width: 720px) {
+      .oi-vchart-wrap {
+        --oi-col-min: 30px; --oi-col-max: 46px; --oi-bar-w: 9px; --oi-bar-gap: 2px;
+        --oi-chart-h: 190px; --oi-label-h: 38px;
+        padding-top: 44px; gap: 4px;
+      }
+      .oi-vaxis { min-width: 26px; }
+      .oi-vaxis span { font-size: 0.55rem; }
+      .oi-vchart { padding-left: 2px; padding-right: 2px; }
+      .oi-vstrike-label {
+        font-size: 0.58rem; bottom: -26px;
+        transform: rotate(-52deg); transform-origin: 50% 0;
+      }
+      .oi-vcol.atm::after { font-size: 0.56rem; padding: 2px 6px; top: -22px; }
+      .oi-maxpain-pill { font-size: 0.54rem; padding: 1px 6px; top: -42px; }
+      .oi-totals-row, .oi-vsummary { gap: 12px; font-size: 0.72rem; }
+      .oi-legend { gap: 12px; font-size: 0.68rem; }
+    }
+    /* Labels are rotated at this size, so column width is set by the two bars
+       (8+8+2 = 18px), not by the text -- 24px keeps the ±5 view fitting a
+       phone with no scroll at all. */
+    @media (max-width: 420px) {
+      .oi-vchart-wrap { --oi-col-min: 24px; --oi-bar-w: 8px; --oi-bar-gap: 1px; }
+    }
 
     .status-badge { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-badge.ok { background: rgba(74,222,128,0.15); color: var(--green); }
@@ -583,6 +660,54 @@
       </div>`;
   }
 
+  // Scroll state for the strike row. The chart re-renders on every poll, so
+  // without this the view would snap back mid-inspection. Signature = "what
+  // is being drawn"; while it's unchanged we restore where you were looking,
+  // and when it changes (view/range/strike set) we re-park on ATM.
+  let _oiChartSig = null;
+  let _oiScrollLeft = 0;
+
+  function finalizeOiChart(chartEl, sig) {
+    const chart = chartEl.querySelector('.oi-vchart');
+    const wrap = chartEl.querySelector('.oi-vchart-wrap');
+    if (!chart || !wrap) return;
+    chart.addEventListener('scroll', () => { _oiScrollLeft = chart.scrollLeft; }, { passive: true });
+    const apply = () => {
+      const scrollable = chart.scrollWidth > chart.clientWidth + 8;
+      wrap.classList.toggle('is-scrollable', scrollable);
+      if (scrollable && !wrap.querySelector('.oi-scroll-hint')) {
+        const hint = document.createElement('div');
+        hint.className = 'oi-scroll-hint';
+        hint.textContent = 'swipe for more strikes';
+        wrap.appendChild(hint);
+      }
+      if (scrollable) {
+        if (sig === _oiChartSig) {
+          chart.scrollLeft = _oiScrollLeft;
+        } else {
+          // Park ATM in the middle so the strikes that matter are on screen
+          // first, and both directions are one swipe away.
+          const atm = chart.querySelector('.oi-vcol.atm');
+          chart.scrollLeft = atm
+            ? Math.max(0, atm.offsetLeft - (chart.clientWidth - atm.offsetWidth) / 2)
+            : (chart.scrollWidth - chart.clientWidth) / 2;
+          _oiScrollLeft = chart.scrollLeft;
+        }
+      }
+      _oiChartSig = sig;
+    };
+    requestAnimationFrame(apply);
+  }
+
+  // Rotating the device or resizing the window changes whether the row
+  // overflows at all, so the hint has to be re-measured.
+  window.addEventListener('resize', () => {
+    const chartEl = document.getElementById('oiChart');
+    const chart = chartEl && chartEl.querySelector('.oi-vchart');
+    const wrap = chartEl && chartEl.querySelector('.oi-vchart-wrap');
+    if (chart && wrap) wrap.classList.toggle('is-scrollable', chart.scrollWidth > chart.clientWidth + 8);
+  }, { passive: true });
+
   function renderOiChart(rows, currentPrice) {
     const chartEl = document.getElementById('oiChart');
     if (!rows || rows.length === 0) {
@@ -627,12 +752,30 @@
       }).join('') + '</div>';
 
       chartEl.innerHTML = totalsHtml + '<div class="oi-vchart-wrap">' + barsHtml + '</div>';
+      finalizeOiChart(chartEl, `total|${oiStrikeRange}|${displayRows.length}|${atmStrike}`);
       return;
     }
 
     // 'change' mode: bars diverge from a shared zero line -- up for a
     // buildup, down for an unwind -- with a hollow shadow extending further
     // from zero when a strike has pulled back from its session peak.
+
+    // Before the session has moved off its OI baseline every change is 0, so
+    // the chart used to render as a row of nothing plus the full-height ATM
+    // column highlight -- which read as a giant phantom bar at the money.
+    // Say plainly that there's no change yet instead.
+    const hasAnyChange = displayRows.some(r =>
+      (r.ce_oi_change || 0) !== 0 || (r.pe_oi_change || 0) !== 0 ||
+      (r.ce_oi_peak_change || 0) !== 0 || (r.pe_oi_peak_change || 0) !== 0);
+    if (!hasAnyChange) {
+      chartEl.innerHTML =
+        '<div class="oi-empty">No OI change yet this session — the baseline was just set.' +
+        '<br>Buildup and unwind will appear here as positions move.' +
+        '<br><span style="opacity:0.75">Switch to <b>Total OI</b> to see where the walls currently sit.</span></div>';
+      _oiChartSig = null;
+      return;
+    }
+
     const maxAbs = Math.max(1, ...displayRows.map(r => Math.max(
       Math.abs(r.ce_oi_peak_change != null ? r.ce_oi_peak_change : (r.ce_oi_change || 0)),
       Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
@@ -670,6 +813,7 @@
       </div>`;
 
     chartEl.innerHTML = '<div class="oi-vchart-wrap">' + axisHtml + barsHtml + '</div>' + summaryHtml;
+    finalizeOiChart(chartEl, `change|${oiStrikeRange}|${displayRows.length}|${atmStrike}`);
   }
 
   async function refresh() {
