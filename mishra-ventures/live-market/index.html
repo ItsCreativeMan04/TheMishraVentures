@@ -53,6 +53,74 @@
     .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #fff; }
     .price-updated { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
 
+    /* Freshness strip: how old is what you're looking at?
+       Shows MEASURED age alongside the nominal cadence, because a stalled
+       agent and a quiet market look identical on a dashboard that only
+       promises "updates every 60s". Age goes amber then red as it exceeds
+       what the cadence should produce, so staleness is visible without
+       reading. */
+    .freshness {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      font-size: 0.72rem; color: var(--muted); margin-bottom: 1rem;
+      padding: 0.6rem 0.9rem; border: 1px solid var(--border);
+      border-radius: 100px; background: rgba(255,255,255,0.02);
+    }
+    .fresh-item { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+    .fresh-label { font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; font-size: 0.62rem; }
+    .fresh-age { font-family: 'JetBrains Mono', monospace; color: var(--text); }
+    .fresh-age.warn { color: var(--yellow); }
+    .fresh-age.stale { color: var(--red); font-weight: 700; }
+    .fresh-cadence { opacity: 0.6; }
+    .fresh-note { flex-basis: 100%; opacity: 0.65; font-size: 0.68rem; line-height: 1.45; }
+    @media (max-width: 720px) {
+      .freshness { border-radius: 14px; gap: 10px; }
+    }
+
+    /* Action banner: the single verdict from the narrator's _decide(), sized
+       to be read in about a second from across the desk. It is the FIRST thing
+       on the page because "what do I do?" is the only question that matters
+       at 09:20; everything below it is the evidence for this line. Colour is
+       the fast channel — you should not have to read the words to know whether
+       you are hunting, holding, or standing down. */
+    .action-banner {
+      display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 6px solid var(--muted); border-radius: 16px;
+      padding: 1.15rem 1.5rem; margin-bottom: 1.2rem;
+      transition: border-left-color 0.25s, background 0.25s;
+    }
+    .action-verb {
+      font-size: clamp(1.5rem, 4.5vw, 2.1rem); font-weight: 800; line-height: 1.05;
+      letter-spacing: -0.5px; color: var(--muted); white-space: nowrap;
+    }
+    .action-body { flex: 1 1 260px; min-width: 0; }
+    .action-reason { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
+    .action-meta { font-size: 0.74rem; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+    .action-pill {
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 3px 10px; border-radius: 100px; align-self: flex-start;
+      background: rgba(255,255,255,0.06); color: var(--muted);
+    }
+    /* One class per verdict so the colour is derived from the verdict itself,
+       never from a second interpretation of it. */
+    .action-banner.go-long   { border-left-color: var(--green); background: rgba(74,222,128,0.05); }
+    .action-banner.go-long   .action-verb { color: var(--green); }
+    .action-banner.go-short  { border-left-color: var(--red); background: rgba(248,113,113,0.05); }
+    .action-banner.go-short  .action-verb { color: var(--red); }
+    .action-banner.ready     { border-left-color: var(--yellow); background: rgba(251,191,36,0.06); }
+    .action-banner.ready     .action-verb { color: var(--yellow); }
+    .action-banner.manage    { border-left-color: var(--accent); background: rgba(59,130,246,0.07); }
+    .action-banner.manage    .action-verb { color: var(--accent2); }
+    .action-banner.stop      { border-left-color: var(--red); background: rgba(248,113,113,0.09); }
+    .action-banner.stop      .action-verb { color: var(--red); }
+    .action-banner.wait      { border-left-color: var(--border); }
+    .action-banner.wait      .action-verb { color: var(--muted); }
+    .action-banner.urgent .action-pill { background: rgba(248,113,113,0.18); color: var(--red); }
+    @media (max-width: 720px) {
+      .action-banner { padding: 1rem 1.1rem; gap: 0.7rem; }
+      .action-reason { font-size: 0.85rem; }
+    }
+
     .narrative-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
       padding: 1.5rem 1.7rem; margin-bottom: 1.2rem;
@@ -376,6 +444,33 @@
 
 <div class="wrap">
   <div class="status-banner" id="statusBanner"></div>
+
+  <!-- How stale is any of this? Rendered from real timestamps, with the
+       nominal cadences supplied by the agent so the page can never claim a
+       refresh rate the backend isn't actually running. -->
+  <div class="freshness" id="freshness">
+    <div class="fresh-item"><span class="fresh-label">Price</span>
+      <span class="fresh-age" id="freshPrice">–</span>
+      <span class="fresh-cadence" id="freshPriceCad"></span></div>
+    <div class="fresh-item"><span class="fresh-label">OI</span>
+      <span class="fresh-age" id="freshOi">–</span>
+      <span class="fresh-cadence" id="freshOiCad"></span></div>
+    <div class="fresh-item"><span class="fresh-label">Structure</span>
+      <span class="fresh-cadence">closed 5m / 15m candles only</span></div>
+    <div class="fresh-note" id="freshNote"></div>
+  </div>
+
+  <!-- The verdict, first on the page. Rendered from decision_focus /
+       decision_reason, which the narrator guarantees is the SAME verdict the
+       commentary opens with -- there is exactly one source of truth. -->
+  <div class="action-banner wait" id="actionBanner">
+    <div class="action-verb" id="actionVerb">–</div>
+    <div class="action-body">
+      <div class="action-reason" id="actionReason">Waiting for the session to start.</div>
+      <div class="action-meta" id="actionMeta"></div>
+    </div>
+    <span class="action-pill" id="actionPill"></span>
+  </div>
 
   <div class="price-card">
     <div class="price-symbol" id="symbol">NIFTY</div>
@@ -984,6 +1079,90 @@
       document.getElementById('planReasons').innerHTML = reasons.length
         ? reasons.map(r => `<li>${r}</li>`).join('')
         : '<li>Evaluating…</li>';
+
+      // ---- Data freshness -------------------------------------------------
+      // Ages are MEASURED from published timestamps, not assumed from the
+      // cadence: an agent that died at 11:04 would otherwise look exactly like
+      // one that is running fine in a quiet market.
+      (function renderFreshness() {
+        const fmtAge = (ms) => {
+          if (ms == null || !isFinite(ms)) return 'unknown';
+          const s = Math.max(0, Math.round(ms / 1000));
+          if (s < 90) return `${s}s ago`;
+          const m = Math.round(s / 60);
+          return m < 90 ? `${m}m ago` : `${Math.round(m / 60)}h ago`;
+        };
+        // Grade against what the cadence should actually produce: stale only
+        // means "later than this feed promised", so a 5-min OI panel is not
+        // flagged for being 4 minutes old.
+        const grade = (ms, budgetS) => {
+          if (ms == null || !isFinite(ms)) return '';
+          const s = ms / 1000;
+          if (s > budgetS * 3) return 'stale';
+          if (s > budgetS * 1.6) return 'warn';
+          return '';
+        };
+        const now = Date.now();
+        const agentS = data.agent_interval_s || 60;
+        const oiS = data.oi_refresh_s || 300;
+        // Delivery adds the publish hop plus this page's own poll on top of
+        // the agent's tick — quoted so the number isn't read as end-to-end.
+        const deliveryS = 60 + (REFRESH_MS / 1000);
+
+        const pAge = data.updated_at ? now - new Date(data.updated_at).getTime() : null;
+        const oAge = data.oi_updated_at ? now - new Date(data.oi_updated_at).getTime() : null;
+
+        const pEl = document.getElementById('freshPrice');
+        pEl.textContent = fmtAge(pAge);
+        pEl.className = 'fresh-age ' + grade(pAge, agentS + deliveryS);
+        document.getElementById('freshPriceCad').textContent = `(agent polls every ${agentS}s)`;
+
+        const oEl = document.getElementById('freshOi');
+        oEl.textContent = data.oi_updated_at ? fmtAge(oAge) : 'not published';
+        oEl.className = 'fresh-age ' + grade(oAge, oiS + deliveryS);
+        document.getElementById('freshOiCad').textContent =
+          `(refreshes every ${Math.round(oiS / 60)} min)`;
+
+        document.getElementById('freshNote').textContent =
+          `This page re-checks every ${Math.round(REFRESH_MS / 1000)}s, and publishing adds up to ~60s, ` +
+          `so what you see can trail the market by roughly ${Math.round((agentS + deliveryS) / 60)}–` +
+          `${Math.round((oiS + deliveryS) / 60)} min depending on the panel. ` +
+          `Structure only updates on CLOSED candles by design — a 15m read can be up to 15 min behind price. ` +
+          `Not a trading terminal; confirm on your broker before acting.`;
+      })();
+
+      // ---- Action banner -------------------------------------------------
+      // Maps the narrator's verdict to a colour. The mapping is on the VERB
+      // only, so the banner can never disagree with the Decision Support card
+      // below it — they render the same two strings.
+      (function renderActionBanner() {
+        const focus = (data.decision_focus || 'WAIT').toUpperCase();
+        const banner = document.getElementById('actionBanner');
+        let cls = 'wait';
+        if (focus.startsWith('MANAGE')) cls = 'manage';
+        else if (focus.startsWith('LOOK FOR LONG')) cls = 'go-long';
+        else if (focus.startsWith('LOOK FOR SHORT')) cls = 'go-short';
+        else if (focus.startsWith('GET READY')) cls = 'ready';
+        else if (focus.startsWith('STAND ASIDE') || focus.startsWith('NO NEW')) cls = 'stop';
+        const urgent = (data.decision_urgency || '').toUpperCase() === 'HIGH';
+        banner.className = 'action-banner ' + cls + (urgent ? ' urgent' : '');
+        document.getElementById('actionVerb').textContent = focus;
+        document.getElementById('actionReason').textContent =
+          data.decision_reason || 'No active setup yet.';
+        const meta = [];
+        if (data.decision_next_event) meta.push(`Next: ${data.decision_next_event}`);
+        if (data.decision_distance != null) meta.push(`${data.decision_distance.toFixed(1)} pts away`);
+        document.getElementById('actionMeta').textContent = meta.join(' · ');
+        // The pill must agree with the verb. "ACT NOW" beside "STAND ASIDE"
+        // told the reader to do two opposite things at once.
+        const pill = document.getElementById('actionPill');
+        const label = !urgent ? ''
+          : cls === 'manage' ? 'Position open'
+          : cls === 'stop' ? 'Attention'
+          : 'Act now';
+        pill.textContent = label;
+        pill.style.display = label ? '' : 'none';
+      })();
 
       document.getElementById('decisionFocus').textContent = data.decision_focus || 'WAIT';
       const urgBadge = document.getElementById('decisionUrgencyBadge');
