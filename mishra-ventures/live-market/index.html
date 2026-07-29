@@ -306,7 +306,34 @@
     .trap-detail { font-size: 0.85rem; color: var(--text); }
     .trap-detail b { font-family: 'JetBrains Mono', monospace; color: #fff; }
 
+    /* Trade Tracking: a triggered trap's live entry/stop/target ladder. The
+       ARMED card above shows a setup waiting; this shows one that fired and
+       is still running, with each level ticked off as it's reached. */
+    .trade-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
+    .trade-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; background: rgba(255,255,255,0.02); }
+    .trade-item + .trade-item { margin-top: 0.7rem; }
+    .trade-item.long { border-left-color: var(--green); }
+    .trade-item.short { border-left-color: var(--red); }
+    .trade-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .trade-levels { display: flex; gap: 8px; flex-wrap: wrap; }
+    .trade-level { font-size: 0.74rem; font-family: 'JetBrains Mono', monospace; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); }
+    .trade-level b { color: #fff; font-weight: 700; }
+    .trade-level.entry { border-color: var(--accent); color: var(--accent2); }
+    .trade-level.stop { border-color: var(--red); color: var(--red); }
+    .trade-level.target.hit { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1); }
+    .trade-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; opacity: 0.8; }
+
     .timeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
+    /* The timeline is the session's record, so it keeps every event and
+       scrolls. Capping the card's height keeps the page navigable on a long
+       day; the filter chips make a 40-event day scannable. */
+    .timeline-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .timeline-count { font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .timeline-scroll { max-height: 440px; overflow-y: auto; overscroll-behavior-y: contain; padding-right: 8px; scrollbar-width: thin; }
+    .timeline-scroll::-webkit-scrollbar { width: 6px; }
+    .timeline-scroll::-webkit-scrollbar-track { background: transparent; }
+    .timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .timeline-scroll::-webkit-scrollbar-thumb:hover { background: var(--muted); }
     .timeline-track { position: relative; padding-left: 24px; }
     .timeline-track::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
     .timeline-item { position: relative; padding-bottom: 1.2rem; }
@@ -435,9 +462,26 @@
     <div id="trapList"></div>
   </div>
 
+  <div class="trade-card" id="tradeCard" style="display: none;">
+    <div class="narrative-label">Trade Tracking</div>
+    <div id="tradeList"></div>
+  </div>
+
   <div class="timeline-card">
-    <div class="narrative-label">Session Timeline</div>
-    <div class="timeline-track" id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
+    <div class="timeline-header">
+      <div class="narrative-label" style="margin-bottom: 0;">Session Timeline</div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span class="timeline-count" id="timelineCount"></span>
+        <div class="oi-range-toggle" id="timelineFilter">
+          <button class="oi-range-btn active" data-sev="all">All</button>
+          <button class="oi-range-btn" data-sev="watch">Watch+</button>
+          <button class="oi-range-btn" data-sev="important">Important+</button>
+        </div>
+      </div>
+    </div>
+    <div class="timeline-scroll" id="timelineScroll">
+      <div class="timeline-track" id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
+    </div>
   </div>
 
   <div class="oi-card">
@@ -658,6 +702,60 @@
         ${shadowHtml}
         <div class="oi-vslot-fill ${side}" style="${fillStyle}"></div>
       </div>`;
+  }
+
+  // ---- Session timeline -------------------------------------------------
+  // The backend now publishes the FULL session history (it used to send only
+  // the last 5, which is why earlier events vanished). Holding it here lets
+  // the severity filter and the reader's scroll position survive the poll.
+  let timelineEvents = [];
+  let timelineMinSev = 'all';
+  const SEV_RANK = { INFO: 0, WATCH: 1, IMPORTANT: 2, CRITICAL: 3 };
+  const SEV_FLOOR = { all: 0, watch: 1, important: 2 };
+
+  document.getElementById('timelineFilter').addEventListener('click', (e) => {
+    const btn = e.target.closest('.oi-range-btn');
+    if (!btn) return;
+    timelineMinSev = btn.dataset.sev;
+    e.currentTarget.querySelectorAll('.oi-range-btn')
+      .forEach(b => b.classList.toggle('active', b === btn));
+    renderTimeline();
+  });
+
+  function renderTimeline() {
+    const scroller = document.getElementById('timelineScroll');
+    const el = document.getElementById('timelineList');
+    const floor = SEV_FLOOR[timelineMinSev] ?? 0;
+    const shown = timelineEvents.filter(
+      ev => (SEV_RANK[(ev.severity || 'INFO').toUpperCase()] ?? 0) >= floor);
+
+    document.getElementById('timelineCount').textContent =
+      !timelineEvents.length ? ''
+      : shown.length === timelineEvents.length
+        ? `${timelineEvents.length} event${timelineEvents.length === 1 ? '' : 's'}`
+        : `${shown.length} of ${timelineEvents.length}`;
+
+    // Newest first. A reader parked at the top stays pinned to newest as
+    // events arrive; a reader who has scrolled back into the day keeps their
+    // place instead of being yanked to the top by the next poll.
+    const keep = scroller.scrollTop;
+    const atTop = keep <= 4;
+    el.innerHTML = shown.length
+      ? shown.slice().reverse().map(ev => {
+          const sev = (ev.severity || 'INFO').toUpperCase();
+          return `
+            <div class="timeline-item ${sev.toLowerCase()}">
+              <div class="timeline-head">
+                <span class="timeline-time">${ev.time || ''}</span>
+                <span class="timeline-sev ${sev.toLowerCase()}">${sev}</span>
+              </div>
+              <div class="timeline-message">${ev.message || ''}</div>
+            </div>`;
+        }).join('')
+      : `<div class="oi-empty">${timelineEvents.length
+            ? 'No events at this severity yet.'
+            : 'No events logged yet this session.'}</div>`;
+    scroller.scrollTop = atTop ? 0 : keep;
   }
 
   // Scroll state for the strike row. The chart re-renders on every poll, so
@@ -916,23 +1014,38 @@
         trapCard.style.display = 'none';
       }
 
-      // Session Timeline (last 5 events, newest first) -- rendered as an
-      // actual vertical timeline: one dot+line item per event.
-      const timelineEl = document.getElementById('timelineList');
-      const events = data.timeline || [];
-      timelineEl.innerHTML = events.length
-        ? events.slice().reverse().map(ev => {
-            const sev = (ev.severity || 'INFO').toUpperCase();
-            return `
-            <div class="timeline-item ${sev.toLowerCase()}">
-              <div class="timeline-head">
-                <span class="timeline-time">${ev.time || ''}</span>
-                <span class="timeline-sev ${sev.toLowerCase()}">${sev}</span>
+      // Trade Tracking -- triggered traps still running. The ARMED card above
+      // is a setup waiting; this is one that fired, with its stop and each
+      // target ticked off as price reaches them.
+      const tradeCard = document.getElementById('tradeCard');
+      const trades = data.active_trades || [];
+      if (trades.length) {
+        tradeCard.style.display = '';
+        document.getElementById('tradeList').innerHTML = trades.map(t => {
+          const levels = [
+            `<span class="trade-level entry">Entry <b>${fmtLivePrice(t.entry)}</b></span>`,
+            `<span class="trade-level stop">Stop <b>${fmtLivePrice(t.stop)}</b></span>`,
+          ].concat((t.targets || []).map(g =>
+            `<span class="trade-level target${g.hit ? ' hit' : ''}">${g.hit ? '&#10003; ' : ''}${g.label} <b>${fmtLivePrice(g.price)}</b></span>`
+          )).join('');
+          return `
+            <div class="trade-item ${t.dir}">
+              <div class="trade-head">
+                <span class="trap-dir-badge ${t.dir}">${t.dir.toUpperCase()}</span>
+                <span class="trap-zone">Zone ${t.zone} (${t.rating || 'Unrated'}) &middot; risk ${t.risk} pts</span>
               </div>
-              <div class="timeline-message">${ev.message || ''}</div>
+              <div class="trade-levels">${levels}</div>
+              <div class="trade-note">Tracks the levels this signal published &mdash; not your actual fill or size.</div>
             </div>`;
-          }).join('')
-        : '<div class="oi-empty">No events logged yet this session.</div>';
+        }).join('');
+      } else {
+        tradeCard.style.display = 'none';
+      }
+
+      // Session Timeline -- the FULL session record (newest first), scrollable
+      // and severity-filterable, rendered as an actual vertical timeline.
+      timelineEvents = data.timeline || [];
+      renderTimeline();
 
       if (data.oi_chains && Object.keys(data.oi_chains).length > 0) {
         oiChainsCache = data.oi_chains;
