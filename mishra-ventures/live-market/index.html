@@ -1,5 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
+<script>
+  // Inline and blocking on purpose: this must run before the first paint,
+  // otherwise the page flashes the default palette before the saved one
+  // applies. Saved choice wins; otherwise follow the OS.
+  (function () {
+    try {
+      var saved = localStorage.getItem('lm-theme');
+      var theme = saved || (window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) { /* private mode: fall through to the dark default */ }
+  })();
+</script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +23,17 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Theme ────────────────────────────────────────────────────────────
+       Two palettes over one set of semantic variables. Every colour in the
+       sheet resolves through these -- there are no hardcoded values left
+       outside this block, so light mode cannot half-apply.
+
+       The semantic hues are DIFFERENT per theme, not just re-tinted: #4ade80
+       green is fine on near-black and close to illegible on white. Since the
+       action banner's whole purpose is being readable at a glance, the light
+       palette uses darker, higher-contrast hues rather than the same ones. */
     :root {
+      color-scheme: dark;
       --bg: #060a14;
       --surface: #0f1729;
       --surface2: #16213a;
@@ -18,18 +41,81 @@
       --accent: #3b82f6;
       --accent2: #93c5fd;
       --text: #eef2ff;
+      --text-strong: #ffffff;
       --muted: rgba(238, 242, 255, 0.48);
       --green: #4ade80;
       --red: #f87171;
       --yellow: #fbbf24;
+      --violet: #a78bfa;
+      /* neutral washes (row stripes, inert pills) */
+      --tint-1: rgba(255, 255, 255, 0.02);
+      --tint-2: rgba(255, 255, 255, 0.04);
+      --tint-3: rgba(255, 255, 255, 0.06);
+      /* hue tiers: 1 = faint wash, 2 = badge fill, 3 = strong fill/border */
+      --accent-1: rgba(59, 130, 246, 0.07);
+      --accent-2: rgba(59, 130, 246, 0.15);
+      --accent-3: rgba(59, 130, 246, 0.18);
+      --green-1: rgba(74, 222, 128, 0.06);
+      --green-2: rgba(74, 222, 128, 0.13);
+      --green-3: rgba(74, 222, 128, 0.20);
+      --red-1: rgba(248, 113, 113, 0.06);
+      --red-2: rgba(248, 113, 113, 0.14);
+      --red-3: rgba(248, 113, 113, 0.20);
+      --yellow-1: rgba(251, 191, 36, 0.07);
+      --yellow-2: rgba(251, 191, 36, 0.15);
+      --yellow-3: rgba(251, 191, 36, 0.30);
+      --violet-2: rgba(167, 139, 250, 0.15);
     }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f7fc;
+      --surface: #ffffff;
+      --surface2: #eef2f9;
+      --border: rgba(15, 23, 42, 0.13);
+      --accent: #1d4ed8;
+      --accent2: #1e40af;
+      --text: #0f172a;
+      --text-strong: #060a14;
+      --muted: rgba(15, 23, 42, 0.62);   /* 0.58 measured 4.40:1 on white — below AA */
+      /* Darker hues: the dark-mode pastels fail on white. */
+      --green: #15803d;
+      --red: #b91c1c;
+      --yellow: #b45309;
+      --violet: #6d28d9;
+      --tint-1: rgba(15, 23, 42, 0.025);
+      --tint-2: rgba(15, 23, 42, 0.05);
+      --tint-3: rgba(15, 23, 42, 0.08);
+      --accent-1: rgba(29, 78, 216, 0.07);
+      --accent-2: rgba(29, 78, 216, 0.13);
+      --accent-3: rgba(29, 78, 216, 0.22);
+      --green-1: rgba(21, 128, 61, 0.07);
+      --green-2: rgba(21, 128, 61, 0.14);
+      --green-3: rgba(21, 128, 61, 0.20);
+      --red-1: rgba(185, 28, 28, 0.06);
+      --red-2: rgba(185, 28, 28, 0.13);
+      --red-3: rgba(185, 28, 28, 0.19);
+      --yellow-1: rgba(180, 83, 9, 0.07);
+      --yellow-2: rgba(180, 83, 9, 0.14);
+      --yellow-3: rgba(180, 83, 9, 0.32);
+      --violet-2: rgba(109, 40, 217, 0.13);
+    }
+
+    .theme-toggle {
+      background: var(--tint-2); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 100px; cursor: pointer;
+      font: inherit; font-size: 0.78rem; padding: 6px 13px;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .theme-toggle:hover { color: var(--text); border-color: var(--accent); }
 
     body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; line-height: 1.6; min-height: 100vh; }
 
     .hero { max-width: 900px; margin: 0 auto; padding: 3.5rem 2rem 1.5rem; text-align: center; }
     h1.hero-title {
       font-size: clamp(1.8rem, 4.5vw, 2.8rem); font-weight: 800; line-height: 1.2;
-      background: linear-gradient(135deg, #fff 20%, var(--accent2) 100%);
+      background: linear-gradient(135deg, var(--text-strong) 20%, var(--accent2) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.75rem;
     }
     .hero-sub { font-size: 1rem; color: var(--muted); max-width: 560px; margin: 0 auto; }
@@ -38,7 +124,7 @@
 
     .status-banner {
       display: none; align-items: center; gap: 10px;
-      background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3);
+      background: var(--yellow-1); border: 1px solid var(--yellow-3);
       color: var(--yellow); border-radius: 12px; padding: 0.9rem 1.2rem; font-size: 0.85rem;
       margin-bottom: 1.5rem;
     }
@@ -50,7 +136,7 @@
     }
     .price-symbol { font-size: 0.85rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
     .price-contract { font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; opacity: 0.7; margin-top: -0.3rem; margin-bottom: 0.5rem; }
-    .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #fff; }
+    .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
     .price-updated { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
 
     /* Freshness strip: how old is what you're looking at?
@@ -63,7 +149,7 @@
       display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
       font-size: 0.72rem; color: var(--muted); margin-bottom: 1rem;
       padding: 0.6rem 0.9rem; border: 1px solid var(--border);
-      border-radius: 100px; background: rgba(255,255,255,0.02);
+      border-radius: 100px; background: var(--tint-1);
     }
     .fresh-item { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
     .fresh-label { font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; font-size: 0.62rem; }
@@ -99,23 +185,23 @@
     .action-pill {
       font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
       padding: 3px 10px; border-radius: 100px; align-self: flex-start;
-      background: rgba(255,255,255,0.06); color: var(--muted);
+      background: var(--tint-3); color: var(--muted);
     }
     /* One class per verdict so the colour is derived from the verdict itself,
        never from a second interpretation of it. */
-    .action-banner.go-long   { border-left-color: var(--green); background: rgba(74,222,128,0.05); }
+    .action-banner.go-long   { border-left-color: var(--green); background: var(--green-1); }
     .action-banner.go-long   .action-verb { color: var(--green); }
-    .action-banner.go-short  { border-left-color: var(--red); background: rgba(248,113,113,0.05); }
+    .action-banner.go-short  { border-left-color: var(--red); background: var(--red-1); }
     .action-banner.go-short  .action-verb { color: var(--red); }
-    .action-banner.ready     { border-left-color: var(--yellow); background: rgba(251,191,36,0.06); }
+    .action-banner.ready     { border-left-color: var(--yellow); background: var(--yellow-1); }
     .action-banner.ready     .action-verb { color: var(--yellow); }
-    .action-banner.manage    { border-left-color: var(--accent); background: rgba(59,130,246,0.07); }
+    .action-banner.manage    { border-left-color: var(--accent); background: var(--accent-1); }
     .action-banner.manage    .action-verb { color: var(--accent2); }
-    .action-banner.stop      { border-left-color: var(--red); background: rgba(248,113,113,0.09); }
+    .action-banner.stop      { border-left-color: var(--red); background: var(--red-1); }
     .action-banner.stop      .action-verb { color: var(--red); }
     .action-banner.wait      { border-left-color: var(--border); }
     .action-banner.wait      .action-verb { color: var(--muted); }
-    .action-banner.urgent .action-pill { background: rgba(248,113,113,0.18); color: var(--red); }
+    .action-banner.urgent .action-pill { background: var(--red-2); color: var(--red); }
     @media (max-width: 720px) {
       .action-banner { padding: 1rem 1.1rem; gap: 0.7rem; }
       .action-reason { font-size: 0.85rem; }
@@ -138,22 +224,22 @@
     .oi-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .oi-summary-pill { font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
     .oi-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .oi-tab { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s, color 0.2s; }
+    .oi-tab { background: var(--tint-2); border: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s, color 0.2s; }
     .oi-tab:hover { color: var(--text); }
-    .oi-tab.active { background: rgba(59,130,246,0.15); border-color: var(--accent); color: var(--accent2); }
+    .oi-tab.active { background: var(--accent-2); border-color: var(--accent); color: var(--accent2); }
 
-    .oi-view-toggle { display: flex; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
+    .oi-view-toggle { display: flex; gap: 2px; background: var(--tint-2); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
     .oi-view-btn { background: none; border: none; color: var(--muted); font-size: 0.74rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
-    .oi-view-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); }
+    .oi-view-btn.active { background: var(--accent-3); color: var(--accent2); }
 
     .oi-range-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 0.9rem; }
     .oi-range-label { font-size: 0.72rem; color: var(--muted); }
-    .oi-range-toggle { display: flex; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
+    .oi-range-toggle { display: flex; gap: 2px; background: var(--tint-2); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
     .oi-range-btn { background: none; border: none; color: var(--muted); font-size: 0.72rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
-    .oi-range-btn.active { background: rgba(59,130,246,0.18); color: var(--accent2); }
+    .oi-range-btn.active { background: var(--accent-3); color: var(--accent2); }
 
     .oi-totals-row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
-    .oi-totals-row b { color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .oi-totals-row b { color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
 
     .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
 
@@ -204,7 +290,7 @@
       flex: 1 1 auto; min-width: var(--oi-col-min); max-width: var(--oi-col-max);
       position: relative;
     }
-    .oi-vcol.atm { background: rgba(59,130,246,0.07); border-radius: 8px; }
+    .oi-vcol.atm { background: var(--accent-1); border-radius: 8px; }
     .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
     /* ATM marker: a dashed vertical line through the column plus a floating
        price pill above the chart, both driven off data-atm-price so no
@@ -233,7 +319,7 @@
     .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
 
     .oi-vsummary { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
-    .oi-vsummary b { color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .oi-vsummary b { color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
     .oi-vsummary b.up { color: var(--green); }
     .oi-vsummary b.down { color: var(--red); }
 
@@ -320,9 +406,9 @@
     }
 
     .status-badge { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .status-badge.ok { background: rgba(74,222,128,0.15); color: var(--green); }
-    .status-badge.warn { background: rgba(251,191,36,0.15); color: var(--yellow); }
-    .status-badge.bad { background: rgba(248,113,113,0.15); color: var(--red); }
+    .status-badge.ok { background: var(--green-2); color: var(--green); }
+    .status-badge.warn { background: var(--yellow-2); color: var(--yellow); }
+    .status-badge.bad { background: var(--red-2); color: var(--red); }
 
     /* Morning Plan + Decision Support merged into one two-column card (they're
        "where things stand" and "what to do about it" -- a natural pair, not
@@ -351,7 +437,7 @@
     .reason-list li { font-size: 0.88rem; color: var(--text); padding-left: 1.2rem; position: relative; }
     .reason-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent2); }
 
-    .decision-focus { font-size: 1.05rem; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .decision-focus { font-size: 1.05rem; font-weight: 700; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
     .decision-detail { font-size: 0.88rem; color: var(--text); margin-bottom: 0.4rem; line-height: 1.5; }
     .decision-detail.muted { color: var(--muted); font-size: 0.82rem; margin-bottom: 0; }
 
@@ -364,31 +450,31 @@
     .trap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
     .trap-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; }
     .trap-item + .trap-item { margin-top: 0.7rem; }
-    .trap-item.long { background: rgba(74,222,128,0.06); border-left-color: var(--green); }
-    .trap-item.short { background: rgba(248,113,113,0.06); border-left-color: var(--red); }
+    .trap-item.long { background: var(--green-1); border-left-color: var(--green); }
+    .trap-item.short { background: var(--red-1); border-left-color: var(--red); }
     .trap-head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
     .trap-dir-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.5px; }
-    .trap-dir-badge.long { background: rgba(74,222,128,0.2); color: var(--green); }
-    .trap-dir-badge.short { background: rgba(248,113,113,0.2); color: var(--red); }
+    .trap-dir-badge.long { background: var(--green-3); color: var(--green); }
+    .trap-dir-badge.short { background: var(--red-3); color: var(--red); }
     .trap-zone { font-size: 0.82rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
     .trap-detail { font-size: 0.85rem; color: var(--text); }
-    .trap-detail b { font-family: 'JetBrains Mono', monospace; color: #fff; }
+    .trap-detail b { font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
 
     /* Trade Tracking: a triggered trap's live entry/stop/target ladder. The
        ARMED card above shows a setup waiting; this shows one that fired and
        is still running, with each level ticked off as it's reached. */
     .trade-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
-    .trade-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; background: rgba(255,255,255,0.02); }
+    .trade-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; background: var(--tint-1); }
     .trade-item + .trade-item { margin-top: 0.7rem; }
     .trade-item.long { border-left-color: var(--green); }
     .trade-item.short { border-left-color: var(--red); }
     .trade-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
     .trade-levels { display: flex; gap: 8px; flex-wrap: wrap; }
     .trade-level { font-size: 0.74rem; font-family: 'JetBrains Mono', monospace; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); }
-    .trade-level b { color: #fff; font-weight: 700; }
+    .trade-level b { color: var(--text-strong); font-weight: 700; }
     .trade-level.entry { border-color: var(--accent); color: var(--accent2); }
     .trade-level.stop { border-color: var(--red); color: var(--red); }
-    .trade-level.target.hit { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.1); }
+    .trade-level.target.hit { border-color: var(--green); color: var(--green); background: var(--green-2); }
     .trade-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; opacity: 0.8; }
 
     .timeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
@@ -411,15 +497,15 @@
       border-radius: 50%; background: var(--surface); border: 2px solid var(--accent2);
     }
     .timeline-item.watch::before { border-color: var(--yellow); }
-    .timeline-item.important::before { border-color: #a78bfa; }
+    .timeline-item.important::before { border-color: var(--violet); }
     .timeline-item.critical::before { border-color: var(--red); }
     .timeline-head { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
     .timeline-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
     .timeline-sev { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 100px; }
-    .timeline-sev.info { background: rgba(59,130,246,0.15); color: var(--accent2); }
-    .timeline-sev.watch { background: rgba(251,191,36,0.15); color: var(--yellow); }
-    .timeline-sev.important { background: rgba(167,139,250,0.15); color: #a78bfa; }
-    .timeline-sev.critical { background: rgba(248,113,113,0.15); color: var(--red); }
+    .timeline-sev.info { background: var(--accent-2); color: var(--accent2); }
+    .timeline-sev.watch { background: var(--yellow-2); color: var(--yellow); }
+    .timeline-sev.important { background: var(--violet-2); color: var(--violet); }
+    .timeline-sev.critical { background: var(--red-2); color: var(--red); }
     .timeline-message { color: var(--text); font-size: 0.85rem; line-height: 1.5; }
   </style>
 </head>
@@ -433,6 +519,10 @@
       <div class="nav-brand-sub">by Mishra Ventures</div>
     </div>
   </a>
+  <button class="theme-toggle" id="themeToggle" type="button"
+          aria-label="Switch between light and dark theme">
+    <span id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
+  </button>
   <a href="../" class="nav-home">← All Ventures</a>
 </nav>
 
@@ -798,6 +888,35 @@
         <div class="oi-vslot-fill ${side}" style="${fillStyle}"></div>
       </div>`;
   }
+
+  // ---- Theme toggle -----------------------------------------------------
+  // The palette itself is applied by the inline pre-paint script in <head>;
+  // this only handles the button and persistence.
+  (function initTheme() {
+    const btn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    const paint = (t) => {
+      document.documentElement.setAttribute('data-theme', t);
+      icon.textContent = t === 'light' ? '☀️' : '🌙';
+      label.textContent = t === 'light' ? 'Light' : 'Dark';
+    };
+    paint(document.documentElement.getAttribute('data-theme') || 'dark');
+    btn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'light'
+        ? 'dark' : 'light';
+      paint(next);
+      try { localStorage.setItem('lm-theme', next); } catch (e) { /* private mode */ }
+    });
+    // Follow the OS only while the user hasn't expressed a preference.
+    if (window.matchMedia) {
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+        let saved = null;
+        try { saved = localStorage.getItem('lm-theme'); } catch (err) { /* ignore */ }
+        if (!saved) paint(e.matches ? 'light' : 'dark');
+      });
+    }
+  })();
 
   // ---- Session timeline -------------------------------------------------
   // The backend now publishes the FULL session history (it used to send only

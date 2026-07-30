@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Market Map Levels \u2014 for Dhan DEXT",
+  "version": "1.0.0",
+  "description": "Shows your generated key levels (rated zones, PDH/PDL, equilibrium) as a floating card inside Dhan DEXT, so you stop switching to TradingView.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.workers.dev/*"
+  ],
+  "options_page": "options.html",
+  "action": {
+    "default_title": "Market Map Levels \u2014 click the card's \u2699 to configure"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://dext.dhan.co/*",
+        "https://*.dhan.co/*"
+      ],
+      "js": [
+        "probe.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://dext.dhan.co/*",
+        "https://*.dhan.co/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "overlay.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+/* Scoped hard under #mm-levels-card. This is injected into somebody else's
+   app, so every rule is namespaced and nothing global is touched — no resets,
+   no body styles, no font imports that could shift Dext's own layout. */
+
+#mm-levels-card {
+  position: fixed;
+  z-index: 2147483000;              /* above Dext's own overlays, below nothing */
+  width: 268px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 12px;
+  color: #e6ecf7;
+  background: rgba(12, 17, 28, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(120, 160, 220, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  user-select: none;
+}
+#mm-levels-card.mm-collapsed .mm-body { display: none; }
+
+#mm-levels-card .mm-head {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(120, 160, 220, 0.16);
+  cursor: move;
+}
+#mm-levels-card .mm-title {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 1.3px;
+  color: rgba(230, 236, 247, 0.55);
+}
+#mm-levels-card .mm-sym {
+  font-size: 10px; font-weight: 600; color: #8fb6ff;
+  font-variant-numeric: tabular-nums;
+}
+#mm-levels-card .mm-spacer { flex: 1; }
+#mm-levels-card .mm-btn {
+  all: unset; cursor: pointer; width: 18px; height: 18px;
+  display: grid; place-items: center; border-radius: 5px;
+  color: rgba(230, 236, 247, 0.6); font-size: 13px; line-height: 1;
+}
+#mm-levels-card .mm-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+#mm-levels-card .mm-body { padding: 9px; }
+
+/* Verdict — same six states and colour language as the website banner, so the
+   two surfaces can never look like they disagree. */
+#mm-levels-card .mm-verdict {
+  border-left: 3px solid rgba(230, 236, 247, 0.3);
+  padding: 6px 8px; border-radius: 7px; margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+#mm-levels-card .mm-verb {
+  display: block; font-size: 13px; font-weight: 800; letter-spacing: -0.2px;
+  color: rgba(230, 236, 247, 0.75);
+}
+#mm-levels-card .mm-reason {
+  display: block; font-size: 10.5px; line-height: 1.35; margin-top: 2px;
+  color: rgba(230, 236, 247, 0.62);
+}
+#mm-levels-card .mm-long  { border-left-color: #4ade80; background: rgba(74,222,128,.09); }
+#mm-levels-card .mm-long  .mm-verb { color: #6ee79b; }
+#mm-levels-card .mm-short { border-left-color: #f87171; background: rgba(248,113,113,.09); }
+#mm-levels-card .mm-short .mm-verb { color: #fb9090; }
+#mm-levels-card .mm-ready { border-left-color: #fbbf24; background: rgba(251,191,36,.10); }
+#mm-levels-card .mm-ready .mm-verb { color: #fcd34d; }
+#mm-levels-card .mm-manage{ border-left-color: #3b82f6; background: rgba(59,130,246,.12); }
+#mm-levels-card .mm-manage .mm-verb { color: #93c5fd; }
+#mm-levels-card .mm-stop  { border-left-color: #f87171; background: rgba(248,113,113,.15); }
+#mm-levels-card .mm-stop  .mm-verb { color: #fb9090; }
+
+#mm-levels-card .mm-price {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: 17px; font-weight: 700; margin-bottom: 7px;
+  font-variant-numeric: tabular-nums;
+}
+#mm-levels-card .mm-age {
+  font-size: 9.5px; font-weight: 500; color: rgba(230, 236, 247, 0.45);
+}
+#mm-levels-card .mm-age.mm-stale { color: #fb9090; font-weight: 700; }
+
+#mm-levels-card .mm-grp {
+  font-size: 8.5px; font-weight: 700; letter-spacing: 1px;
+  color: rgba(230, 236, 247, 0.38);
+  margin: 7px 0 3px;
+}
+#mm-levels-card .mm-row {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 6px;
+  align-items: baseline; padding: 3px 5px; border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+}
+/* A level within ~25 pts is the only one you might act on in the next few
+   minutes, so it gets the emphasis. */
+#mm-levels-card .mm-row.mm-near { background: rgba(255, 255, 255, 0.07); }
+#mm-levels-card .mm-lab { font-size: 11px; font-weight: 600; }
+#mm-levels-card .mm-val { display: none; }
+#mm-levels-card .mm-d {
+  font-size: 11px; font-weight: 700; color: rgba(230, 236, 247, 0.8);
+}
+#mm-levels-card .mm-note {
+  grid-column: 1 / -1; font-size: 9px; color: rgba(230, 236, 247, 0.42);
+  margin-top: -1px;
+}
+#mm-levels-card .mm-sup .mm-lab { color: #fb9090; }
+#mm-levels-card .mm-dem .mm-lab { color: #6ee79b; }
+#mm-levels-card .mm-ctx .mm-lab { color: rgba(230, 236, 247, 0.72); }
+#mm-levels-card .mm-inv .mm-lab { color: #fcd34d; }
+
+#mm-levels-card .mm-empty {
+  font-size: 10.5px; color: rgba(230, 236, 247, 0.45);
+  padding: 8px 2px; line-height: 1.4;
+}
+#mm-levels-card .mm-foot {
+  margin-top: 8px; padding-top: 6px;
+  border-top: 1px solid rgba(120, 160, 220, 0.14);
+  font-size: 9px; color: rgba(230, 236, 247, 0.4); line-height: 1.4;
+}
+
+/* Probe readout — temporary diagnostic. Says whether Dext exposes a chart API
+   we could draw real lines with, so the question is answered from the card
+   rather than from DevTools. */
+#mm-levels-card .mm-probe {
+  margin-top: 8px; padding: 5px 7px; border-radius: 6px;
+  font-size: 9px; line-height: 1.4; word-break: break-word;
+  background: rgba(255, 255, 255, 0.05); color: rgba(230, 236, 247, 0.55);
+}
+#mm-levels-card .mm-probe-yes {
+  background: rgba(74, 222, 128, 0.14); color: #6ee79b; font-weight: 700;
+}
+#mm-levels-card .mm-probe-no { background: rgba(248, 113, 113, 0.10); color: #fb9090; }
