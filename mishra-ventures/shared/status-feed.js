@@ -19,9 +19,21 @@ const LIVE_STATUS_STALE_AFTER_MIN = 5;
  * parsed object based on `updated_at`. Throws on network failure or a
  * missing/empty status file -- callers should catch and show an
  * offline/no-data state.
+ *
+ * `symbol` (optional) selects which instrument's snapshot to read. Two agents
+ * now publish -- the near-month FUTURE (which produces trap entries) and the
+ * SPOT index (levels only, no volume so no entries). They sit ~40-70 pts apart,
+ * so a caller that cares which frame it is showing must ASK for it. Omitting
+ * it returns the Worker's DEFAULT_SYMBOL, which is the back-compatible path.
  */
-async function fetchLiveStatus() {
-  const res = await fetch(LIVE_STATUS_URL, { cache: 'no-store' });
+async function fetchLiveStatus(symbol) {
+  const url = symbol
+    ? `${LIVE_STATUS_URL}?symbol=${encodeURIComponent(symbol)}`
+    : LIVE_STATUS_URL;
+  const res = await fetch(url, { cache: 'no-store' });
+  // 404 = that symbol has never published. Name it, rather than letting it
+  // look like a market with no activity.
+  if (res.status === 404) throw new Error(`No feed for symbol "${symbol}"`);
   if (!res.ok) throw new Error('No status file yet');
   const data = await res.json();
 
@@ -31,6 +43,30 @@ async function fetchLiveStatus() {
   data._minsOld = minsOld;
   data._isStale = minsOld > LIVE_STATUS_STALE_AFTER_MIN;
   return data;
+}
+
+/** Symbols the Worker has ever received a snapshot for, plus its default. */
+async function fetchSymbolList() {
+  try {
+    const res = await fetch(`${LIVE_STATUS_URL}?list=1`, { cache: 'no-store' });
+    if (!res.ok) return { symbols: [], default: null };
+    return await res.json();
+  } catch (e) {
+    return { symbols: [], default: null };
+  }
+}
+
+/** True for the bare index (spot). Spot reports no volume, so its agent can
+ *  never produce a trap entry -- surfaces must say so rather than let a trader
+ *  wait for a signal that cannot arrive. */
+function isSpotSymbol(sym) {
+  return /^[A-Z]+$/.test(String(sym || '')) && !/FUT$/.test(String(sym || ''));
+}
+
+/** Human label: "NIFTY 50 (spot)" vs "NIFTY Aug FUT". */
+function frameLabel(sym) {
+  if (!sym) return '';
+  return isSpotSymbol(sym) ? `${sym} (spot index)` : `${sym} (futures)`;
 }
 
 function fmtLivePrice(v) {

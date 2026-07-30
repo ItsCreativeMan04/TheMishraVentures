@@ -139,6 +139,31 @@
     .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
     .price-updated { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
 
+    /* Instrument switcher. ONE page, not a duplicate spot page: a second copy
+       of ~1400 lines would drift from this one within a week, and the two would
+       eventually disagree — the exact failure mode this whole dashboard has
+       been cleaned up to prevent. The selected symbol lives in the URL
+       (?symbol=...) so each instrument is still a bookmarkable "page". */
+    .frame-switch { display: flex; gap: 2px; background: var(--tint-2);
+      border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
+    .frame-btn { background: none; border: 0; cursor: pointer; font: inherit;
+      font-size: 0.76rem; font-weight: 600; color: var(--muted);
+      padding: 5px 13px; border-radius: 100px; transition: background .2s, color .2s; }
+    .frame-btn:hover { color: var(--text); }
+    .frame-btn.active { background: var(--accent-2); color: var(--accent2); }
+
+    /* Says which instrument you are looking at, loudly enough that it cannot be
+       mistaken — reading futures levels off a spot chart is wrong by the basis
+       on every entry and stop. */
+    .frame-note {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      font-size: 0.76rem; margin-bottom: 1rem; padding: 0.65rem 1rem;
+      border-radius: 12px; border: 1px solid var(--border);
+      background: var(--tint-1); color: var(--muted);
+    }
+    .frame-note b { color: var(--text-strong); font-weight: 700; }
+    .frame-note.spot { border-color: var(--yellow-3); background: var(--yellow-1); }
+
     /* Freshness strip: how old is what you're looking at?
        Shows MEASURED age alongside the nominal cadence, because a stalled
        agent and a quiet market look identical on a dashboard that only
@@ -519,6 +544,10 @@
       <div class="nav-brand-sub">by Mishra Ventures</div>
     </div>
   </a>
+  <div class="frame-switch" id="frameSwitch" role="group" aria-label="Instrument">
+    <button class="frame-btn" type="button" data-sym="">Futures</button>
+    <button class="frame-btn" type="button" data-sym="NIFTY">Spot</button>
+  </div>
   <button class="theme-toggle" id="themeToggle" type="button"
           aria-label="Switch between light and dark theme">
     <span id="themeIcon">🌙</span><span id="themeLabel">Dark</span>
@@ -534,6 +563,8 @@
 
 <div class="wrap">
   <div class="status-banner" id="statusBanner"></div>
+
+  <div class="frame-note" id="frameNote"></div>
 
   <!-- How stale is any of this? Rendered from real timestamps, with the
        nominal cadences supplied by the agent so the page can never claim a
@@ -889,6 +920,67 @@
       </div>`;
   }
 
+  // ---- Instrument frame -------------------------------------------------
+  // Which agent's snapshot this page is showing. Precedence: ?symbol= in the
+  // URL (so a bookmark pins an instrument), then the last choice, then the
+  // Worker default (futures). Empty string means "let the Worker decide",
+  // which keeps the original behaviour intact.
+  let activeSymbol = (() => {
+    try {
+      const q = new URLSearchParams(location.search).get('symbol');
+      if (q !== null) return q;
+      return localStorage.getItem('lm-symbol') || '';
+    } catch (e) { return ''; }
+  })();
+
+  function paintFrameSwitch() {
+    document.querySelectorAll('#frameSwitch .frame-btn').forEach(b => {
+      b.classList.toggle('active', (b.dataset.sym || '') === (activeSymbol || ''));
+    });
+  }
+
+  function renderFrameNote(data) {
+    const el = document.getElementById('frameNote');
+    const sym = (data && data.symbol) || activeSymbol || '';
+    const spot = isSpotSymbol(sym);
+    el.className = 'frame-note' + (spot ? ' spot' : '');
+    // The frame is the single most consequential thing on this page: futures
+    // and spot sit ~40-70 pts apart, so which one you are reading has to be
+    // unambiguous before any number below it means anything.
+    const parts = [`Showing <b>${frameLabel(sym) || '—'}</b>`];
+    if (spot) {
+      parts.push('Spot has no traded volume, so this agent tracks levels and '
+        + 'structure only — <b>it can never produce a trap entry</b>. '
+        + 'Entries come from the futures agent.');
+    } else {
+      parts.push('The entry frame: real volume, trap detection active. '
+        + 'Chart this contract, not the spot index.');
+    }
+    // Asked for one instrument and got another = every level is wrong by the
+    // basis. Must be impossible to miss.
+    if (activeSymbol && data && data.symbol && data.symbol !== activeSymbol) {
+      parts.unshift(`<b>⚠ Asked for ${activeSymbol} but received ${data.symbol}</b> — wrong frame.`);
+    }
+    el.innerHTML = parts.join(' ');
+  }
+
+  document.getElementById('frameSwitch').addEventListener('click', (e) => {
+    const btn = e.target.closest('.frame-btn');
+    if (!btn) return;
+    activeSymbol = btn.dataset.sym || '';
+    paintFrameSwitch();
+    try { localStorage.setItem('lm-symbol', activeSymbol); } catch (err) { /* private mode */ }
+    // Keep the URL in step so the current view can be bookmarked or shared.
+    try {
+      const u = new URL(location.href);
+      if (activeSymbol) u.searchParams.set('symbol', activeSymbol);
+      else u.searchParams.delete('symbol');
+      history.replaceState(null, '', u);
+    } catch (err) { /* ignore */ }
+    refresh();
+  });
+  paintFrameSwitch();
+
   // ---- Theme toggle -----------------------------------------------------
   // The palette itself is applied by the inline pre-paint script in <head>;
   // this only handles the button and persistence.
@@ -1134,7 +1226,8 @@
     const liveLabel = document.getElementById('liveLabel');
 
     try {
-      const data = await fetchLiveStatus();
+      const data = await fetchLiveStatus(activeSymbol || undefined);
+      renderFrameNote(data);
 
       const ago = fmtLiveAgo(data.updated_at);
 

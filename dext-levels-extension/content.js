@@ -20,6 +20,12 @@
 
   const DEFAULTS = {
     statusUrl: 'https://live-market-status.itscreativeman04.workers.dev',
+    // Which instrument's map to show. Two agents now publish (futures for
+    // entries, spot for levels), so this must be EXPLICIT — relying on the
+    // Worker's default would silently show whichever agent happened to be the
+    // default, and the two are ~40-70 pts apart. Set it to match the symbol on
+    // your Dext chart: 'NIFTY' for the NIFTY 50 spot chart.
+    symbol: 'NIFTY',
     refreshMs: 30000,
     pos: { right: 18, top: 96 },
     collapsed: false,
@@ -146,7 +152,17 @@
     $('mm-levels').innerHTML = parts.join('');
 
     const s = L.session_date ? `map for ${L.session_date}` : '';
-    $('mm-foot').textContent = [s, 'levels are areas, not entry lines'].filter(Boolean).join(' · ');
+    const bits = [s, 'levels are areas, not entry lines'];
+    // Frame guard: showing another instrument's levels on this chart is wrong
+    // by the basis on every entry and stop, so it must be impossible to miss.
+    if (cfg.symbol && d.symbol && d.symbol !== cfg.symbol) {
+      bits.unshift(`⚠ asked for ${cfg.symbol} but got ${d.symbol} — WRONG FRAME`);
+    }
+    // Spot has no volume, so this feed can never produce a trap entry.
+    if (/^NIFTY$/i.test(String(d.symbol || ''))) {
+      bits.push('spot frame: levels only, entries come from the futures agent');
+    }
+    $('mm-foot').textContent = bits.filter(Boolean).join(' · ');
   }
 
   function renderError(msg) {
@@ -163,7 +179,13 @@
 
   async function tick() {
     try {
-      const res = await fetch(cfg.statusUrl, { cache: 'no-store' });
+      const url = cfg.symbol
+        ? `${cfg.statusUrl}?symbol=${encodeURIComponent(cfg.symbol)}`
+        : cfg.statusUrl;
+      const res = await fetch(url, { cache: 'no-store' });
+      // A 404 means this symbol has never published — say which one, rather
+      // than showing a market that looks merely quiet.
+      if (res.status === 404) throw new Error(`no feed for symbol "${cfg.symbol}"`);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       lastGood = data;
