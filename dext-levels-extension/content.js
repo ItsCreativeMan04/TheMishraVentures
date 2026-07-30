@@ -147,7 +147,20 @@
       parts.push(levelRow('Invalidation', L.invalidation, price, 'mm-inv', ''));
     }
     if (!parts.length) {
-      parts.push('<div class="mm-empty">No levels published yet — the map builds after the close.</div>');
+      // Describe what was OBSERVED, don't guess the cause. The first version
+      // said "the map builds after the close", which was wrong in the common
+      // case: the map existed and the PUBLISHER simply sent no levels (an agent
+      // running code older than the levels block). That sent debugging in the
+      // wrong direction entirely.
+      const hasLevelsKey = d.levels && typeof d.levels === 'object';
+      parts.push(
+        `<div class="mm-empty">This snapshot carried <strong>no levels</strong>` +
+        (hasLevelsKey
+          ? ' — the <code>levels</code> block is present but empty.'
+          : ' — the snapshot has no <code>levels</code> block at all, so the agent' +
+            ' that published it is running older code.') +
+        `<br>Levels appear once an agent publishes with them. Nothing is wrong` +
+        ` with this card.</div>`);
     }
     $('mm-levels').innerHTML = parts.join('');
 
@@ -161,6 +174,16 @@
     // Spot has no volume, so this feed can never produce a trap entry.
     if (/^NIFTY$/i.test(String(d.symbol || ''))) {
       bits.push('spot frame: levels only, entries come from the futures agent');
+    }
+    // FUTURES-ON-SPOT-CHART GUARD (2026-07-30). The existing guard compares the
+    // symbol ASKED FOR against the symbol RECEIVED, which cannot catch the real
+    // mistake: a correctly-fetched FUTURES snapshot read against a NIFTY 50
+    // (spot) chart. Seen live with the card at 24355 and the chart at 24296.60
+    // -- a ~58 pt basis silently applied to every zone, entry and stop. The
+    // extension cannot read Dext's chart symbol, so it states the frame plainly
+    // and lets the trader check, rather than staying quiet and being wrong.
+    if (/FUT$/i.test(String(d.symbol || ''))) {
+      bits.push('FUTURES frame — only valid on a futures chart; ~40-70 pts above spot');
     }
     $('mm-foot').textContent = bits.filter(Boolean).join(' · ');
   }
