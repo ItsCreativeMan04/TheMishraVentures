@@ -14,7 +14,10 @@ nav {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 2rem; height: 60px;
-  background: rgba(6, 10, 20, 0.88); backdrop-filter: blur(16px);
+  /* var(), not a literal: this used to be hardcoded dark, so the nav bar
+     ignored the theme toggle entirely. Fallback keeps the dark-only pages
+     working even if global.css is ever loaded out of order. */
+  background: var(--nav-bg, rgba(6, 10, 20, 0.88)); backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
 }
 .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -39,7 +42,9 @@ nav {
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.2rem; }
 .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; }
 .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-.stat-value { font-size: 1.15rem; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }
+/* color: #fff was invisible in light mode — white text on a white tile.
+   Falls back to #fff for pages that never define --text-strong. */
+.stat-value { font-size: 1.15rem; font-weight: 700; color: var(--text-strong, #fff); font-family: 'JetBrains Mono', monospace; }
 .stat-value.bullish { color: var(--green); }
 .stat-value.bearish { color: var(--red); }
 .stat-value.neutral { color: var(--yellow); }

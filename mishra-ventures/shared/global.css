@@ -8,4 +8,18 @@
   --dark-border: rgba(255,255,255,0.1);
   --dark-muted: #94a3b8;
   --font-base: system-ui, -apple-system, sans-serif;
+
+  /* Nav background. Lives here as a VARIABLE because components.css used to
+     hardcode rgba(6,10,20,0.88), which meant the nav bar stayed dark when the
+     live-market page switched to light mode — the header simply did not follow
+     the theme. Seven pages share this stylesheet and only live-market has a
+     light mode, so the default stays dark and only pages that actually set
+     data-theme="light" get the override below. */
+  --nav-bg: rgba(6, 10, 20, 0.88);
+}
+
+/* Light-mode overrides for the SHARED components. Scoped to the attribute, so
+   the six dark-only pages are completely unaffected. */
+html[data-theme="light"] {
+  --nav-bg: rgba(255, 255, 255, 0.9);
 }
