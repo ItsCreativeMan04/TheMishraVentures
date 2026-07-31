@@ -742,7 +742,12 @@
   <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Market &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-market/
 </footer>
 
-<script src="../shared/status-feed.js"></script>
+<script src="../shared/status-feed.js?v=20260731"></script>
+<!-- ?v= is a cache-buster. index.html and status-feed.js are separate
+     files with separate cache lifetimes: on 2026-07-31 the HTML updated while
+     the JS stayed cached, so the page called isSpotSymbol() from a version that
+     did not define it and showed OFFLINE while live data was flowing. BUMP THIS
+     STRING whenever status-feed.js changes. -->
 <script>
   const REFRESH_MS = 30000;
 
@@ -933,10 +938,64 @@
     } catch (e) { return ''; }
   })();
 
+  // Fallbacks for helpers that live in shared/status-feed.js.
+  //
+  // WHY: index.html and status-feed.js are separate files with separate cache
+  // lifetimes. On 2026-07-31 the HTML deployed but the browser kept a cached
+  // older JS that predated these helpers, so renderFrameNote() threw a
+  // ReferenceError, the catch in refresh() swallowed it, and the page showed
+  // "OFFLINE / No live session data yet" while the agent was publishing fine
+  // every 60 seconds. Diagnosing that took far longer than it should have.
+  //
+  // The ?v= cache-buster on the script tag prevents the mismatch; these keep a
+  // stale cache from blanking the whole page if it happens anyway. Logic is
+  // duplicated deliberately and kept trivial — a missing label is a cosmetic
+  // problem, a missing dashboard is not.
+  if (typeof isSpotSymbol !== 'function') {
+    window.isSpotSymbol = function (sym) {
+      const s = String(sym || '');
+      return /^[A-Z]+$/.test(s) && !/FUT$/.test(s);
+    };
+    console.warn('[live-market] isSpotSymbol missing from status-feed.js — using fallback. The cached JS is stale; bump ?v= on the script tag.');
+  }
+  if (typeof frameLabel !== 'function') {
+    window.frameLabel = function (sym) {
+      if (!sym) return '';
+      return isSpotSymbol(sym) ? `${sym} (spot index)` : `${sym} (futures)`;
+    };
+    console.warn('[live-market] frameLabel missing from status-feed.js — using fallback.');
+  }
+  if (typeof fetchSymbolList !== 'function') {
+    window.fetchSymbolList = async function () { return { symbols: [], default: null }; };
+  }
+
   function paintFrameSwitch() {
     document.querySelectorAll('#frameSwitch .frame-btn').forEach(b => {
       b.classList.toggle('active', (b.dataset.sym || '') === (activeSymbol || ''));
     });
+  }
+
+  // Is what came back the frame the user actually asked for?
+  //
+  // The Futures button carries data-sym="" ON PURPOSE: the near-month contract
+  // rolls monthly (NIFTY25AUG26FUT -> NIFTY25SEP26FUT), so it asks the Worker
+  // for its DEFAULT rather than hardcoding a ticker that expires. The failure
+  // that exposed (2026-07-31): with only the spot agent publishing, "the
+  // default" WAS spot, so clicking Futures silently showed SPOT prices under a
+  // Futures label. Spot and futures sit ~40-70 pts apart — that is not a
+  // cosmetic bug, it is every level on the page being wrong by the basis.
+  function frameMismatch(data) {
+    const got = (data && data.symbol) || '';
+    if (!got) return null;
+    // Explicit request that came back as something else.
+    if (activeSymbol && got !== activeSymbol) {
+      return `You asked for ${activeSymbol} but the feed returned ${got}.`;
+    }
+    // "Futures" (default) that resolved to a SPOT instrument.
+    if (!activeSymbol && isSpotSymbol(got)) {
+      return `No futures feed is publishing — the status feed's default is ${got}, which is SPOT.`;
+    }
+    return null;
   }
 
   function renderFrameNote(data) {
@@ -1453,7 +1512,19 @@
         renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
       }
 
-      if (data._isStale) {
+      // Frame mismatch outranks staleness: stale-but-correct data is usable
+      // with care, whereas the wrong instrument is wrong by the basis on every
+      // single number above. Say so loudly rather than letting the page look
+      // normal while labelled as something it is not.
+      const mismatch = frameMismatch(data);
+      if (mismatch) {
+        liveDot.classList.add('offline');
+        liveLabel.textContent = 'Wrong frame';
+        banner.textContent = `⚠ ${mismatch} Everything above is ${data.symbol}. `
+          + `Spot and futures trade ~40–70 pts apart, so do not read these levels `
+          + `against the other instrument.`;
+        banner.classList.add('show');
+      } else if (data._isStale) {
         liveDot.classList.add('offline');
         liveLabel.textContent = 'Session Ended';
         banner.textContent = `⏸ No fresh data in the last ${LIVE_STATUS_STALE_AFTER_MIN}+ minutes — the agent only runs during NSE market hours (9:15 AM – 3:15 PM IST, weekdays). Showing the last known snapshot above.`;
@@ -1464,14 +1535,66 @@
         banner.classList.remove('show');
       }
     } catch (e) {
+      // SAY WHAT WENT WRONG. This used to show one fixed message for every
+      // possible failure -- network down, 404, bad JSON, or a TypeError in the
+      // render path all looked identical, and identical to "the market is
+      // closed". On 2026-07-31 the agent was publishing correctly every 60s and
+      // this still read "No live session data yet", which sent the debugging in
+      // completely the wrong direction.
+      console.error('[live-market] refresh failed:', e);
       liveDot.classList.add('offline');
       liveLabel.textContent = 'Offline';
-      banner.textContent = '⏸ No live session data yet. Check back during NSE market hours (9:15 AM – 3:15 PM IST, weekdays).';
+
+      const msg = String((e && e.message) || e);
+      // ALWAYS show the reason. The first version of this classified anything
+      // matching /No status file/ as "no data yet" -- but fetchLiveStatus threw
+      // that exact string for EVERY non-2xx, so an HTTP 500 or a CORS failure
+      // still rendered the reassuring "check back during market hours". The fix
+      // that was supposed to expose the bug reproduced it. Only "this symbol has
+      // never published" gets the soft wording now, and even that names itself.
+      const neverPublished = /No feed for symbol/i.test(msg);
+      banner.textContent = neverPublished
+        ? `⏸ ${msg} — nothing has been published for this instrument yet. Check back during NSE market hours (9:15 AM – 3:15 PM IST, weekdays).`
+        : `⚠ Could not load live data — ${msg}. The agent may be publishing fine; this is a page-side failure. Details in the browser console.`;
       banner.classList.add('show');
     }
   }
 
-  refresh();
+  // Hide the Futures/Spot switch unless there is genuinely something to switch
+  // BETWEEN. Today only the spot agent publishes, so the switch offered a
+  // choice that could not be honoured — and choosing the unavailable side
+  // silently served the other frame. A control that cannot do what it says is
+  // worse than no control. It reappears by itself once a second instrument
+  // starts publishing; nothing to remember or re-enable.
+  async function configureFrameSwitch() {
+    const sw = document.getElementById('frameSwitch');
+    if (!sw) return;
+    try {
+      const [def, spot] = await Promise.allSettled([
+        fetchLiveStatus(undefined),      // whatever the feed defaults to
+        fetchLiveStatus('NIFTY'),        // spot, explicitly
+      ]);
+      const syms = new Set(
+        [def, spot].filter(r => r.status === 'fulfilled' && r.value && r.value.symbol)
+                   .map(r => r.value.symbol));
+      if (syms.size < 2) {
+        sw.style.display = 'none';
+        const only = [...syms][0];
+        if (only) {
+          activeSymbol = isSpotSymbol(only) ? only : '';
+          try { localStorage.setItem('lm-symbol', activeSymbol); } catch (e) { /* private mode */ }
+        }
+        console.info('[live-market] one instrument publishing (' + ([...syms][0] || 'none')
+          + ') — frame switch hidden until a second one appears.');
+      } else {
+        sw.style.display = '';
+      }
+    } catch (e) {
+      console.warn('[live-market] could not determine available instruments:', e);
+    }
+  }
+
+  configureFrameSwitch().finally(refresh);
   setInterval(refresh, REFRESH_MS);
 </script>
 </body>

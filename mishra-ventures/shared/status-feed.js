@@ -30,12 +30,31 @@ async function fetchLiveStatus(symbol) {
   const url = symbol
     ? `${LIVE_STATUS_URL}?symbol=${encodeURIComponent(symbol)}`
     : LIVE_STATUS_URL;
-  const res = await fetch(url, { cache: 'no-store' });
+  let res;
+  try {
+    res = await fetch(url, { cache: 'no-store' });
+  } catch (netErr) {
+    // A thrown fetch is a NETWORK/CORS failure, not an empty feed. These look
+    // identical to the user otherwise, and they need opposite fixes: one is
+    // "wait for the market", the other is "the Worker is unreachable or is not
+    // sending CORS headers for this origin".
+    throw new Error(`Network/CORS failure reaching the status feed (${netErr.message})`);
+  }
   // 404 = that symbol has never published. Name it, rather than letting it
   // look like a market with no activity.
   if (res.status === 404) throw new Error(`No feed for symbol "${symbol}"`);
-  if (!res.ok) throw new Error('No status file yet');
-  const data = await res.json();
+  // Carry the STATUS CODE. This used to throw a flat 'No status file yet' for
+  // every non-2xx, so a 500 or a 403 was indistinguishable from a market that
+  // had not opened -- and any caller trying to be helpful would classify it as
+  // "no data yet" and say so. Name the code.
+  if (!res.ok) throw new Error(`Status feed returned HTTP ${res.status}`);
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (parseErr) {
+    throw new Error(`Status feed returned unparseable JSON (${parseErr.message})`);
+  }
 
   const minsOld = data.updated_at
     ? (Date.now() - new Date(data.updated_at).getTime()) / 60000
