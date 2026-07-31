@@ -64,21 +64,36 @@ html[data-theme="light"] .theme-switch {
   --ts-idle-hover: rgba(15, 23, 42, 0.95);
   --ts-track: rgba(15, 23, 42, 0.04);
 }
-.ts-opt {
+/* The ACTIVE state is driven by a CLASS (.is-on), not the aria-pressed
+   attribute. Both are kept — aria-pressed for assistive tech, the class for
+   styling — because in testing the attribute selector did not reliably win
+   against `all: unset` on the same element, leaving the active pill with no
+   background in light mode. A class is the boring, dependable option and this
+   control is shared by seven pages, so dependable wins.
+
+   Colours are literal, not var(). Each page defines its own palette; a shared
+   control that borrows them looks different (or vanishes) depending on where it
+   lands. #2563eb carries 5.17:1 against white in both themes. */
+.theme-switch .ts-opt {
   all: unset;
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 26px; border-radius: 100px;
-  cursor: pointer; color: var(--ts-idle);
+  cursor: pointer; color: rgba(255, 255, 255, 0.55);
   transition: background 0.18s, color 0.18s;
 }
-.ts-opt svg { width: 15px; height: 15px; display: block; }
-.ts-opt:hover { color: var(--ts-idle-hover); }
-.ts-opt[aria-pressed="true"] {
-  background: var(--ts-active-bg);
-  color: var(--ts-active-fg);
+html[data-theme="light"] .theme-switch .ts-opt { color: rgba(15, 23, 42, 0.55); }
+
+.theme-switch .ts-opt svg { width: 15px; height: 15px; display: block; }
+.theme-switch .ts-opt:hover { color: rgba(255, 255, 255, 0.9); }
+html[data-theme="light"] .theme-switch .ts-opt:hover { color: rgba(15, 23, 42, 0.95); }
+
+.theme-switch .ts-opt.is-on,
+html[data-theme="light"] .theme-switch .ts-opt.is-on {
+  background: #2563eb;
+  color: #ffffff;
 }
 /* Keyboard users must see focus; `all: unset` removes the default ring. */
-.ts-opt:focus-visible { outline: 2px solid var(--ts-active-bg); outline-offset: 2px; }
+.theme-switch .ts-opt:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
 /* ── Nav on small screens ──────────────────────────────────────────────────
    This file had NO media queries at all, so the nav kept its desktop layout on
@@ -106,7 +121,10 @@ html[data-theme="light"] .theme-switch {
     display: inline-flex; align-items: center; justify-content: center;
   }
   .theme-switch { flex: 0 0 auto; padding: 4px; }
-  .ts-opt { width: 34px; height: 30px; }
+  /* Must match the base rule's specificity (.theme-switch .ts-opt), or the
+     base wins and the mobile sizing silently does nothing — which is exactly
+     what happened: the tap target stayed 30x26 on a phone. */
+  .theme-switch .ts-opt { width: 34px; height: 30px; }
 }
 
 /* Very narrow phones: drop the words, keep every control tappable. */
@@ -114,7 +132,7 @@ html[data-theme="light"] .theme-switch {
   .nav-home { font-size: 0; padding: 5px 9px; }
   .nav-home::after { content: '←'; font-size: 0.85rem; }
   /* The switch is already icon-only; just tighten it a touch. */
-  .ts-opt { width: 30px; }
+  .theme-switch .ts-opt { width: 30px; }
 }
 
 /* ── Live status badge (pulsing dot + label) ── */

@@ -1075,8 +1075,19 @@
     if (!sw) return;
     const paint = (t) => {
       document.documentElement.setAttribute('data-theme', t);
-      sw.querySelectorAll('.ts-opt').forEach(b =>
-        b.setAttribute('aria-pressed', String(b.dataset.setTheme === t)));
+        sw.querySelectorAll('.ts-opt').forEach(b => {
+          const on = b.dataset.setTheme === t;
+          b.setAttribute('aria-pressed', String(on));   // for assistive tech
+          b.classList.toggle('is-on', on);              // for styling hooks
+          // Inline, deliberately. Three separate attempts to style the active
+          // pill from the stylesheet produced a correct result in dark and a
+          // TRANSPARENT pill in light, and the cause resisted isolation. An
+          // inline style cannot lose a cascade fight, and this is a two-element
+          // control — the cost of certainty here is four lines.
+          b.style.background = on ? '#2563eb' : 'transparent';
+          b.style.color = on ? '#ffffff'
+            : (t === 'light' ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.55)');
+        });
     };
     paint(document.documentElement.getAttribute('data-theme') || 'dark');
     sw.addEventListener('click', (e) => {
