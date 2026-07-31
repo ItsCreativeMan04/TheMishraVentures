@@ -27,6 +27,96 @@ nav {
 .nav-home { font-size: 0.82rem; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 6px 14px; border-radius: 100px; transition: color 0.2s, border-color 0.2s; }
 .nav-home:hover { color: var(--text); border-color: var(--accent); }
 
+/* ── Theme switch ──────────────────────────────────────────────────────────
+   A two-position SEGMENTED control, not a single button.
+
+   The previous version was an emoji plus the current theme's name ("🌙 Dark"),
+   which had two problems. Emoji render differently on every OS — inconsistent
+   weight, colour and baseline, and nothing you can style. And the label was
+   ambiguous: "Dark" could equally mean "you are in dark mode" or "click for
+   dark mode", so the control never told you which state you were actually in.
+
+   Showing BOTH options with one highlighted removes the ambiguity entirely:
+   the current mode is the lit one, the other is what you get if you press it.
+   Inline SVG keeps it crisp and inherits currentColor in both themes. */
+.theme-switch {
+  /* SELF-SUFFICIENT COLOURS. Seven pages share this stylesheet and each defines
+     its own palette, so leaning on --accent2/--muted made the control's
+     appearance depend on whichever page it landed on. Measured on the live page:
+     in light mode the active pill rendered TRANSPARENT and the idle icon white
+     on white — invisible. A control that vanishes on some pages is worse than a
+     plain one that works everywhere, so the switch now owns its own tokens and
+     only borrows --border. */
+  --ts-active-bg: #2563eb;
+  --ts-active-fg: #ffffff;
+  --ts-idle: rgba(255, 255, 255, 0.55);
+  --ts-idle-hover: rgba(255, 255, 255, 0.9);
+  --ts-track: rgba(255, 255, 255, 0.06);
+
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 3px; border-radius: 100px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--ts-track);
+}
+html[data-theme="light"] .theme-switch {
+  --ts-active-bg: #2563eb;
+  --ts-idle: rgba(15, 23, 42, 0.55);
+  --ts-idle-hover: rgba(15, 23, 42, 0.95);
+  --ts-track: rgba(15, 23, 42, 0.04);
+}
+.ts-opt {
+  all: unset;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 26px; border-radius: 100px;
+  cursor: pointer; color: var(--ts-idle);
+  transition: background 0.18s, color 0.18s;
+}
+.ts-opt svg { width: 15px; height: 15px; display: block; }
+.ts-opt:hover { color: var(--ts-idle-hover); }
+.ts-opt[aria-pressed="true"] {
+  background: var(--ts-active-bg);
+  color: var(--ts-active-fg);
+}
+/* Keyboard users must see focus; `all: unset` removes the default ring. */
+.ts-opt:focus-visible { outline: 2px solid var(--ts-active-bg); outline-offset: 2px; }
+
+/* ── Nav on small screens ──────────────────────────────────────────────────
+   This file had NO media queries at all, so the nav kept its desktop layout on
+   a phone: four flex children plus 2rem of padding each side needed ~355px of
+   a 326px usable strip at 390px. The overflow squeezed the THEME TOGGLE off
+   the edge, which is why light/dark worked on desktop and appeared "broken" on
+   mobile — the button was unreachable, not faulty.
+
+   Priority when space is short: keep the toggle and the brand; shed decoration.
+   Applies to all pages sharing this stylesheet, which all had the same latent
+   problem. */
+@media (max-width: 720px) {
+  nav { padding: 0 1rem; gap: 8px; }
+  /* The tagline is the least useful thing here and costs a whole line. */
+  .nav-brand-sub { display: none; }
+  .nav-brand-text { font-size: 0.88rem; }
+  .nav-logo { width: 28px; height: 28px; font-size: 14px; }
+  /* Never let the brand crowd out the controls. */
+  .nav-brand { min-width: 0; flex: 0 1 auto; overflow: hidden; }
+  .nav-brand-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* 40px minimum: the controls shrank to 31px, usable with a mouse and fiddly
+     with a thumb. This keeps both tappable without growing the 60px nav. */
+  .nav-home {
+    padding: 5px 10px; font-size: 0.75rem; min-height: 40px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .theme-switch { flex: 0 0 auto; padding: 4px; }
+  .ts-opt { width: 34px; height: 30px; }
+}
+
+/* Very narrow phones: drop the words, keep every control tappable. */
+@media (max-width: 400px) {
+  .nav-home { font-size: 0; padding: 5px 9px; }
+  .nav-home::after { content: '←'; font-size: 0.85rem; }
+  /* The switch is already icon-only; just tighten it a touch. */
+  .ts-opt { width: 30px; }
+}
+
 /* ── Live status badge (pulsing dot + label) ── */
 .hero-badge {
   display: inline-flex; align-items: center; gap: 7px;
