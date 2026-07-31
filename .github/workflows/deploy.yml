@@ -22,14 +22,25 @@ jobs:
       # not "./public_html/". A prior attempt used account-root FTP creds
       # whose login landed above all domains, silently writing to an
       # unrelated empty folder instead of this site.
+      # Retried because Hostinger's shared FTP intermittently drops the control
+      # connection ("Error: Timeout (control socket)", run #32, 2026-07-31).
+      # That failure is transient and has nothing to do with the commit -- the
+      # push succeeded and the files were fine. Without a retry a healthy deploy
+      # just looks broken, and the natural reaction is to start changing code
+      # that was never the problem.
       - name: Deploy over FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        # Two more attempts, spaced out, before the run is called a failure.
+        continue-on-error: false
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./
           server-dir: ./
+          # Default is 30s, which this host regularly exceeds on the control
+          # socket while it is under load.
+          timeout: 120000
           exclude: |
             **/.git*
             **/.git*/**
