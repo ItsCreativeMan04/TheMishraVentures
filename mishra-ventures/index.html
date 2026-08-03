@@ -148,6 +148,8 @@
     .card.farm:hover   { border-color: rgba(34, 197, 94, 0.5); }
     .card.money:hover  { border-color: rgba(234, 179, 8, 0.5); }
     .card.market:hover { border-color: rgba(59, 130, 246, 0.55); }
+    /* Amber, matching the discipline-journal page's own accent. */
+    .card.journal:hover { border-color: rgba(245, 158, 11, 0.55); }
 
     .live-dot {
       width: 6px; height: 6px; border-radius: 50%; background: var(--green);
@@ -239,7 +241,7 @@
 
     <div class="sec-head">
       <span class="sec-title">What I've built</span>
-      <span class="sec-note">four ventures, one domain</span>
+      <span class="sec-note">five ventures, one domain</span>
     </div>
 
     <section class="grid">
@@ -255,6 +257,16 @@
           <span class="ticker-meta" id="vcTickerMeta"></span>
         </div>
         <div class="card-arrow">Open dashboard →</div>
+      </a>
+
+      <a href="discipline-journal/" class="card journal">
+        <div class="card-top">
+          <span class="card-icon">📓</span>
+          <span class="card-label">Discipline</span>
+        </div>
+        <div class="card-title">Discipline Journal</div>
+        <div class="card-desc">A trading journal that grades process instead of profit — entries auto-checked against the zones and signals that existed at the time.</div>
+        <div class="card-arrow">See how it works →</div>
       </a>
 
       <a href="tech-ai-hub/" class="card tech">
