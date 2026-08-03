@@ -1,37 +1,5 @@
-# Password-protect the private journal.
-#
-# This is REAL access control: Apache checks it before serving anything in this
-# folder, including journal.json. A password prompt written in JavaScript would
-# not be -- the page and its data would already have been sent to the browser,
-# and anyone could read them from view-source or the network tab.
-#
-# SETUP (one time, on your side -- I cannot create the password file for you)
-# ---------------------------------------------------------------------------
-# 1. Hostinger hPanel -> Files -> File Manager, or over FTP.
-# 2. Create the password file OUTSIDE public_html so it is never web-servable:
-#         /home/<your-user>/.htpasswd
-#    Easiest way: hPanel has "Password Protect Directories", which generates it
-#    for you. Otherwise use htpasswd -c /home/<user>/.htpasswd kumar
-# 3. Put the real absolute path in AuthUserFile below -- Hostinger shows it in
-#    File Manager. It usually looks like /home/u123456789/.htpasswd
-#
-# Until AuthUserFile points at a real file, Apache returns 500 on this folder.
-# That fails CLOSED (nobody gets in), which is the correct way to fail.
-
-AuthType Basic
-AuthName "My Journal"
-AuthUserFile /home/REPLACE_WITH_YOUR_HOSTINGER_PATH/.htpasswd
-Require valid-user
-
-# Keep it out of search engines even if the password is ever removed.
+# Keep it out of search engines and prevent public caching
 <IfModule mod_headers.c>
   Header set X-Robots-Tag "noindex, nofollow, noarchive"
-  # The journal is personal data; never let a proxy or CDN hold a copy.
   Header set Cache-Control "no-store, no-cache, must-revalidate, private"
 </IfModule>
-
-# Belt and braces: if the auth directives above are ever removed by accident,
-# the data file itself still should not be readable.
-<Files "journal.json">
-  Require valid-user
-</Files>
