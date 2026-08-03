@@ -17,8 +17,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Market Intelligence – The Mishra Ventures</title>
-  <link rel="stylesheet" href="../shared/global.css?v=20260731b" />
-  <link rel="stylesheet" href="../shared/components.css?v=20260731b" />
+  <link rel="stylesheet" href="../shared/global.css?v=20260803" />
+  <link rel="stylesheet" href="../shared/components.css?v=20260803" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -218,7 +218,38 @@
     .action-banner.wait      { border-left-color: var(--border); }
     .action-banner.wait      .action-verb { color: var(--muted); }
     .action-banner.urgent .action-pill { background: var(--red-2); color: var(--red); }
+
+    /* Discipline strip: standing process reminder matching the live engine's HUD */
+    .discipline-strip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-left: 5px solid var(--accent); border-radius: 14px;
+      padding: 0.9rem 1.3rem; margin-bottom: 1.2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .discipline-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .discipline-badge {
+      font-size: 0.72rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px; padding: 3px 10px; border-radius: 100px;
+      background: var(--accent-2); color: var(--accent2);
+    }
+    .discipline-badge.limit-reached { background: var(--red-2); color: var(--red); }
+    .discipline-setup {
+      font-size: 0.76rem; font-weight: 600; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .discipline-setup.valid { color: var(--green); }
+    .discipline-setup.none { color: var(--muted); }
+    .discipline-body { flex: 1 1 260px; min-width: 0; text-align: right; }
+    .discipline-mission {
+      font-size: 0.84rem; font-weight: 800; letter-spacing: 0.5px;
+      color: var(--text-strong); text-transform: uppercase;
+    }
+    .discipline-sub { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
     @media (max-width: 720px) {
+      .discipline-strip { padding: 0.85rem 1rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .discipline-body { text-align: left; }
       .action-banner { padding: 1rem 1.1rem; gap: 0.7rem; }
       .action-reason { font-size: 0.85rem; }
 
@@ -245,7 +276,7 @@
 
       /* Safety net: no card may exceed the viewport, whatever it contains. This
          constrains the BOX; the rules above make the CONTENT fit inside it. */
-      .action-banner, .narrative-card, .price-card, .freshness,
+      .discipline-strip, .action-banner, .narrative-card, .price-card, .freshness,
       .plan-decision-card, .timeline-card { max-width: 100%; }
     }
 
@@ -606,6 +637,18 @@
     <div class="fresh-note" id="freshNote"></div>
   </div>
 
+  <!-- Discipline Bar: Standing Process Reminder & Live Trade Rules -->
+  <div class="discipline-strip" id="disciplineStrip">
+    <div class="discipline-left">
+      <span class="discipline-badge" id="discTradeBadge">0 / 3 TRADES</span>
+      <span class="discipline-setup" id="discSetupStatus">SETUP: Checking…</span>
+    </div>
+    <div class="discipline-body">
+      <div class="discipline-mission" id="discMission">DO OR DIE: 100% RULE-BASED TRADING.</div>
+      <div class="discipline-sub" id="discSub">Lucky profit is worse than a loss — only system execution counts.</div>
+    </div>
+  </div>
+
   <!-- The verdict, first on the page. Rendered from decision_focus /
        decision_reason, which the narrator guarantees is the SAME verdict the
        commentary opens with -- there is exactly one source of truth. -->
@@ -767,7 +810,7 @@
   <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Market &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-market/
 </footer>
 
-<script src="../shared/status-feed.js?v=20260731"></script>
+<script src="../shared/status-feed.js?v=20260803"></script>
 <!-- ?v= is a cache-buster. index.html and status-feed.js are separate
      files with separate cache lifetimes: on 2026-07-31 the HTML updated while
      the JS stayed cached, so the page called isSpotSymbol() from a version that
@@ -1437,6 +1480,42 @@
           `${Math.round((oiS + deliveryS) / 60)} min depending on the panel. ` +
           `Structure only updates on CLOSED candles by design — a 15m read can be up to 15 min behind price. ` +
           `Not a trading terminal; confirm on your broker before acting.`;
+      })();
+
+      // ---- Discipline strip ----------------------------------------------
+      (function renderDisciplineStrip() {
+        const disc = data.discipline || {};
+        const taken = disc.taken != null ? disc.taken : 0;
+        const limit = disc.limit != null ? disc.limit : 3;
+        const left = Math.max(0, limit - taken);
+        const discBadge = document.getElementById('discTradeBadge');
+        if (discBadge) {
+          discBadge.textContent = `${taken} / ${limit} TRADES (${left} left)`;
+          discBadge.className = 'discipline-badge ' + (taken >= limit ? 'limit-reached' : '');
+        }
+
+        const discSetup = document.getElementById('discSetupStatus');
+        if (discSetup) {
+          if (disc.setup_available === true) {
+            discSetup.textContent = `SETUP: VALID (${disc.setup_reason || 'In Zone'})`;
+            discSetup.className = 'discipline-setup valid';
+          } else if (disc.setup_available === false) {
+            discSetup.textContent = `SETUP: NONE (${disc.setup_reason || 'Open Air'})`;
+            discSetup.className = 'discipline-setup none';
+          } else {
+            discSetup.textContent = disc.setup_reason ? `SETUP: ${disc.setup_reason}` : 'SETUP: Checking…';
+            discSetup.className = 'discipline-setup';
+          }
+        }
+
+        const mEl = document.getElementById('discMission');
+        if (mEl && disc.mission) {
+          mEl.textContent = disc.mission;
+        }
+        const sEl = document.getElementById('discSub');
+        if (sEl && disc.mission_sub) {
+          sEl.textContent = disc.mission_sub;
+        }
       })();
 
       // ---- Action banner -------------------------------------------------
