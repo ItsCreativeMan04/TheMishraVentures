@@ -1,1 +1,6 @@
 .DS_Store
+
+# The private journal's DATA never belongs in this repo. This repo drives a
+# public site; real fills and P&L are uploaded straight to Hostinger by the
+# platform's nightly job. Only the page shell lives here.
+mishra-ventures/discipline-journal/my/journal.json
