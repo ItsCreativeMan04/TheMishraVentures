@@ -4,3 +4,37 @@
 # flash. ^/$ matches only the exact root path -- everything else
 # (mishra-ventures/live-market/, etc.) is left untouched.
 RedirectMatch 301 ^/$ /mishra-ventures/
+
+# ── Don't let browsers cache the HTML ──
+#
+# WHY: the credit-spread pages were removed from the repo and the host on
+# 2026-08-03, and Kumar still saw MONITORING_SPREAD and a "Bull Put Spread" a
+# day later — his browser was serving an 8-hour-old copy of index.html. The
+# site already cache-busts CSS and JS with ?v= query strings, but nothing ever
+# told the browser how long to keep the PAGE that references them, so a stale
+# page kept loading its own stale assets and the busters never fired.
+#
+# These files are small and change often; re-fetching them costs nothing next
+# to showing someone a strategy that was deleted. Assets keep their long cache
+# because their URLs change when their contents do.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+  </FilesMatch>
+  # The live status feed is polled every 30s; a cached copy would freeze the
+  # dashboard on an old price while looking perfectly current.
+  <FilesMatch "\.(json)$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

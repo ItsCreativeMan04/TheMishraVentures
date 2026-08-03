@@ -158,6 +158,18 @@
     .ilink.primary .live-dot { background: #fff; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 
+    /* Market closed: stop claiming to be live.
+       A green pulsing dot at 9pm on a Sunday says the desk is streaming when
+       nothing has moved for two days. Small lie, but this dot is the page's
+       only status signal and a status signal that is always "on" carries no
+       information at all. Grey and still when the market is shut. */
+    body.market-closed .live-dot {
+      background: var(--muted, #6b7280);
+      animation: none;
+      opacity: 0.65;
+    }
+    body.market-closed .ilink.primary .live-dot { background: rgba(255,255,255,0.55); }
+
     /* Live price teaser inside the Live Market card. */
     .ticker {
       display: none; align-items: baseline; gap: 8px; width: 100%;
@@ -354,6 +366,44 @@
         document.getElementById('vcTickerMeta').textContent = data.bias ? `· ${data.bias}` : '';
         document.getElementById('vcTicker').style.display = 'flex';
       } catch (e) { /* silent by design */ }
+    })();
+
+    // ── Is the market actually open right now? ──
+    // NSE cash: Mon–Fri, 09:15–15:30 IST. Computed in IST explicitly rather
+    // than from the visitor's clock, because the answer must not depend on
+    // which country the page is opened in.
+    //
+    // Holidays are NOT handled: there is no holiday list on this static page,
+    // so a trading holiday still shows "open" between 9:15 and 3:30. That is a
+    // handful of days a year against every evening and weekend, which is what
+    // this fixes. The dashboard itself carries the authoritative staleness
+    // stamp; this dot is a hint, not a source of truth.
+    (function marketStatus() {
+      function istNow() {
+        const now = new Date();
+        const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        return new Date(utcMs + 5.5 * 3600 * 1000);
+      }
+      function isOpen() {
+        const t = istNow();
+        const day = t.getDay();                 // 0 Sun … 6 Sat
+        if (day === 0 || day === 6) return false;
+        const mins = t.getHours() * 60 + t.getMinutes();
+        return mins >= (9 * 60 + 15) && mins <= (15 * 60 + 30);
+      }
+      function paintStatus() {
+        const open = isOpen();
+        document.body.classList.toggle('market-closed', !open);
+        document.querySelectorAll('.live-dot').forEach(function (d) {
+          d.setAttribute('title', open
+            ? 'Market open — the desk is streaming'
+            : 'Market closed — last session’s data');
+        });
+      }
+      paintStatus();
+      // Re-check each minute so a page left open across the bell updates itself
+      // instead of freezing on whatever it said when it loaded.
+      setInterval(paintStatus, 60000);
     })();
   </script>
 </body>
