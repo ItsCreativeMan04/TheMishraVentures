@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discipline Journal — The Mishra Ventures</title>
-  <meta name="description" content="A trading journal that grades process instead of profit. Entries are auto-checked against archived zones and system alerts." />
+  <title>Discipline Journal — a trading journal that grades your process</title>
+  <meta name="description" content="A trading journal that scores how well you followed your own rules, not how much you made. Trades sync from your broker automatically." />
 
   <link rel="stylesheet" href="../shared/global.css?v=20260731b" />
   <link rel="stylesheet" href="../shared/components.css?v=20260731b" />
 
   <script>
-    // Blocking on purpose — must run before first paint or the page flashes
-    // the wrong palette. Shares the 'lm-theme' key with every other page so
-    // moving between them never flips the theme under you.
     (function () {
       try {
         var saved = localStorage.getItem('lm-theme');
@@ -24,196 +21,229 @@
   </script>
 
   <style>
-    /* ── Palette ───────────────────────────────────────────────────────────
-       DELIBERATELY NOT the live-market palette. That page is a market
-       terminal — cool blues, dense data. This one is about behaviour and
-       habit, so it takes a warmer, quieter ledger feel: amber accent, paper
-       surfaces, more air. Variable NAMES stay identical to the other pages
-       because shared/components.css (nav, theme switch) consumes them. */
+    /* ── Palette ──────────────────────────────────────────────────────────
+       A ledger, not a terminal. live-market is cool and dense because it is a
+       market screen; this is a product about habit, so it runs warmer and
+       calmer. Variable NAMES match the other pages because shared/
+       components.css (nav, theme switch) consumes them. */
     :root {
-      --bg: #0d0b08;
-      --surface: rgba(255, 247, 235, 0.045);
-      --surface-2: rgba(255, 247, 235, 0.025);
-      --border: rgba(255, 237, 213, 0.13);
-      --border-strong: rgba(255, 237, 213, 0.26);
+      --bg: #0c0a07;
+      --surface: #14110c;
+      --surface-2: #1b1710;
+      --border: rgba(255, 237, 213, 0.12);
+      --border-strong: rgba(255, 237, 213, 0.24);
       --text-strong: #fffaf3;
-      --text: rgba(255, 250, 243, 0.84);
+      --text: rgba(255, 250, 243, 0.85);
       --muted: rgba(255, 250, 243, 0.55);
       --faint: rgba(255, 250, 243, 0.32);
       --accent: #f59e0b;
       --accent2: #fbbf24;
       --green: #4ade80;
+      --green-bg: rgba(74, 222, 128, 0.13);
       --red: #f87171;
+      --red-bg: rgba(248, 113, 113, 0.13);
       --yellow: #facc15;
-      --grid: rgba(255, 237, 213, 0.055);
-      --shadow: 0 20px 46px rgba(0, 0, 0, 0.5);
+      --yellow-bg: rgba(250, 204, 21, 0.13);
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
     }
     html[data-theme="light"] {
-      --bg: #fbf7f0;
+      --bg: #f7f3ec;
       --surface: #ffffff;
-      --surface-2: #fffdf9;
+      --surface-2: #fdfaf5;
       --border: rgba(69, 39, 12, 0.14);
-      --border-strong: rgba(69, 39, 12, 0.28);
-      --text-strong: #1c1308;
+      --border-strong: rgba(69, 39, 12, 0.26);
+      --text-strong: #1b1308;
       --text: #2d2113;
-      /* 0.62 alpha measures ~5:1 here; 0.55 fell under WCAG AA on this warm bg. */
       --muted: rgba(45, 33, 19, 0.62);
-      --faint: rgba(45, 33, 19, 0.42);
+      --faint: rgba(45, 33, 19, 0.4);
       --accent: #b45309;
       --accent2: #92400e;
       --green: #15803d;
+      --green-bg: rgba(21, 128, 61, 0.11);
       --red: #b91c1c;
+      --red-bg: rgba(185, 28, 28, 0.1);
       --yellow: #a16207;
-      --grid: rgba(69, 39, 12, 0.05);
-      --shadow: 0 14px 34px rgba(69, 39, 12, 0.09);
+      --yellow-bg: rgba(161, 98, 7, 0.12);
+      --shadow: 0 12px 30px rgba(69, 39, 12, 0.08);
     }
 
     * { box-sizing: border-box; }
     body {
       margin: 0; background: var(--bg); color: var(--text);
       font-family: var(--font-base, system-ui, -apple-system, sans-serif);
-      line-height: 1.65; -webkit-font-smoothing: antialiased;
-      /* Faint ruled-paper grid — the ledger metaphor, very low contrast so it
-         never competes with text. */
-      background-image: linear-gradient(var(--grid) 1px, transparent 1px);
-      background-size: 100% 30px;
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 940px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+    .mono, .num { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+    .wrap { max-width: 1020px; margin: 0 auto; padding: 0 1.4rem 4.5rem; }
 
     /* ── Hero ── */
-    .hero { padding: 4.5rem 0 3rem; }
+    .hero { padding: 3.6rem 0 2rem; text-align: center; }
     .eyebrow {
-      display: inline-block; font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-      color: var(--accent); border: 1px solid var(--border-strong);
-      border-radius: 100px; padding: 5px 14px; margin-bottom: 1.4rem;
+      display: inline-block; font-size: 10.5px; letter-spacing: 2.4px;
+      text-transform: uppercase; color: var(--accent); font-weight: 700;
+      border: 1px solid var(--border-strong); border-radius: 100px;
+      padding: 5px 15px; margin-bottom: 1.3rem;
     }
     h1 {
-      font-size: clamp(2rem, 6.2vw, 3.4rem); line-height: 1.1; margin: 0 0 1.1rem;
-      color: var(--text-strong); font-weight: 800; letter-spacing: -0.02em;
+      font-size: clamp(1.95rem, 5.6vw, 3.15rem); line-height: 1.1;
+      margin: 0 0 1rem; color: var(--text-strong); font-weight: 800;
+      letter-spacing: -0.025em;
     }
     h1 em { font-style: normal; color: var(--accent); }
-    .lede { font-size: clamp(1rem, 2.6vw, 1.18rem); color: var(--muted); max-width: 62ch; margin: 0 0 1rem; }
-
-    .quote {
-      border-left: 3px solid var(--accent); padding: 0.3rem 0 0.3rem 1.1rem;
-      margin: 2rem 0 0; font-size: clamp(1.02rem, 2.7vw, 1.22rem);
-      color: var(--text-strong); font-weight: 600; font-style: italic;
-    }
-    .quote span { display: block; font-size: 0.8rem; font-style: normal;
-      font-weight: 400; color: var(--faint); margin-top: 0.5rem; letter-spacing: 0.02em; }
-
-    h2 {
-      font-size: clamp(1.3rem, 3.6vw, 1.75rem); color: var(--text-strong);
-      margin: 3.5rem 0 0.6rem; letter-spacing: -0.01em;
-    }
-    h2 .num {
-      font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.72em;
-      color: var(--accent); margin-right: 0.55rem;
-    }
-    .sub { color: var(--muted); margin: 0 0 1.6rem; max-width: 64ch; }
-
-    /* ── The 2x2 — the centrepiece ── */
-    .matrix {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
-      margin: 1.2rem 0 0.9rem;
-    }
-    .cell {
-      border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem 1.35rem;
-      background: var(--surface); cursor: pointer; text-align: left;
-      font: inherit; color: inherit; transition: border-color .18s, transform .18s, background .18s;
-      position: relative; overflow: hidden;
-    }
-    .cell:hover, .cell:focus-visible { border-color: var(--border-strong); transform: translateY(-2px); }
-    .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-    .cell .tag {
-      font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
-      letter-spacing: 1.6px; text-transform: uppercase; color: var(--faint);
-    }
-    .cell .big { font-size: 1.02rem; font-weight: 700; color: var(--text-strong); margin: 0.45rem 0 0.3rem; }
-    .cell .why { font-size: 0.87rem; color: var(--muted); margin: 0; }
-    .cell.good { border-color: rgba(74, 222, 128, 0.34); }
-    .cell.fine { border-color: var(--border); }
-    .cell.lucky {
-      border-color: rgba(245, 158, 11, 0.55);
-      background: linear-gradient(180deg, rgba(245,158,11,0.10), var(--surface));
-    }
-    .cell.bad { border-color: rgba(248, 113, 113, 0.3); }
-    .cell.lucky .big { color: var(--accent); }
-    .cell .count {
-      position: absolute; top: 1.1rem; right: 1.25rem;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 1.5rem; font-weight: 700; color: var(--faint);
-    }
-    .cell.lucky .count { color: var(--accent); }
-
-    .axis { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 10.5px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--faint); padding: 0 0.4rem; }
-
-    .explain {
-      border: 1px dashed var(--border-strong); border-radius: 14px;
-      padding: 1rem 1.2rem; background: var(--surface-2); color: var(--text);
-      font-size: 0.93rem; min-height: 3.2rem;
-    }
-    .explain strong { color: var(--accent); }
-
-    /* ── Cards ── */
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-    .card { border: 1px solid var(--border); border-radius: 14px; padding: 1.15rem 1.25rem; background: var(--surface); }
-    .card h3 { margin: 0 0 0.4rem; font-size: 0.97rem; color: var(--text-strong); }
-    .card p { margin: 0; font-size: 0.88rem; color: var(--muted); }
-    .card .src {
-      display: block; margin-top: 0.6rem; font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 11px; color: var(--accent);
+    .lede {
+      font-size: clamp(0.99rem, 2.4vw, 1.14rem); color: var(--muted);
+      max-width: 56ch; margin: 0 auto;
     }
 
-    /* ── Terminal ── */
-    .term {
-      background: #0a0806; border: 1px solid var(--border-strong); border-radius: 14px;
-      padding: 1.1rem 1.25rem; overflow-x: auto; box-shadow: var(--shadow);
-      font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px;
-      line-height: 1.75; color: rgba(255, 250, 243, 0.86); white-space: pre;
-      /* Literal colours, not vars: a terminal is dark in BOTH themes, so
-         borrowing the page palette would make it unreadable in light mode. */
+    /* ── App shell — the product itself ── */
+    .app {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; box-shadow: var(--shadow); overflow: hidden;
+      margin-top: 2.2rem;
     }
-    .term .c { color: #fbbf24; }
-    .term .g { color: #4ade80; }
-    .term .r { color: #f87171; }
-    .term .d { color: rgba(255,250,243,0.42); }
-
-    /* ── Verdict pills ── */
-    .verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
-    .v { border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; background: var(--surface); }
-    .v .p { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
-      letter-spacing: 1.4px; font-weight: 700; }
-    .v.pass .p { color: var(--green); }
-    .v.fail .p { color: var(--red); }
-    .v.unk .p { color: var(--yellow); }
-    .v p { margin: 0.5rem 0 0; font-size: 0.88rem; color: var(--muted); }
-    .v.unk { border-color: rgba(250, 204, 21, 0.4); }
-
-    .note {
-      border-left: 3px solid var(--accent); background: var(--surface-2);
-      padding: 1rem 1.2rem; border-radius: 0 12px 12px 0; margin: 1.4rem 0 0;
-      font-size: 0.92rem; color: var(--text);
+    .app-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 0.9rem 1.3rem; border-bottom: 1px solid var(--border);
+      background: var(--surface-2); flex-wrap: wrap;
     }
+    .app-title { font-weight: 700; color: var(--text-strong); font-size: 0.95rem; }
+    .app-title small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--faint); }
+    .sync-pill {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px;
+      color: var(--muted); border: 1px solid var(--border); border-radius: 100px;
+      padding: 5px 13px; background: var(--surface);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      animation: pulse 2.4s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ── Stat strip ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
+    .stat { padding: 1.15rem 1.2rem; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: 0; }
+    .stat .k { font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); }
+    .stat .v { font-size: clamp(1.25rem, 3.6vw, 1.7rem); font-weight: 700; color: var(--text-strong); margin-top: 3px; }
+    .stat .v.good { color: var(--green); }
+    .stat .v.warn { color: var(--accent); }
+    .stat .sfx { font-size: 0.72rem; color: var(--faint); font-weight: 400; }
+
+    /* ── Calendar strip ── */
+    .cal { padding: 1.1rem 1.3rem; border-bottom: 1px solid var(--border); }
+    .cal-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.7rem; }
+    .cal-head h3 { margin: 0; font-size: 0.85rem; color: var(--text-strong); }
+    .cal-legend { font-size: 10.5px; color: var(--faint); display: flex; gap: 11px; align-items: center; }
+    .chip { width: 9px; height: 9px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 4px; }
+    .days { display: flex; gap: 5px; flex-wrap: wrap; }
+    .day {
+      width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: var(--faint); cursor: default;
+    }
+    .day.ok   { background: var(--green-bg);  border-color: rgba(74,222,128,.4);  color: var(--green); }
+    .day.bad  { background: var(--red-bg);    border-color: rgba(248,113,113,.4); color: var(--red); }
+    .day.unk  { background: var(--yellow-bg); border-color: rgba(250,204,21,.4);  color: var(--yellow); }
+    .day.flat { background: transparent; }
+
+    /* ── Entries ── */
+    .entries { padding: 0.4rem 0 0.6rem; max-height: 400px; overflow-y: auto; }
+    .entry {
+      display: grid; grid-template-columns: 62px 1fr auto; gap: 12px;
+      align-items: center; padding: 0.85rem 1.3rem; border-bottom: 1px solid var(--border);
+    }
+    .entry:last-child { border-bottom: 0; }
+    .entry .t { font-size: 12px; color: var(--faint); }
+    .entry .main { min-width: 0; }
+    .entry .line1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .side {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 2px 8px;
+      border-radius: 5px; text-transform: uppercase;
+    }
+    .side.up { background: var(--green-bg); color: var(--green); }
+    .side.down { background: var(--red-bg); color: var(--red); }
+    .inst { font-size: 12.5px; color: var(--text-strong); font-weight: 600; }
+    .entry .line2 { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+    .verdict {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; padding: 3px 9px;
+      border-radius: 100px; border: 1px solid transparent; white-space: nowrap;
+    }
+    .verdict.pass { background: var(--green-bg); color: var(--green); border-color: rgba(74,222,128,.35); }
+    .verdict.fail { background: var(--red-bg); color: var(--red); border-color: rgba(248,113,113,.35); }
+    .verdict.unk  { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(250,204,21,.35); }
+    .pnl { font-size: 13px; font-weight: 700; text-align: right; }
+    .pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); }
+    .lucky-tag {
+      display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+      color: var(--accent); border: 1px solid var(--accent); border-radius: 4px;
+      padding: 1px 6px; margin-left: 6px;
+    }
+
+    /* ── Composer ── */
+    .composer { padding: 1.1rem 1.3rem; border-top: 1px solid var(--border); background: var(--surface-2); }
+    .composer h3 { margin: 0 0 0.15rem; font-size: 0.85rem; color: var(--text-strong); }
+    .composer p.hint { margin: 0 0 0.85rem; font-size: 11.5px; color: var(--faint); }
+    .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 9px; }
+    .field label { display: block; font-size: 9.5px; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+    .field input, .field select {
+      width: 100%; padding: 8px 10px; border-radius: 9px; font-size: 13px;
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      font-family: inherit;
+    }
+    .field input:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn {
+      margin-top: 10px; padding: 10px 20px; border-radius: 10px; border: 0;
+      background: var(--accent); color: #1b1308; font-weight: 700; font-size: 13px;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); margin-left: 8px; }
+    .grade-out {
+      margin-top: 11px; border: 1px dashed var(--border-strong); border-radius: 11px;
+      padding: 0.8rem 1rem; font-size: 12.5px; color: var(--muted); min-height: 2.6rem;
+    }
+    .grade-out .row { display: flex; gap: 9px; padding: 2px 0; }
+    .grade-out .row b { min-width: 96px; color: var(--faint); font-weight: 500; font-size: 11px;
+      letter-spacing: .6px; text-transform: uppercase; }
+
+    /* ── 2x2 ── */
+    .matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+    .cell { border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem;
+      background: var(--surface); position: relative; }
+    .cell .tag { font-size: 9.5px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--faint); }
+    .cell .big { font-size: 0.97rem; font-weight: 700; color: var(--text-strong); margin: 0.35rem 0 0.25rem; }
+    .cell .why { font-size: 0.83rem; color: var(--muted); margin: 0; }
+    .cell .count { position: absolute; top: .9rem; right: 1.05rem; font-size: 1.35rem;
+      font-weight: 700; color: var(--faint); }
+    .cell.lucky { border-color: rgba(245,158,11,.55);
+      background: linear-gradient(180deg, rgba(245,158,11,.09), var(--surface)); }
+    .cell.lucky .big, .cell.lucky .count { color: var(--accent); }
+    .cell.good { border-color: rgba(74,222,128,.32); }
+
+    /* ── Sections ── */
+    h2 { font-size: clamp(1.2rem, 3.2vw, 1.6rem); color: var(--text-strong);
+      margin: 3.4rem 0 .5rem; letter-spacing: -.01em; }
+    .sub { color: var(--muted); margin: 0 0 1.4rem; max-width: 62ch; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(228px, 1fr)); gap: 11px; }
+    .card { border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.2rem; background: var(--surface); }
+    .card .ic { font-size: 1.1rem; }
+    .card h3 { margin: .45rem 0 .35rem; font-size: .94rem; color: var(--text-strong); }
+    .card p { margin: 0; font-size: .86rem; color: var(--muted); }
+    .note { border-left: 3px solid var(--accent); background: var(--surface-2);
+      padding: .95rem 1.15rem; border-radius: 0 12px 12px 0; margin-top: 1.3rem;
+      font-size: .9rem; }
     .note b { color: var(--text-strong); }
+    .demo-note { text-align: center; font-size: 11.5px; color: var(--faint); margin-top: .8rem; }
 
-    .demo-banner {
-      display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
-      border: 1px solid var(--border-strong); border-radius: 100px;
-      padding: 7px 16px; font-size: 12.5px; color: var(--muted);
-      background: var(--surface); margin: 2.2rem 0 0;
-    }
-    .demo-banner b { color: var(--accent); }
-
-    @media (max-width: 620px) {
+    @media (max-width: 720px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat { border-bottom: 1px solid var(--border); }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(3), .stat:nth-child(4) { border-bottom: 0; }
       .matrix { grid-template-columns: 1fr; }
-      .axis { display: none; }
-      .cell .count { font-size: 1.2rem; top: 0.95rem; right: 1.05rem; }
-      .term { font-size: 11px; }
-      .wrap { padding: 0 1.1rem 4rem; }
-      .hero { padding: 3rem 0 2.2rem; }
+      .entry { grid-template-columns: 50px 1fr; }
+      .entry .pnl { grid-column: 2; text-align: left; }
+      .wrap { padding: 0 1rem 3.5rem; }
+      .hero { padding: 2.6rem 0 1.4rem; }
     }
   </style>
 </head>
@@ -245,190 +275,148 @@
   <div class="wrap">
 
     <header class="hero">
-      <span class="eyebrow">Trading Research Platform</span>
-      <h1>A journal that grades<br><em>process, not profit.</em></h1>
+      <span class="eyebrow">Trading Journal</span>
+      <h1>Your P&amp;L can lie.<br><em>Your process can't.</em></h1>
       <p class="lede">
-        Most trading journals record what you earned. That teaches the wrong
-        lesson, because a rule you broke can still pay — and then you do it again.
-        This one checks whether you followed your own rules, and treats a
-        profitable rule-break as a <strong>warning</strong>.
+        A journal that scores how well you followed your own rules — and treats
+        a profitable rule-break as a warning, not a win. Trades arrive from your
+        broker on their own.
       </p>
-      <blockquote class="quote">
-        “Lucky profit is bad, then discipline loss/profit.”
-        <span>— the line that started this tool</span>
-      </blockquote>
     </header>
 
-    <section>
-      <h2><span class="num">01</span>The problem it solves</h2>
-      <p class="sub">
-        Two habits, both invisible in a normal P&amp;L: entering before the setup
-        actually appears, and taking one more trade than planned. Neither shows
-        up in a profit number — a broken rule that made money looks identical to
-        a good trade.
-      </p>
-      <div class="cards">
-        <div class="card">
-          <h3>Can't wait for the setup</h3>
-          <p>Entering in open air because the screen is boring. The journal checks the entry price against the zones that were actually rated that morning.</p>
+    <!-- ══ THE PRODUCT ══ -->
+    <div class="app">
+      <div class="app-bar">
+        <div class="app-title">
+          August 2026
+          <small>NIFTY options · rule: max 2 trades/day, A-grade zone + confirmation</small>
         </div>
-        <div class="card">
-          <h3>Overtrading without noticing</h3>
-          <p>The limit is two. The third trade gets flagged as it is logged, before the day is over.</p>
-        </div>
-        <div class="card">
-          <h3>Learning from luck</h3>
-          <p>The most expensive habit. Profit from a broken rule reinforces the break. It gets its own box below.</p>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <h2><span class="num">02</span>Process vs outcome</h2>
-      <p class="sub">
-        Every trading day lands in one of four boxes. Tap one to see why it matters.
-      </p>
-
-      <div class="axis"><span>&nbsp;</span><span>← won&nbsp;&nbsp;·&nbsp;&nbsp;lost →</span></div>
-      <div class="matrix" id="matrix">
-        <button class="cell good" data-k="good">
-          <span class="count">7</span>
-          <div class="tag">followed rules · won</div>
-          <div class="big">Earned</div>
-          <p class="why">Repeatable. The only box that compounds.</p>
-        </button>
-        <button class="cell fine" data-k="fine">
-          <span class="count">5</span>
-          <div class="tag">followed rules · lost</div>
-          <div class="big">Acceptable</div>
-          <p class="why">The process was right. The market wasn't.</p>
-        </button>
-        <button class="cell lucky" data-k="lucky">
-          <span class="count">4</span>
-          <div class="tag">broke rules · won</div>
-          <div class="big">Lucky ⚠</div>
-          <p class="why">The most dangerous box on this page.</p>
-        </button>
-        <button class="cell bad" data-k="bad">
-          <span class="count">2</span>
-          <div class="tag">broke rules · lost</div>
-          <div class="big">The real cost</div>
-          <p class="why">Honest, and the easiest one to learn from.</p>
-        </button>
-      </div>
-      <div class="explain" id="explain">
-        <strong>Tap a box.</strong> Judge yourself on the left column, not the top row.
+        <span class="sync-pill"><span class="dot"></span> Synced from broker · 15:34</span>
       </div>
 
-      <div class="note">
-        <b>Why “lucky” is called out.</b> If the lucky box outgrows the earned
-        box, the report says so in plain words — because at that point your P&amp;L
-        is telling you a story your process hasn't earned. Profit is never used
-        as a grade anywhere in this tool.
-      </div>
-    </section>
-
-    <section>
-      <h2><span class="num">03</span>Four fields typed, the rest looked up</h2>
-      <p class="sub">
-        Manual journals die because they're work. This one asks for direction,
-        entry price, entry time and exit. Everything used for grading is read
-        from files the platform already writes each night.
-      </p>
-      <div class="cards">
-        <div class="card">
-          <h3>Was it inside a rated zone?</h3>
-          <p>The entry price is checked against the demand/supply zones that were in force at that session's open — archived before the day traded, so it can't be rewritten afterwards.</p>
-          <span class="src">morning_zones.json</span>
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Rules followed</div>
+          <div class="v good" id="sDisc">—</div>
         </div>
-        <div class="card">
-          <h3>Did the system confirm it?</h3>
-          <p>Looks for a trap, sweep-reclaim or structure-shift alert within ±15 minutes of the entry.</p>
-          <span class="src">agent alert timeline</span>
+        <div class="stat">
+          <div class="k">Current streak</div>
+          <div class="v" id="sStreak">—<span class="sfx"> days</span></div>
         </div>
-        <div class="card">
-          <h3>What did the system expect?</h3>
-          <p>The directional call, frozen the night before. Recorded for comparison — never used as a rule.</p>
-          <span class="src">morning_forecast.json</span>
+        <div class="stat">
+          <div class="k">Lucky wins</div>
+          <div class="v warn" id="sLucky">—</div>
         </div>
-        <div class="card">
-          <h3>Which trade of the day?</h3>
-          <p>Counted from the journal itself, and compared against the limit in your own rules file.</p>
-          <span class="src">discipline_rules.json</span>
+        <div class="stat">
+          <div class="k">Net P&amp;L</div>
+          <div class="v" id="sPnl">—</div>
         </div>
       </div>
-    </section>
 
-    <section>
-      <h2><span class="num">04</span>Three verdicts, not two</h2>
-      <p class="sub">
-        This is the design decision the tool most depends on being right.
-      </p>
-      <div class="verdicts">
-        <div class="v pass"><div class="p">PASS</div><p>Entry was inside a rated zone, a confirmation fired nearby, and you were within your trade limit.</p></div>
-        <div class="v fail"><div class="p">FAIL</div><p>Positive evidence of a break — open-air entry, no confirmation, or past the limit.</p></div>
-        <div class="v unk"><div class="p">UNKNOWN</div><p>The monitoring agent wasn't running, so there's no record either way. Never counted against you.</p></div>
-      </div>
-      <div class="note">
-        <b>Absent evidence is not a rule break.</b> The monitoring agent only
-        observed about 3 of 23 trading days in its first month. If a missing
-        alert record counted as a failure, the report would call the trader
-        undisciplined on days he may have traded perfectly — and he'd
-        “correct” behaviour that was never wrong. That turns an uptime problem
-        into an invented psychological one, so it's pinned by its own tests.
-      </div>
-    </section>
-
-    <section>
-      <h2><span class="num">05</span>What it looks like</h2>
-      <p class="sub">Three commands. One before the trade, one after, one weekly.</p>
-      <div class="term"><span class="d">$</span> python3 scripts/journal.py <span class="c">today</span>
-
-  2026-08-14
-  trades taken : <span class="c">1</span> of 2 allowed
-  &gt;&gt; 1 trade(s) left.
-
-<span class="d">$</span> python3 scripts/journal.py <span class="c">add</span> --dir UP --entry 24000 --time 10:45 --exit 24060
-
-  logged: 2026-08-14 10:45 UP @ 24000
-  trade #2 of 2 allowed
-    zone         : <span class="g">PASS</span>     inside A+ demand 23943.0-24013.5
-    confirmation : <span class="g">PASS</span>     10:40 5m Bullish CHOCH at 24355.45
-    setup        : <span class="g">PASS</span>
-
-<span class="d">$</span> python3 scripts/journal.py <span class="c">add</span> --dir UP --entry 24999 --time 11:30 --exit 24950
-
-  <span class="r">!! This is trade #3 today. Your limit is 2.</span>
-  <span class="d">   Logging it anyway — the journal records what happened,</span>
-  <span class="d">   not what should have.</span>
-
-    zone         : <span class="r">FAIL</span>     open air — nearest A+ zone 646 pts away
-    setup        : <span class="r">FAIL</span>
-    <span class="r">OVER LIMIT</span></div>
-
-      <div class="demo-banner">
-        <b>Demo data.</b>
-        <span>Numbers on this page are illustrative. Real trades and P&amp;L stay private.</span>
-      </div>
-    </section>
-
-    <section>
-      <h2><span class="num">06</span>What it refuses to grade</h2>
-      <div class="cards">
-        <div class="card">
-          <h3>Disagreeing with the system</h3>
-          <p>Discretion is allowed. The report shows separately whether overrides paid off — that's information, not a rule.</p>
+      <div class="cal">
+        <div class="cal-head">
+          <h3>Every trading day this month</h3>
+          <div class="cal-legend">
+            <span><i class="chip" style="background:var(--green-bg);border:1px solid var(--green)"></i>followed</span>
+            <span><i class="chip" style="background:var(--red-bg);border:1px solid var(--red)"></i>broke</span>
+            <span><i class="chip" style="background:var(--yellow-bg);border:1px solid var(--yellow)"></i>no data</span>
+          </div>
         </div>
-        <div class="card">
-          <h3>Profit</h3>
-          <p>Grading on profit is what makes journals lie. The tool tracks it, reports it, and never lets it decide whether a day was good.</p>
+        <div class="days" id="cal"></div>
+      </div>
+
+      <div class="entries" id="entries"></div>
+
+      <div class="composer">
+        <h3>Add a trade</h3>
+        <p class="hint">In the real product these arrive from your broker automatically. Try one here — it grades instantly.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="fDir">Direction</label>
+            <select id="fDir"><option value="UP">Bullish</option><option value="DOWN">Bearish</option></select>
+          </div>
+          <div class="field">
+            <label for="fEntry">NIFTY level</label>
+            <input id="fEntry" type="number" value="24000" step="0.05" />
+          </div>
+          <div class="field">
+            <label for="fTime">Entry time</label>
+            <input id="fTime" type="text" value="10:45" placeholder="HH:MM" />
+          </div>
+          <div class="field">
+            <label for="fPnl">P&amp;L (₹)</label>
+            <input id="fPnl" type="number" value="2250" step="50" />
+          </div>
         </div>
-        <div class="card">
-          <h3>Days you sat out</h3>
-          <p>Deliberately not trading counts as a <em>disciplined day</em>. The behaviour being built has to leave a trace, or the report only ever shows failures.</p>
+        <button class="btn" id="addBtn">Add to journal</button>
+        <button class="btn ghost" id="resetBtn">Reset demo</button>
+        <div class="grade-out" id="gradeOut">
+          Zones today: <b class="mono">A+ 23943–24014</b> (demand) ·
+          <b class="mono">A 24320–24352</b> (supply). Anything else is open air.
         </div>
       </div>
-    </section>
+    </div>
+    <p class="demo-note">Demo data. Real trades and P&amp;L stay private.</p>
+
+    <!-- ══ 2x2 ══ -->
+    <h2>Process beats outcome</h2>
+    <p class="sub">
+      Every day lands in one of four boxes. Only the left column tells you
+      anything repeatable — the top row is mostly luck.
+    </p>
+    <div class="matrix">
+      <div class="cell good"><span class="count" id="mGood">0</span>
+        <div class="tag">followed · won</div><div class="big">Earned</div>
+        <p class="why">Repeatable. The only box that compounds.</p></div>
+      <div class="cell"><span class="count" id="mFine">0</span>
+        <div class="tag">followed · lost</div><div class="big">Acceptable</div>
+        <p class="why">The process was right. The market wasn't.</p></div>
+      <div class="cell lucky"><span class="count" id="mLucky">0</span>
+        <div class="tag">broke · won</div><div class="big">Lucky ⚠</div>
+        <p class="why">Paid for breaking a rule — so you'll break it again.</p></div>
+      <div class="cell"><span class="count" id="mBad">0</span>
+        <div class="tag">broke · lost</div><div class="big">The real cost</div>
+        <p class="why">Honest, and the easiest box to learn from.</p></div>
+    </div>
+    <div class="note" id="luckyWarn" style="display:none">
+      <b>Heads up.</b> Lucky wins now outnumber earned wins. Your P&amp;L is
+      telling you a story your process hasn't earned yet.
+    </div>
+
+    <!-- ══ AUTOMATION ══ -->
+    <h2>You don't fill it in</h2>
+    <p class="sub">
+      Journals die because they're homework. This one reads your executed
+      trades straight from your broker after the close and grades them.
+    </p>
+    <div class="cards">
+      <div class="card"><div class="ic">🔄</div><h3>Trades sync themselves</h3>
+        <p>Fills, times, quantity and real rupee P&amp;L come from your broker account. Buys and sells are paired into round trips automatically.</p></div>
+      <div class="card"><div class="ic">🎯</div><h3>Setups are verified, not claimed</h3>
+        <p>Each entry is checked against the zones that were published <em>before</em> the session opened — so it can't be rewritten to look better afterwards.</p></div>
+      <div class="card"><div class="ic">🔔</div><h3>The limit warns you live</h3>
+        <p>Hit your daily trade cap and you're told during the session, while it can still change what you do.</p></div>
+      <div class="card"><div class="ic">✍️</div><h3>One field stays yours</h3>
+        <p><em>Why</em> you broke a rule. No API knows that, and it's the most useful line in the journal.</p></div>
+    </div>
+
+    <!-- ══ HONEST BIT ══ -->
+    <h2>Three verdicts, not two</h2>
+    <p class="sub">Most journals score pass or fail. That's a mistake when evidence can be missing.</p>
+    <div class="cards">
+      <div class="card"><h3 style="color:var(--green)">Followed</h3>
+        <p>Entry inside a rated zone, confirmation nearby, within your trade limit.</p></div>
+      <div class="card"><h3 style="color:var(--red)">Broke</h3>
+        <p>Positive evidence of a break — open-air entry, no confirmation, or past the cap.</p></div>
+      <div class="card"><h3 style="color:var(--yellow)">No data</h3>
+        <p>Monitoring wasn't running, so there's no record either way. Never counted against you.</p></div>
+    </div>
+    <div class="note">
+      <b>Absent evidence is not a rule break.</b> If a missing record counted as
+      a failure, the journal would call you undisciplined on days you may have
+      traded perfectly — and you'd "fix" behaviour that was never wrong. A
+      journal that invents faults is worse than no journal.
+    </div>
 
   </div>
 
@@ -439,49 +427,194 @@
 
   <script>
     (function () {
-      // ── Theme switch (same contract as every other page) ──
+      // ── Theme (same contract as every other page) ──
       const sw = document.getElementById('themeSwitch');
       function paint(t) {
         document.documentElement.setAttribute('data-theme', t);
         sw.querySelectorAll('.ts-opt').forEach(b => {
           const on = b.dataset.setTheme === t;
-          // Class drives the styling, aria-pressed is for assistive tech.
-          // Both are kept: the attribute selector proved unreliable against
-          // `all: unset` on the same element.
           b.classList.toggle('is-on', on);
           b.setAttribute('aria-pressed', on ? 'true' : 'false');
         });
       }
       paint(document.documentElement.getAttribute('data-theme') || 'dark');
-
-      sw.addEventListener('click', (e) => {
-        const btn = e.target.closest('.ts-opt');
-        if (!btn) return;
-        paint(btn.dataset.setTheme);
-        try { localStorage.setItem('lm-theme', btn.dataset.setTheme); } catch (err) { /* private mode */ }
+      sw.addEventListener('click', e => {
+        const b = e.target.closest('.ts-opt'); if (!b) return;
+        paint(b.dataset.setTheme);
+        try { localStorage.setItem('lm-theme', b.dataset.setTheme); } catch (err) {}
       });
-
       if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
-          let saved = null;
-          try { saved = localStorage.getItem('lm-theme'); } catch (err) { /* ignore */ }
-          if (!saved) paint(e.matches ? 'light' : 'dark');
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
+          let s = null; try { s = localStorage.getItem('lm-theme'); } catch (err) {}
+          if (!s) paint(e.matches ? 'light' : 'dark');
         });
       }
 
-      // ── 2x2 explanations ──
-      const TEXT = {
-        good:  "<strong>Earned.</strong> You followed your rules and the trade worked. This is the only box that tells you something repeatable — everything else is either noise or a warning.",
-        fine:  "<strong>Acceptable.</strong> You followed your rules and still lost. Nothing went wrong. Any process with an edge loses regularly, and treating these as mistakes is how traders abandon a working method.",
-        lucky: "<strong>Lucky — the dangerous one.</strong> You broke a rule and got paid. Your brain records “breaking rules works” and the habit gets stronger. If this box outgrows <em>Earned</em>, the report warns you explicitly.",
-        bad:   "<strong>The real cost.</strong> Broke a rule, lost money. Unpleasant but honest — this is the box that actually teaches, because the feedback and the behaviour point the same way."
-      };
-      const explain = document.getElementById('explain');
-      document.getElementById('matrix').addEventListener('click', (e) => {
-        const cell = e.target.closest('.cell');
-        if (!cell) return;
-        explain.innerHTML = TEXT[cell.dataset.k];
+      // ── Demo state ─────────────────────────────────────────────────────
+      // Mirrors the real grading rules: A/A+ zone + confirmation, max 2/day.
+      const LIMIT = 2;
+      const ZONES = [
+        { lo: 23943, hi: 24014, rating: 'A+', kind: 'demand' },
+        { lo: 24320, hi: 24352, rating: 'A',  kind: 'supply' },
+        { lo: 24100, hi: 24120, rating: 'B',  kind: 'demand' }   // not tradeable
+      ];
+      const ALERTS = ['09:35', '10:40', '11:20', '12:15', '13:05', '14:10'];
+
+      const SEED = [
+        { d: '2026-08-03', t: '10:40', dir: 'UP',   inst: 'NIFTY 24000 CE', lvl: 23988, pnl: 3150 },
+        { d: '2026-08-04', t: '11:22', dir: 'DOWN', inst: 'NIFTY 24350 PE', lvl: 24338, pnl: -1800 },
+        { d: '2026-08-05', t: '09:36', dir: 'UP',   inst: 'NIFTY 24000 CE', lvl: 23960, pnl: 2400 },
+        { d: '2026-08-05', t: '13:04', dir: 'UP',   inst: 'NIFTY 24100 CE', lvl: 23995, pnl: -1250 },
+        { d: '2026-08-06', t: '12:14', dir: 'DOWN', inst: 'NIFTY 24300 PE', lvl: 24688, pnl: 4600 },
+        { d: '2026-08-07', t: '10:41', dir: 'UP',   inst: 'NIFTY 24000 CE', lvl: 23971, pnl: 1950 },
+        { d: '2026-08-10', t: '11:19', dir: 'DOWN', inst: 'NIFTY 24350 PE', lvl: 24330, pnl: -2100 },
+        { d: '2026-08-11', t: '14:12', dir: 'UP',   inst: 'NIFTY 24200 CE', lvl: 24555, pnl: 2750 },
+        { d: '2026-08-11', t: '14:48', dir: 'UP',   inst: 'NIFTY 24200 CE', lvl: 24560, pnl: -3400 },
+        { d: '2026-08-11', t: '15:05', dir: 'DOWN', inst: 'NIFTY 24500 PE', lvl: 24571, pnl: 900 },
+        { d: '2026-08-12', t: '10:39', dir: 'UP',   inst: 'NIFTY 24000 CE', lvl: 24005, pnl: 2200 },
+        { d: '2026-08-13', t: '12:16', dir: 'DOWN', inst: 'NIFTY 24350 PE', lvl: 24344, pnl: -1600 },
+        // A day with no monitoring record -> UNKNOWN, deliberately included.
+        { d: '2026-08-14', t: '11:05', dir: 'UP',   inst: 'NIFTY 24100 CE', lvl: 23990, pnl: 1400, noData: true }
+      ];
+      let trades = SEED.map(x => ({ ...x }));
+
+      const mins = s => { const m = /^(\d{1,2}):(\d{2})/.exec((s || '').trim());
+        return m ? +m[1] * 60 + +m[2] : null; };
+
+      function zoneOf(lvl) {
+        const hits = ZONES.filter(z => lvl >= z.lo && lvl <= z.hi && (z.rating === 'A' || z.rating === 'A+'));
+        return hits.length ? hits.sort((a, b) => (a.hi - a.lo) - (b.hi - b.lo))[0] : null;
+      }
+      function confirmed(t) {
+        const e = mins(t); if (e === null) return false;
+        return ALERTS.some(a => Math.abs(mins(a) - e) <= 15);
+      }
+      function gradeTrade(tr, n) {
+        if (tr.noData) return { setup: 'unk', why: 'monitoring was offline — no record either way', limit: n <= LIMIT };
+        const z = zoneOf(tr.lvl), c = confirmed(tr.t);
+        if (!z) return { setup: 'fail', why: `open air — no A-grade zone at ${tr.lvl}`, limit: n <= LIMIT };
+        if (!c)  return { setup: 'fail', why: 'no confirmation within 15 min', limit: n <= LIMIT };
+        return { setup: 'pass', why: `inside ${z.rating} ${z.kind} ${z.lo}–${z.hi}`, limit: n <= LIMIT };
+      }
+
+      function byDay() {
+        const m = {};
+        trades.forEach(t => { (m[t.d] = m[t.d] || []).push(t); });
+        Object.values(m).forEach(a => a.sort((x, y) => x.t.localeCompare(y.t)));
+        return m;
+      }
+
+      function dayVerdict(list) {
+        const gs = list.map((t, i) => gradeTrade(t, i + 1));
+        if (gs.some(g => !g.limit)) return 'bad';
+        if (gs.some(g => g.setup === 'fail')) return 'bad';
+        if (gs.some(g => g.setup === 'unk')) return 'unk';
+        return 'ok';
+      }
+
+      function render() {
+        const days = byDay(), dates = Object.keys(days).sort();
+
+        // Calendar
+        const cal = document.getElementById('cal');
+        cal.innerHTML = dates.map(d => {
+          const v = dayVerdict(days[d]);
+          const cls = v === 'ok' ? 'ok' : v === 'bad' ? 'bad' : 'unk';
+          const n = +d.slice(-2);
+          const label = v === 'ok' ? 'followed rules' : v === 'bad' ? 'broke rules' : 'no data';
+          return `<div class="day ${cls}" title="${d} — ${label}">${n}</div>`;
+        }).join('');
+
+        // Entries (newest first — the one you can still learn from)
+        const rows = [];
+        dates.slice().reverse().forEach(d => {
+          days[d].forEach((t, i) => {
+            const g = gradeTrade(t, i + 1);
+            const broke = g.setup === 'fail' || !g.limit;
+            const lucky = broke && t.pnl > 0;
+            const vcls = g.setup === 'pass' && g.limit ? 'pass' : g.setup === 'unk' ? 'unk' : 'fail';
+            const vtxt = !g.limit ? 'OVER LIMIT' : g.setup === 'pass' ? 'FOLLOWED' : g.setup === 'unk' ? 'NO DATA' : 'BROKE';
+            rows.push(`<div class="entry">
+              <div class="t mono">${d.slice(8)} Aug<br>${t.t}</div>
+              <div class="main">
+                <div class="line1">
+                  <span class="side ${t.dir === 'UP' ? 'up' : 'down'}">${t.dir === 'UP' ? 'Bullish' : 'Bearish'}</span>
+                  <span class="inst">${t.inst}</span>
+                  <span class="verdict ${vcls}">${vtxt}</span>
+                  ${lucky ? '<span class="lucky-tag">LUCKY</span>' : ''}
+                </div>
+                <div class="line2">NIFTY @ <span class="mono">${t.lvl}</span> · ${g.why}</div>
+              </div>
+              <div class="pnl ${t.pnl >= 0 ? 'pos' : 'neg'}">${t.pnl >= 0 ? '+' : '−'}₹${Math.abs(t.pnl).toLocaleString('en-IN')}</div>
+            </div>`);
+          });
+        });
+        document.getElementById('entries').innerHTML = rows.join('');
+
+        // Stats + 2x2
+        let ok = 0, bad = 0, unk = 0, good = 0, fine = 0, lucky = 0, worst = 0, net = 0;
+        dates.forEach(d => {
+          const v = dayVerdict(days[d]);
+          const p = days[d].reduce((s, t) => s + t.pnl, 0);
+          net += p;
+          if (v === 'ok') ok++; else if (v === 'bad') bad++; else unk++;
+          if (v === 'unk') return;
+          if (v === 'ok') { p > 0 ? good++ : fine++; } else { p > 0 ? lucky++ : worst++; }
+        });
+        const graded = ok + bad;
+        document.getElementById('sDisc').textContent =
+          graded ? Math.round(ok / graded * 100) + '%' : '—';
+        let streak = 0;
+        for (let i = dates.length - 1; i >= 0; i--) {
+          if (dayVerdict(days[dates[i]]) === 'bad') break;
+          streak++;
+        }
+        document.getElementById('sStreak').innerHTML = streak + '<span class="sfx"> days</span>';
+        document.getElementById('sLucky').textContent = lucky;
+        const pnlEl = document.getElementById('sPnl');
+        pnlEl.textContent = (net >= 0 ? '+₹' : '−₹') + Math.abs(net).toLocaleString('en-IN');
+        pnlEl.className = 'v ' + (net >= 0 ? 'good' : '');
+        mGood.textContent = good; mFine.textContent = fine;
+        mLucky.textContent = lucky; mBad.textContent = worst;
+        document.getElementById('luckyWarn').style.display = lucky > good ? '' : 'none';
+      }
+
+      // ── Composer ──
+      document.getElementById('addBtn').addEventListener('click', () => {
+        const dir = document.getElementById('fDir').value;
+        const lvl = parseFloat(document.getElementById('fEntry').value);
+        const t = document.getElementById('fTime').value.trim();
+        const pnl = parseFloat(document.getElementById('fPnl').value) || 0;
+        if (isNaN(lvl) || mins(t) === null) {
+          document.getElementById('gradeOut').innerHTML =
+            '<span style="color:var(--red)">Enter a NIFTY level and a time like 10:45.</span>';
+          return;
+        }
+        const d = '2026-08-14';
+        const n = trades.filter(x => x.d === d).length + 1;
+        const tr = { d, t, dir, inst: `NIFTY ${Math.round(lvl / 50) * 50} ${dir === 'UP' ? 'CE' : 'PE'}`,
+                     lvl, pnl };
+        trades.push(tr);
+        const g = gradeTrade(tr, n);
+        const broke = g.setup === 'fail' || !g.limit;
+        document.getElementById('gradeOut').innerHTML =
+          `<div class="row"><b>Zone</b><span>${g.why}</span></div>
+           <div class="row"><b>Confirmation</b><span>${confirmed(t) ? 'alert within 15 min' : 'none within 15 min'}</span></div>
+           <div class="row"><b>Trade #</b><span>${n} of ${LIMIT} allowed${n > LIMIT ? ' — OVER LIMIT' : ''}</span></div>
+           <div class="row"><b>Verdict</b><span style="color:${broke ? 'var(--red)' : 'var(--green)'};font-weight:700">
+             ${broke ? 'RULE BROKEN' : 'FOLLOWED'}</span></div>
+           ${broke && pnl > 0 ? '<div class="row"><b></b><span style="color:var(--accent);font-weight:700">Profitable — but logged as LUCKY, not a win.</span></div>' : ''}`;
+        render();
       });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        trades = SEED.map(x => ({ ...x }));
+        document.getElementById('gradeOut').innerHTML =
+          'Zones today: <b class="mono">A+ 23943–24014</b> (demand) · <b class="mono">A 24320–24352</b> (supply). Anything else is open air.';
+        render();
+      });
+
+      render();
     })();
   </script>
 </body>
