@@ -75,12 +75,66 @@
       border-bottom:1px solid var(--border);background:var(--surface-2)}
     .panel .body{padding:1rem 1.15rem}
 
-    .days{display:flex;gap:5px;flex-wrap:wrap}
-    .day{width:27px;height:27px;border-radius:7px;border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--faint)}
-    .day.PASS{background:var(--green-bg);border-color:rgba(74,222,128,.4);color:var(--green)}
-    .day.FAIL{background:var(--red-bg);border-color:rgba(248,113,113,.4);color:var(--red)}
-    .day.UNKNOWN{background:var(--yellow-bg);border-color:rgba(250,204,21,.4);color:var(--yellow)}
+    /* ── Calendar heatmap ──
+       A month grid, not a flat strip. A strip of squares tells you how many
+       days you logged; a calendar tells you WHEN — which weekday you break
+       rules on, whether a bad run clustered, whether you skipped a whole week.
+       That is the pattern a discipline journal exists to surface. */
+    .cal-wrap{display:flex;flex-wrap:wrap;gap:1.4rem}
+    .cal{min-width:212px}
+    .cal-title{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+      color:var(--faint);margin-bottom:.5rem}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .dow{font-size:9px;text-align:center;color:var(--faint);padding-bottom:2px}
+    .day{aspect-ratio:1;min-height:26px;border-radius:7px;border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:10.5px;
+      color:var(--faint);background:transparent}
+    .day.pad{border:0;background:transparent}
+    /* No entry for a weekday: an outline, not a colour. An untraded day and a
+       day you have no data for must not look the same as a disciplined one. */
+    .day.none{border-style:dashed;opacity:.4}
+    .day.has{cursor:pointer}
+    .day.has:hover{border-color:var(--border-strong)}
+    .day.PASS{background:var(--green-bg);border-color:rgba(74,222,128,.45);color:var(--green)}
+    .day.FAIL{background:var(--red-bg);border-color:rgba(248,113,113,.45);color:var(--red)}
+    .day.UNKNOWN{background:var(--yellow-bg);border-color:rgba(250,204,21,.45);color:var(--yellow)}
+    .day.LUCKY{background:rgba(245,158,11,.18);border-color:var(--accent);color:var(--accent);
+      font-weight:700}
+    .day.FLAT{background:var(--surface-2);border-color:var(--border-strong);color:var(--muted)}
+    .day.sel{outline:2px solid var(--accent);outline-offset:1px}
+    .legend{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.9rem;font-size:11px;color:var(--muted)}
+    .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;
+      margin-right:5px;vertical-align:-1px;border:1px solid var(--border)}
+
+    /* ── Expandable trade rows ── */
+    .entry.clickable{cursor:pointer}
+    .entry.clickable:hover{background:var(--surface-2)}
+    .chev{font-size:10px;color:var(--faint);transition:transform .15s}
+    .entry.open .chev{transform:rotate(90deg)}
+    .detail{padding:0 1.15rem 1rem;border-bottom:1px solid var(--border);
+      background:var(--surface-2)}
+    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+      gap:9px;margin:.2rem 0 .9rem}
+    .chk{border:1px solid var(--border);border-radius:11px;padding:.65rem .8rem;
+      background:var(--surface)}
+    .chk .ck{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint)}
+    .chk .cv{font-size:12.5px;font-weight:700;margin-top:3px}
+    .chk .cw{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
+    .cv.ok{color:var(--green)} .cv.no{color:var(--red)} .cv.unk{color:var(--yellow)}
+    .note-lab{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;
+      color:var(--faint);margin-bottom:5px}
+    .note{width:100%;min-height:62px;resize:vertical;background:var(--surface);
+      color:var(--text);border:1px solid var(--border);border-radius:10px;
+      padding:.6rem .75rem;font:inherit;font-size:12.5px;line-height:1.5}
+    .note:focus{outline:none;border-color:var(--accent)}
+    .note-hint{font-size:10.5px;color:var(--faint);margin-top:5px}
+    .saved{color:var(--green)}
+
+    .filter-note{display:flex;justify-content:space-between;align-items:center;
+      gap:10px;flex-wrap:wrap;padding:.6rem 1.15rem;background:var(--surface-2);
+      border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+    .filter-note button{background:none;border:1px solid var(--border);color:var(--text);
+      border-radius:100px;padding:2px 11px;font:inherit;font-size:11px;cursor:pointer}
 
     .matrix{display:grid;grid-template-columns:1fr 1fr;gap:9px}
     .cell{border:1px solid var(--border);border-radius:13px;padding:.9rem 1rem;position:relative}
@@ -233,13 +287,68 @@
             <div class="v ${(s.net_pnl || 0) >= 0 ? 'good' : 'bad'}">${money(s.net_pnl, s.net_unit)}</div></div>
         </div>`);
 
-        // Calendar
+        // ── Calendar heatmap ──
+        // A day's colour is its WORST outcome, not its average: one broken
+        // rule in a day of good ones is the thing worth seeing. LUCKY outranks
+        // everything, because a rule broken on a winning day is the failure
+        // most likely to be repeated.
+        const byDate = {};
+        d.days.forEach(x => { byDate[x.date] = x; });
+
+        function dayClass(x) {
+          if (!x) return 'none';
+          if (x.flat) return 'FLAT';
+          const broke = (x.trades || []).some(t => t.setup === 'FAIL' || !t.within_limit);
+          if (broke && (x.pnl || 0) > 0) return 'LUCKY';
+          if (broke) return 'FAIL';
+          if ((x.trades || []).some(t => t.setup === 'UNKNOWN')) return 'UNKNOWN';
+          return 'PASS';
+        }
+        const CLASS_WORD = { PASS: 'rules followed', FAIL: 'rule broken',
+          LUCKY: 'rule broken — but won', UNKNOWN: 'no data to grade',
+          FLAT: 'no trade taken', none: 'nothing logged' };
+
+        const months = [...new Set(d.days.map(x => x.date.slice(0, 7)))].sort();
+        const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const cals = months.map(ym => {
+          const [Y, M] = ym.split('-').map(Number);
+          const first = new Date(Y, M - 1, 1);
+          const total = new Date(Y, M, 0).getDate();
+          // Monday-first, matching how a trading week is read.
+          const lead = (first.getDay() + 6) % 7;
+          const cells = [];
+          for (let i = 0; i < lead; i++) cells.push('<div class="day pad"></div>');
+          for (let dnum = 1; dnum <= total; dnum++) {
+            const iso = `${Y}-${String(M).padStart(2, '0')}-${String(dnum).padStart(2, '0')}`;
+            const rec = byDate[iso];
+            const wd = new Date(Y, M - 1, dnum).getDay();
+            const weekend = (wd === 0 || wd === 6);
+            const cls = dayClass(rec);
+            const tip = `${iso} — ${CLASS_WORD[cls]}` +
+              (rec && rec.pnl != null ? ` · ${money(rec.pnl, rec.unit)}` : '');
+            cells.push(`<div class="day ${cls} ${rec ? 'has' : ''}"
+              ${weekend && !rec ? 'style="visibility:hidden"' : ''}
+              ${rec ? `data-date="${iso}"` : ''} title="${tip}">${dnum}</div>`);
+          }
+          return `<div class="cal"><div class="cal-title">${MON[M - 1]} ${Y}</div>
+            <div class="cal-grid">
+              ${['M','T','W','T','F','S','S'].map(x => `<div class="dow">${x}</div>`).join('')}
+              ${cells.join('')}
+            </div></div>`;
+        }).join('');
+
         parts.push(`<div class="panel"><h2>Every logged day</h2><div class="body">
-          <div class="days">${d.days.map(x =>
-            `<div class="day ${x.verdict}" title="${x.date} — ${x.verdict}${x.flat ? ' (no trade)' : ''}">
-               ${+x.date.slice(-2)}</div>`).join('')}</div>
-          ${s.days_unknown ? `<div style="margin-top:.7rem;font-size:11.5px;color:var(--faint)">
-            ${s.days_unknown} day(s) marked no-data — monitoring gaps, not rule breaks.</div>` : ''}
+          <div class="cal-wrap">${cals || '<div class="msg">Nothing logged yet.</div>'}</div>
+          <div class="legend">
+            <span><i style="background:var(--green-bg);border-color:rgba(74,222,128,.45)"></i>Followed</span>
+            <span><i style="background:rgba(245,158,11,.18);border-color:var(--accent)"></i>Lucky (broke, won)</span>
+            <span><i style="background:var(--red-bg);border-color:rgba(248,113,113,.45)"></i>Broke</span>
+            <span><i style="background:var(--yellow-bg);border-color:rgba(250,204,21,.45)"></i>No data</span>
+            <span><i style="background:var(--surface-2);border-color:var(--border-strong)"></i>No trade</span>
+          </div>
+          <div style="margin-top:.6rem;font-size:11.5px;color:var(--faint)">
+            Click a day to see only that day's trades.${s.days_unknown ?
+            ` ${s.days_unknown} day(s) marked no-data — monitoring gaps, not rule breaks.` : ''}</div>
         </div></div>`);
 
         // 2x2
@@ -256,41 +365,156 @@
               <div class="tag">broke · lost</div><div class="big">The real cost</div></div>
           </div></div></div>`);
 
-        // Entries, newest first
+        // ── Trades, newest first, each expandable ──
+        function esc(v) {
+          return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+        // Note key: date + time + instrument. Deliberately NOT the array index,
+        // so a note stays attached to its trade when a re-sync reorders or
+        // merges rows -- which is exactly what happened when partial fills were
+        // collapsed from three rows into one.
+        const noteKey = (day, t) => `jn:${day.date}:${t.time}:${t.instrument || ''}`;
+        function getNote(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+
+        function checks(t) {
+          const zone = t.setup === 'PASS' ? ['ok', 'Inside a rated zone']
+                     : t.setup === 'FAIL' ? ['no', 'Not in a rated zone']
+                     : ['unk', 'Could not check'];
+          const conf = t.confirmation === 'PASS' ? ['ok', 'System confirmed']
+                     : t.confirmation === 'FAIL' ? ['no', 'No confirmation']
+                     : ['unk', 'Could not check'];
+          const lim = t.within_limit ? ['ok', `Trade ${t.trade_number} of ${d.rules.max_trades_per_day}`]
+                                     : ['no', `Trade ${t.trade_number} — over your limit of ${d.rules.max_trades_per_day}`];
+          return `<div class="checks">
+            <div class="chk"><div class="ck">Zone</div>
+              <div class="cv ${zone[0]}">${zone[1]}</div>
+              <div class="cw">${esc(t.why) || `Entry must sit inside an ${d.rules.zone_ratings.join('/')} zone from that morning's map.`}</div></div>
+            <div class="chk"><div class="ck">Confirmation</div>
+              <div class="cv ${conf[0]}">${conf[1]}</div>
+              <div class="cw">A system alert within ±${d.rules.confirmation_window_minutes} min of entry.</div></div>
+            <div class="chk"><div class="ck">Daily limit</div>
+              <div class="cv ${lim[0]}">${lim[1]}</div>
+              <div class="cw">${t.rule_break ? esc(t.rule_break) : 'Counts positions taken, not broker fills.'}</div></div>
+          </div>`;
+        }
+
         const rows = [];
         d.days.slice().reverse().forEach(day => {
           if (day.flat) {
-            rows.push(`<div class="entry"><div class="t mono">${day.date.slice(5)}</div>
+            rows.push(`<div class="entry" data-date="${day.date}">
+              <div class="t mono">${day.date.slice(5)}</div>
               <div><span class="verdict PASS">NO TRADE</span>
               <div class="line2">Sat out — counts as a disciplined day.</div></div><div></div></div>`);
             return;
           }
-          day.trades.forEach(t => {
+          (day.trades || []).forEach((t, i) => {
             const broke = t.setup === 'FAIL' || !t.within_limit;
             const v = !t.within_limit ? 'FAIL' : t.setup;
             const vtxt = !t.within_limit ? 'OVER LIMIT' : t.setup === 'PASS' ? 'FOLLOWED'
                        : t.setup === 'UNKNOWN' ? 'NO DATA' : 'BROKE';
             const lucky = broke && t.pnl > 0;
-            rows.push(`<div class="entry">
+            const id = `${day.date}-${i}`;
+            const k = noteKey(day, t);
+            const note = getNote(k);
+            rows.push(`<div class="entry clickable" data-toggle="${id}" data-date="${day.date}">
               <div class="t mono">${day.date.slice(5)}<br>${t.time || ''}</div>
               <div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                  <span class="chev">▶</span>
                   <span class="side ${t.direction}">${t.direction === 'UP' ? 'Bullish' : 'Bearish'}</span>
-                  <span class="inst">${t.instrument || ''}</span>
+                  <span class="inst">${esc(t.instrument)}</span>
                   <span class="verdict ${v}">${vtxt}</span>
                   ${lucky ? '<span class="lucky-tag">LUCKY</span>' : ''}
+                  ${note ? '<span class="lucky-tag" style="color:var(--muted);border-color:var(--border)">NOTE</span>' : ''}
                 </div>
-                <div class="line2">${t.level ? 'NIFTY @ <span class="mono">' + t.level + '</span> · ' : ''}${t.why || ''}</div>
-                ${t.rule_break ? `<div class="line2" style="color:var(--accent)">why: ${t.rule_break}</div>` : ''}
+                <div class="line2">${t.level ? 'NIFTY @ <span class="mono">' + esc(t.level) + '</span> · ' : ''}${esc(t.why)}</div>
               </div>
               <div class="pnl ${(t.pnl || 0) >= 0 ? 'pos' : 'neg'}">${money(t.pnl, day.unit)}</div>
+            </div>
+            <div class="detail" id="d-${id}" data-date="${day.date}" style="display:none">
+              ${checks(t)}
+              ${t.notes ? `<div class="cw" style="margin-bottom:.8rem;color:var(--muted);font-size:11.5px">
+                 <b>From the broker:</b> ${esc(t.notes)}</div>` : ''}
+              <div class="note-lab">My note — what was I thinking?</div>
+              <textarea class="note" data-key="${k}"
+                placeholder="What did I see? What would I do differently?">${esc(note)}</textarea>
+              <div class="note-hint" data-hint="${k}">Saved on this device only.</div>
             </div>`);
           });
         });
-        parts.push(`<div class="panel"><h2>Trades</h2>${rows.join('') ||
-          '<div class="msg">Nothing logged yet.</div>'}</div>`);
+        parts.push(`<div class="panel"><h2>Trades</h2>
+          <div class="filter-note" id="filterNote" style="display:none">
+            <span id="filterText"></span><button type="button" id="clearFilter">Show all</button>
+          </div>
+          ${rows.join('') || '<div class="msg">Nothing logged yet.</div>'}</div>`);
 
         app.innerHTML = parts.join('');
+        wire();
+      }
+
+      function wire() {
+        // Expand / collapse a trade.
+        app.addEventListener('click', e => {
+          const row = e.target.closest('[data-toggle]');
+          if (row) {
+            const box = document.getElementById('d-' + row.dataset.toggle);
+            if (box) {
+              const open = box.style.display !== 'none';
+              box.style.display = open ? 'none' : 'block';
+              row.classList.toggle('open', !open);
+            }
+            return;
+          }
+          // Click a calendar day -> show only that day.
+          const cell = e.target.closest('.day.has');
+          if (cell) { applyFilter(cell.dataset.date); return; }
+          if (e.target.id === 'clearFilter') applyFilter(null);
+        });
+
+        // Notes. Saved per keystroke (debounced) rather than behind a button --
+        // an unsaved note is worse than no note, and nobody presses save.
+        let timer;
+        app.addEventListener('input', e => {
+          const ta = e.target.closest('.note');
+          if (!ta) return;
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            const hint = app.querySelector(`[data-hint="${CSS.escape(ta.dataset.key)}"]`);
+            try {
+              localStorage.setItem(ta.dataset.key, ta.value);
+              if (hint) { hint.innerHTML = '<span class="saved">Saved</span> — on this device only.'; }
+            } catch (err) {
+              // Private-mode Safari and a full quota both land here. Say so:
+              // silently dropping what someone just typed is the worst option.
+              if (hint) hint.textContent = 'Could NOT save — ' + (err.message || err);
+            }
+          }, 400);
+        });
+      }
+
+      function applyFilter(date) {
+        const note = document.getElementById('filterNote');
+        const text = document.getElementById('filterText');
+        app.querySelectorAll('.day.sel').forEach(x => x.classList.remove('sel'));
+        // Collapse everything first. Leaving a row expanded while its detail is
+        // filtered out desynchronises the chevron from what is on screen.
+        app.querySelectorAll('.detail').forEach(x => { x.style.display = 'none'; });
+        app.querySelectorAll('.entry.open').forEach(x => x.classList.remove('open'));
+        app.querySelectorAll('.entry[data-date], .detail[data-date]').forEach(el => {
+          const show = !date || el.dataset.date === date;
+          if (el.classList.contains('detail')) return;   // stays collapsed
+          el.style.display = show ? '' : 'none';
+        });
+        if (date) {
+          const cell = app.querySelector(`.day[data-date="${date}"]`);
+          if (cell) cell.classList.add('sel');
+          text.textContent = `Showing ${date} only.`;
+          note.style.display = 'flex';
+        } else {
+          note.style.display = 'none';
+        }
       }
     })();
   </script>
