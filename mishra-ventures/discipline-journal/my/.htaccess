@@ -3,3 +3,59 @@
   Header set X-Robots-Tag "noindex, nofollow, noarchive"
   Header set Cache-Control "no-store, no-cache, must-revalidate, private"
 </IfModule>
+
+# ============================================================================
+# PASSWORD PROTECTION — currently OFF. Turn it on before trusting this folder.
+# ============================================================================
+#
+# WHAT IS EXPOSED RIGHT NOW
+#   Anyone who knows this URL can read journal.json — your real fills, entry
+#   and exit prices, and P&L. The headers above stop Google indexing the page.
+#   They do not stop a person. Verified 2026-08-03: journal.json was fetched
+#   with no credentials at all.
+#
+# WHY IT MATTERS MORE NOW
+#   notes.php in this folder WRITES to disk. Apache checks this file before any
+#   script runs, so Basic Auth protects reading and writing together. With it
+#   off, anyone who finds the URL can write into your journal.
+#
+#   Putting a token in the page's JavaScript instead would not help — it would
+#   be sitting in view-source for the same person to read.
+#
+# SETUP — one time, and you have to do it: I cannot create a password file, and
+# you should never paste a password into a chat.
+# ---------------------------------------------------------------------------
+# 1. Easiest: hPanel -> Advanced -> Password Protect Directories, pointed at
+#        public_html/mishra-ventures/discipline-journal/my
+#    That writes .htpasswd for you — then skip to step 4.
+#
+#    To do it by hand instead, continue:
+#
+# 2. Create the password file OUTSIDE public_html so it can never be served:
+#        /home/<your-user>/.htpasswd-journal
+#    hPanel -> Files -> File Manager, or over FTP. Hostinger's password-protect
+#    tool can generate the hashed line for you to paste in.
+#
+# 3. Uncomment the four lines below and set AuthUserFile to that FULL path.
+#    A relative path will not work.
+#
+# 4. Test in a private window. You should get a browser password prompt for
+#    BOTH of these, before any content appears:
+#        /mishra-ventures/discipline-journal/my/
+#        /mishra-ventures/discipline-journal/my/journal.json
+#    If journal.json opens with no prompt, it is still public. Fix that before
+#    writing anything you would mind a stranger reading.
+#
+# Once it is on, notes sync with no extra login: the browser sends the same
+# credentials to notes.php that it already used for the page.
+
+#AuthType Basic
+#AuthName "My Journal"
+#AuthUserFile /home/REPLACE-WITH-YOUR-USER/.htpasswd-journal
+#Require valid-user
+
+# Never serve the notes store as a plain file, whatever else is configured.
+# notes.php is the only way in or out, and it validates what it writes.
+<Files "notes.json">
+  Require all denied
+</Files>

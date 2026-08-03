@@ -4,3 +4,8 @@
 # public site; real fills and P&L are uploaded straight to Hostinger by the
 # platform's nightly job. Only the page shell lives here.
 mishra-ventures/discipline-journal/my/journal.json
+
+# Your notes live on the host, never in this public repo. Same reason
+# journal.json is ignored above: this repository is public, and a note about a
+# trade is as personal as the trade.
+mishra-ventures/discipline-journal/my/notes.json

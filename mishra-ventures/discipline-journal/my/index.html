@@ -243,14 +243,38 @@
         return unit === 'PTS' ? `${s}${n} pts` : `${s}₹${n}`;
       };
 
+      // Notes live on the server so they follow you between phone and laptop.
+      // Null until loaded; `{}` once we know the server has none. The
+      // distinction matters -- a failed load must not look like "no notes" and
+      // silently overwrite what is stored.
+      let SERVER_NOTES = null;
+      let NOTES_ONLINE = false;
+
+      async function loadNotes() {
+        try {
+          const r = await fetch('notes.php?t=' + Date.now(), { cache: 'no-store' });
+          if (!r.ok) throw new Error('notes.php returned ' + r.status);
+          const j = await r.json();
+          SERVER_NOTES = j.notes || {};
+          NOTES_ONLINE = true;
+        } catch (e) {
+          // No PHP, no file, or offline. Fall back to this device only, and
+          // SAY so on every note box rather than pretending it synced.
+          SERVER_NOTES = null;
+          NOTES_ONLINE = false;
+        }
+      }
+
       // Cache-busted so a phone never shows yesterday's journal from cache —
       // the exact failure that made the live-market page look broken before.
-      fetch('journal.json?t=' + Date.now(), { cache: 'no-store' })
-        .then(r => {
+      Promise.all([
+        fetch('journal.json?t=' + Date.now(), { cache: 'no-store' }).then(r => {
           if (!r.ok) throw new Error(`journal.json returned ${r.status}`);
           return r.json();
-        })
-        .then(render)
+        }),
+        loadNotes(),
+      ])
+        .then(([data]) => render(data))
         .catch(err => {
           // Report the real reason. A generic "no data" message hid a caching
           // bug for two days on the live-market page.
@@ -375,8 +399,14 @@
         // so a note stays attached to its trade when a re-sync reorders or
         // merges rows -- which is exactly what happened when partial fills were
         // collapsed from three rows into one.
-        const noteKey = (day, t) => `jn:${day.date}:${t.time}:${t.instrument || ''}`;
-        function getNote(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+        const noteKey = (day, t) => `${day.date}:${t.time}:${t.instrument || ''}`;
+        // Server first, local copy as the fallback. The local copy is not a
+        // cache to be trusted -- it is what you get to keep if the phone is on
+        // a dead connection mid-note.
+        function getNote(k) {
+          if (SERVER_NOTES && k in SERVER_NOTES) return SERVER_NOTES[k];
+          try { return localStorage.getItem('jn:' + k) || ''; } catch (e) { return ''; }
+        }
 
         function checks(t) {
           const zone = t.setup === 'PASS' ? ['ok', 'Inside a rated zone']
@@ -440,7 +470,9 @@
               <div class="note-lab">My note — what was I thinking?</div>
               <textarea class="note" data-key="${k}"
                 placeholder="What did I see? What would I do differently?">${esc(note)}</textarea>
-              <div class="note-hint" data-hint="${k}">Saved on this device only.</div>
+              <div class="note-hint" data-hint="${k}">${NOTES_ONLINE
+                ? 'Syncs across your devices.'
+                : '<span style="color:var(--accent)">Offline — this device only.</span>'}</div>
             </div>`);
           });
         });
@@ -480,17 +512,37 @@
           const ta = e.target.closest('.note');
           if (!ta) return;
           clearTimeout(timer);
-          timer = setTimeout(() => {
-            const hint = app.querySelector(`[data-hint="${CSS.escape(ta.dataset.key)}"]`);
-            try {
-              localStorage.setItem(ta.dataset.key, ta.value);
-              if (hint) { hint.innerHTML = '<span class="saved">Saved</span> — on this device only.'; }
-            } catch (err) {
-              // Private-mode Safari and a full quota both land here. Say so:
-              // silently dropping what someone just typed is the worst option.
-              if (hint) hint.textContent = 'Could NOT save — ' + (err.message || err);
+          timer = setTimeout(async () => {
+            const key = ta.dataset.key;
+            const hint = app.querySelector(`[data-hint="${CSS.escape(key)}"]`);
+            const say = (html) => { if (hint) hint.innerHTML = html; };
+
+            // Always keep a local copy first. If the network write fails, the
+            // words are still somewhere rather than gone.
+            try { localStorage.setItem('jn:' + key, ta.value); } catch (err) { /* quota */ }
+
+            if (!NOTES_ONLINE) {
+              say('<span style="color:var(--accent)">Saved on this device only</span> — notes.php not reachable.');
+              return;
             }
-          }, 400);
+            say('Saving…');
+            try {
+              const r = await fetch('notes.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, text: ta.value }),
+              });
+              const j = await r.json().catch(() => ({}));
+              if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+              if (SERVER_NOTES) SERVER_NOTES[key] = ta.value;
+              say('<span class="saved">Saved</span> — synced to your other devices.');
+            } catch (err) {
+              // Name the failure. A note that looks saved and is not is worse
+              // than one that never pretended.
+              say('<span style="color:var(--red)">NOT synced</span> — ' +
+                  String(err.message || err) + '. Kept on this device.');
+            }
+          }, 600);
         });
       }
 
