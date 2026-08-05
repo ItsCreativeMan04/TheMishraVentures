@@ -133,33 +133,25 @@
     }
     .warn-banner b { color: var(--text-strong); }
 
-    /* ── Calendar Heatmap ── */
+    /* ── Calendar Heatmap (Demo Page Day Strip Style) ── */
     .cal-section { padding: 1.15rem 1.3rem; border-bottom: 1px solid var(--border); }
-    .cal-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 8px; }
+    .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 10px; }
     .cal-head h3 { margin: 0; font-size: 0.88rem; color: var(--text-strong); font-weight: 700; }
-    .cal-wrap { display: flex; flex-wrap: wrap; gap: 1.4rem; }
-    .cal { min-width: 212px; }
-    .cal-title { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--faint); margin-bottom: 0.5rem; font-weight: 600; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .dow { font-size: 9px; text-align: center; color: var(--faint); padding-bottom: 2px; }
+    .legend-inline { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--muted); align-items: center; }
+    .chip { width: 9px; height: 9px; border-radius: 3px; display: inline-block; vertical-align: -1px; margin-right: 4px; border: 1px solid var(--border); }
+    .days { display: flex; gap: 6px; flex-wrap: wrap; }
     .day {
-      aspect-ratio: 1; min-height: 26px; border-radius: 7px; border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; font-size: 10.5px;
-      color: var(--faint); background: transparent; transition: border-color 0.15s;
+      width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
+      color: var(--faint); background: transparent; cursor: pointer; transition: all 0.15s;
     }
-    .day.pad { border: 0; background: transparent; }
-    .day.none { border-style: dashed; opacity: .4; }
-    .day.has { cursor: pointer; }
-    .day.has:hover { border-color: var(--border-strong); }
+    .day.has:hover { border-color: var(--border-strong); transform: translateY(-1px); }
     .day.PASS { background: var(--green-bg); border-color: rgba(74,222,128,.45); color: var(--green); }
     .day.FAIL { background: var(--red-bg); border-color: rgba(248,113,113,.45); color: var(--red); }
     .day.UNKNOWN { background: var(--yellow-bg); border-color: rgba(250,204,21,.45); color: var(--yellow); }
     .day.LUCKY { background: rgba(245,158,11,.18); border-color: var(--accent); color: var(--accent); font-weight: 700; }
     .day.FLAT { background: var(--surface-2); border-color: var(--border-strong); color: var(--muted); }
     .day.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
-
-    .legend { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 0.95rem; font-size: 11px; color: var(--muted); }
-    .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; border: 1px solid var(--border); }
 
     /* ── 2x2 Matrix ── */
     .matrix-section { padding: 1.15rem 1.3rem; border-bottom: 1px solid var(--border); }
@@ -363,8 +355,17 @@
 
       function render(d) {
         const s = d.summary;
-        const stampText = new Date(d.generated_at).toLocaleString('en-IN',
-          { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+        // Parse generated_at with timezone awareness
+        let stampText = '—';
+        if (d.generated_at) {
+          let iso = d.generated_at;
+          if (typeof iso === 'string' && !iso.includes('+') && !iso.includes('-') && !iso.endsWith('Z')) {
+            iso = iso + 'Z';
+          }
+          const dt = new Date(iso);
+          stampText = dt.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
+        }
 
         const parts = [];
 
@@ -395,10 +396,7 @@
             <div class="v ${(s.net_pnl || 0) >= 0 ? 'good' : 'bad'}">${money(s.net_pnl, s.net_unit)}</div></div>
         </div>`);
 
-        // Calendar Heatmap Section
-        const byDate = {};
-        d.days.forEach(x => { byDate[x.date] = x; });
-
+        // Day Strip Section (Demo Page Style)
         function dayClass(x) {
           if (!x) return 'none';
           if (x.flat) return 'FLAT';
@@ -412,46 +410,24 @@
           LUCKY: 'rule broken — but won', UNKNOWN: 'no data to grade',
           FLAT: 'no trade taken', none: 'nothing logged' };
 
-        const months = [...new Set(d.days.map(x => x.date.slice(0, 7)))].sort();
-        const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const cals = months.map(ym => {
-          const [Y, M] = ym.split('-').map(Number);
-          const first = new Date(Y, M - 1, 1);
-          const total = new Date(Y, M, 0).getDate();
-          const lead = (first.getDay() + 6) % 7;
-          const cells = [];
-          for (let i = 0; i < lead; i++) cells.push('<div class="day pad"></div>');
-          for (let dnum = 1; dnum <= total; dnum++) {
-            const iso = `${Y}-${String(M).padStart(2, '0')}-${String(dnum).padStart(2, '0')}`;
-            const rec = byDate[iso];
-            const wd = new Date(Y, M - 1, dnum).getDay();
-            const weekend = (wd === 0 || wd === 6);
-            const cls = dayClass(rec);
-            const tip = `${iso} — ${CLASS_WORD[cls]}` +
-              (rec && rec.pnl != null ? ` · ${money(rec.pnl, rec.unit)}` : '');
-            cells.push(`<div class="day ${cls} ${rec ? 'has' : ''}"
-              ${weekend && !rec ? 'style="visibility:hidden"' : ''}
-              ${rec ? `data-date="${iso}"` : ''} title="${tip}">${dnum}</div>`);
-          }
-          return `<div class="cal"><div class="cal-title">${MON[M - 1]} ${Y}</div>
-            <div class="cal-grid">
-              ${['M','T','W','T','F','S','S'].map(x => `<div class="dow">${x}</div>`).join('')}
-              ${cells.join('')}
-            </div></div>`;
+        const dayPills = d.days.map(rec => {
+          const cls = dayClass(rec);
+          const dayNum = parseInt(rec.date.slice(8), 10);
+          const tip = `${rec.date} — ${CLASS_WORD[cls]}` + (rec.pnl != null ? ` · ${money(rec.pnl, rec.unit)}` : '');
+          return `<div class="day ${cls} has" data-date="${rec.date}" title="${tip}">${dayNum}</div>`;
         }).join('');
 
         parts.push(`<div class="cal-section">
           <div class="cal-head">
             <h3>Every trading day this month</h3>
+            <div class="legend-inline">
+              <span><i class="chip" style="background:var(--green-bg);border-color:rgba(74,222,128,.45)"></i>followed</span>
+              <span><i class="chip" style="background:rgba(245,158,11,.18);border-color:var(--accent)"></i>lucky</span>
+              <span><i class="chip" style="background:var(--red-bg);border-color:rgba(248,113,113,.45)"></i>broke</span>
+              <span><i class="chip" style="background:var(--yellow-bg);border-color:rgba(250,204,21,.45)"></i>no data</span>
+            </div>
           </div>
-          <div class="cal-wrap">${cals || '<div class="msg">Nothing logged yet.</div>'}</div>
-          <div class="legend">
-            <span><i style="background:var(--green-bg);border-color:rgba(74,222,128,.45)"></i>Followed</span>
-            <span><i style="background:rgba(245,158,11,.18);border-color:var(--accent)"></i>Lucky (broke, won)</span>
-            <span><i style="background:var(--red-bg);border-color:rgba(248,113,113,.45)"></i>Broke</span>
-            <span><i style="background:var(--yellow-bg);border-color:rgba(250,204,21,.45)"></i>No data</span>
-            <span><i style="background:var(--surface-2);border-color:var(--border-strong)"></i>No trade</span>
-          </div>
+          <div class="days">${dayPills || '<div class="msg">Nothing logged yet.</div>'}</div>
           <div style="margin-top:.7rem;font-size:11.5px;color:var(--faint)">
             Click a day to filter trades below.${s.days_unknown ?
             ` ${s.days_unknown} day(s) marked no-data — monitoring gaps, not rule breaks.` : ''}</div>
