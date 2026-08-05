@@ -24,159 +24,236 @@
        It is a shell. Real fills and P&L live in journal.json, which is
        uploaded straight to Hostinger by the platform's nightly job and is
        never committed to this repository. Access control is the .htaccess
-       alongside it; this separation is what limits the damage if that access
-       control is ever misconfigured. */
+       alongside it. */
     :root {
-      --bg:#0c0a07; --surface:#14110c; --surface-2:#1b1710;
-      --border:rgba(255,237,213,.12); --border-strong:rgba(255,237,213,.24);
-      --text-strong:#fffaf3; --text:rgba(255,250,243,.85); --muted:rgba(255,250,243,.55);
-      --faint:rgba(255,250,243,.32); --accent:#f59e0b;
-      --green:#4ade80; --green-bg:rgba(74,222,128,.13);
-      --red:#f87171; --red-bg:rgba(248,113,113,.13);
-      --yellow:#facc15; --yellow-bg:rgba(250,204,21,.13);
-      --shadow:0 18px 44px rgba(0,0,0,.5);
+      --bg: #0c0a07;
+      --surface: #14110c;
+      --surface-2: #1b1710;
+      --border: rgba(255, 237, 213, 0.12);
+      --border-strong: rgba(255, 237, 213, 0.24);
+      --text-strong: #fffaf3;
+      --text: rgba(255, 250, 243, 0.85);
+      --muted: rgba(255, 250, 243, 0.55);
+      --faint: rgba(255, 250, 243, 0.32);
+      --accent: #f59e0b;
+      --accent2: #fbbf24;
+      --green: #4ade80;
+      --green-bg: rgba(74, 222, 128, 0.13);
+      --red: #f87171;
+      --red-bg: rgba(248, 113, 113, 0.13);
+      --yellow: #facc15;
+      --yellow-bg: rgba(250, 204, 21, 0.13);
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
     }
     html[data-theme="light"] {
-      --bg:#f7f3ec; --surface:#fff; --surface-2:#fdfaf5;
-      --border:rgba(69,39,12,.14); --border-strong:rgba(69,39,12,.26);
-      --text-strong:#1b1308; --text:#2d2113; --muted:rgba(45,33,19,.62);
-      --faint:rgba(45,33,19,.4); --accent:#b45309;
-      --green:#15803d; --green-bg:rgba(21,128,61,.11);
-      --red:#b91c1c; --red-bg:rgba(185,28,28,.1);
-      --yellow:#a16207; --yellow-bg:rgba(161,98,7,.12);
-      --shadow:0 12px 30px rgba(69,39,12,.08);
+      --bg: #f7f3ec;
+      --surface: #ffffff;
+      --surface-2: #fdfaf5;
+      --border: rgba(69, 39, 12, 0.14);
+      --border-strong: rgba(69, 39, 12, 0.26);
+      --text-strong: #1b1308;
+      --text: #2d2113;
+      --muted: rgba(45, 33, 19, 0.62);
+      --faint: rgba(45, 33, 19, 0.4);
+      --accent: #b45309;
+      --accent2: #92400e;
+      --green: #15803d;
+      --green-bg: rgba(21, 128, 61, 0.11);
+      --red: #b91c1c;
+      --red-bg: rgba(185, 28, 28, 0.1);
+      --yellow: #a16207;
+      --yellow-bg: rgba(161, 98, 7, 0.12);
+      --shadow: 0 12px 30px rgba(69, 39, 12, 0.08);
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);
-      font-family:var(--font-base,system-ui,-apple-system,sans-serif);line-height:1.6;
-      -webkit-font-smoothing:antialiased}
-    .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
-    .wrap{max-width:980px;margin:0 auto;padding:1.6rem 1.2rem 4rem}
 
-    .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:1.1rem}
-    .top h1{font-size:clamp(1.3rem,4vw,1.75rem);margin:0;color:var(--text-strong);letter-spacing:-.02em}
-    .stamp{font-size:11.5px;color:var(--faint)}
-    .private{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.4px;
-      text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
-      border-radius:100px;padding:3px 10px;font-weight:700}
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: var(--font-base, system-ui, -apple-system, sans-serif);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    .mono, .num { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+    .wrap { max-width: 1020px; margin: 0 auto; padding: 0 1.4rem 4.5rem; }
 
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border);
-      border-radius:16px;overflow:hidden;background:var(--surface);margin-bottom:1rem}
-    .stat{padding:1rem 1.1rem;border-right:1px solid var(--border)}
-    .stat:last-child{border-right:0}
-    .stat .k{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint)}
-    .stat .v{font-size:clamp(1.2rem,3.4vw,1.6rem);font-weight:700;color:var(--text-strong);margin-top:3px}
-    .stat .v.good{color:var(--green)} .stat .v.warn{color:var(--accent)} .stat .v.bad{color:var(--red)}
-    .sfx{font-size:.7rem;color:var(--faint);font-weight:400}
+    /* ── Hero Header ── */
+    .hero { padding: 3.2rem 0 1.8rem; text-align: center; }
+    .eyebrow {
+      display: inline-block; font-size: 10.5px; letter-spacing: 2.4px;
+      text-transform: uppercase; color: var(--accent); font-weight: 700;
+      border: 1px solid var(--border-strong); border-radius: 100px;
+      padding: 5px 15px; margin-bottom: 1.1rem;
+    }
+    h1 {
+      font-size: clamp(1.85rem, 5.2vw, 3rem); line-height: 1.1;
+      margin: 0 0 0.8rem; color: var(--text-strong); font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+    h1 em { font-style: normal; color: var(--accent); }
+    .lede {
+      font-size: clamp(0.96rem, 2.3vw, 1.1rem); color: var(--muted);
+      max-width: 56ch; margin: 0 auto;
+    }
 
-    .panel{border:1px solid var(--border);border-radius:16px;background:var(--surface);
-      margin-bottom:1rem;overflow:hidden}
-    .panel h2{margin:0;padding:.85rem 1.15rem;font-size:.85rem;color:var(--text-strong);
-      border-bottom:1px solid var(--border);background:var(--surface-2)}
-    .panel .body{padding:1rem 1.15rem}
+    /* ── App shell ── */
+    .app {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; box-shadow: var(--shadow); overflow: hidden;
+      margin-top: 1.8rem;
+    }
+    .app-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 0.95rem 1.3rem; border-bottom: 1px solid var(--border);
+      background: var(--surface-2); flex-wrap: wrap;
+    }
+    .app-title { font-weight: 700; color: var(--text-strong); font-size: 0.95rem; }
+    .app-title small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--faint); margin-top: 2px; }
+    .sync-pill {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px;
+      color: var(--muted); border: 1px solid var(--border); border-radius: 100px;
+      padding: 5px 13px; background: var(--surface);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green);
+      animation: pulse 2.4s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-    /* ── Calendar heatmap ──
-       A month grid, not a flat strip. A strip of squares tells you how many
-       days you logged; a calendar tells you WHEN — which weekday you break
-       rules on, whether a bad run clustered, whether you skipped a whole week.
-       That is the pattern a discipline journal exists to surface. */
-    .cal-wrap{display:flex;flex-wrap:wrap;gap:1.4rem}
-    .cal{min-width:212px}
-    .cal-title{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
-      color:var(--faint);margin-bottom:.5rem}
-    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-    .dow{font-size:9px;text-align:center;color:var(--faint);padding-bottom:2px}
-    .day{aspect-ratio:1;min-height:26px;border-radius:7px;border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:10.5px;
-      color:var(--faint);background:transparent}
-    .day.pad{border:0;background:transparent}
-    /* No entry for a weekday: an outline, not a colour. An untraded day and a
-       day you have no data for must not look the same as a disciplined one. */
-    .day.none{border-style:dashed;opacity:.4}
-    .day.has{cursor:pointer}
-    .day.has:hover{border-color:var(--border-strong)}
-    .day.PASS{background:var(--green-bg);border-color:rgba(74,222,128,.45);color:var(--green)}
-    .day.FAIL{background:var(--red-bg);border-color:rgba(248,113,113,.45);color:var(--red)}
-    .day.UNKNOWN{background:var(--yellow-bg);border-color:rgba(250,204,21,.45);color:var(--yellow)}
-    .day.LUCKY{background:rgba(245,158,11,.18);border-color:var(--accent);color:var(--accent);
-      font-weight:700}
-    .day.FLAT{background:var(--surface-2);border-color:var(--border-strong);color:var(--muted)}
-    .day.sel{outline:2px solid var(--accent);outline-offset:1px}
-    .legend{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:.9rem;font-size:11px;color:var(--muted)}
-    .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;
-      margin-right:5px;vertical-align:-1px;border:1px solid var(--border)}
+    /* ── Stat strip ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
+    .stat { padding: 1.15rem 1.2rem; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: 0; }
+    .stat .k { font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--faint); }
+    .stat .v { font-size: clamp(1.25rem, 3.6vw, 1.7rem); font-weight: 700; color: var(--text-strong); margin-top: 3px; }
+    .stat .v.good { color: var(--green); }
+    .stat .v.warn { color: var(--accent); }
+    .stat .v.bad  { color: var(--red); }
+    .stat .sfx { font-size: 0.72rem; color: var(--faint); font-weight: 400; }
 
-    /* ── Expandable trade rows ── */
-    .entry.clickable{cursor:pointer}
-    .entry.clickable:hover{background:var(--surface-2)}
-    .chev{font-size:10px;color:var(--faint);transition:transform .15s}
-    .entry.open .chev{transform:rotate(90deg)}
-    .detail{padding:0 1.15rem 1rem;border-bottom:1px solid var(--border);
-      background:var(--surface-2)}
-    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-      gap:9px;margin:.2rem 0 .9rem}
-    .chk{border:1px solid var(--border);border-radius:11px;padding:.65rem .8rem;
-      background:var(--surface)}
-    .chk .ck{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;color:var(--faint)}
-    .chk .cv{font-size:12.5px;font-weight:700;margin-top:3px}
-    .chk .cw{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.45}
-    .cv.ok{color:var(--green)} .cv.no{color:var(--red)} .cv.unk{color:var(--yellow)}
-    .note-lab{font-size:9.5px;letter-spacing:1.1px;text-transform:uppercase;
-      color:var(--faint);margin-bottom:5px}
-    .note{width:100%;min-height:62px;resize:vertical;background:var(--surface);
-      color:var(--text);border:1px solid var(--border);border-radius:10px;
-      padding:.6rem .75rem;font:inherit;font-size:12.5px;line-height:1.5}
-    .note:focus{outline:none;border-color:var(--accent)}
-    .note-hint{font-size:10.5px;color:var(--faint);margin-top:5px}
-    .saved{color:var(--green)}
+    .warn-banner {
+      border-left: 3px solid var(--accent); background: var(--surface-2);
+      padding: 0.9rem 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text);
+    }
+    .warn-banner b { color: var(--text-strong); }
 
-    .filter-note{display:flex;justify-content:space-between;align-items:center;
-      gap:10px;flex-wrap:wrap;padding:.6rem 1.15rem;background:var(--surface-2);
-      border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
-    .filter-note button{background:none;border:1px solid var(--border);color:var(--text);
-      border-radius:100px;padding:2px 11px;font:inherit;font-size:11px;cursor:pointer}
+    /* ── Calendar Heatmap ── */
+    .cal-section { padding: 1.15rem 1.3rem; border-bottom: 1px solid var(--border); }
+    .cal-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 8px; }
+    .cal-head h3 { margin: 0; font-size: 0.88rem; color: var(--text-strong); font-weight: 700; }
+    .cal-wrap { display: flex; flex-wrap: wrap; gap: 1.4rem; }
+    .cal { min-width: 212px; }
+    .cal-title { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--faint); margin-bottom: 0.5rem; font-weight: 600; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .dow { font-size: 9px; text-align: center; color: var(--faint); padding-bottom: 2px; }
+    .day {
+      aspect-ratio: 1; min-height: 26px; border-radius: 7px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 10.5px;
+      color: var(--faint); background: transparent; transition: border-color 0.15s;
+    }
+    .day.pad { border: 0; background: transparent; }
+    .day.none { border-style: dashed; opacity: .4; }
+    .day.has { cursor: pointer; }
+    .day.has:hover { border-color: var(--border-strong); }
+    .day.PASS { background: var(--green-bg); border-color: rgba(74,222,128,.45); color: var(--green); }
+    .day.FAIL { background: var(--red-bg); border-color: rgba(248,113,113,.45); color: var(--red); }
+    .day.UNKNOWN { background: var(--yellow-bg); border-color: rgba(250,204,21,.45); color: var(--yellow); }
+    .day.LUCKY { background: rgba(245,158,11,.18); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+    .day.FLAT { background: var(--surface-2); border-color: var(--border-strong); color: var(--muted); }
+    .day.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-    .matrix{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .cell{border:1px solid var(--border);border-radius:13px;padding:.9rem 1rem;position:relative}
-    .cell .tag{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
-    .cell .big{font-size:.93rem;font-weight:700;color:var(--text-strong);margin-top:.3rem}
-    .cell .count{position:absolute;top:.8rem;right:1rem;font-size:1.3rem;font-weight:700;color:var(--faint)}
-    .cell.lucky{border-color:rgba(245,158,11,.55)}
-    .cell.lucky .big,.cell.lucky .count{color:var(--accent)}
-    .cell.good{border-color:rgba(74,222,128,.32)}
+    .legend { display: flex; flex-wrap: wrap; gap: 0.85rem; margin-top: 0.95rem; font-size: 11px; color: var(--muted); }
+    .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 5px; vertical-align: -1px; border: 1px solid var(--border); }
 
-    .entry{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;
-      padding:.8rem 1.15rem;border-bottom:1px solid var(--border)}
-    .entry:last-child{border-bottom:0}
-    .entry .t{font-size:11.5px;color:var(--faint)}
-    .side{font-size:9.5px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:5px;text-transform:uppercase}
-    .side.UP{background:var(--green-bg);color:var(--green)}
-    .side.DOWN{background:var(--red-bg);color:var(--red)}
-    .inst{font-size:12.5px;color:var(--text-strong);font-weight:600}
-    .line2{font-size:11.5px;color:var(--muted);margin-top:3px}
-    .verdict{font-size:9.5px;font-weight:700;letter-spacing:.7px;padding:3px 9px;border-radius:100px;border:1px solid}
-    .verdict.PASS{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.35)}
-    .verdict.FAIL{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.35)}
-    .verdict.UNKNOWN{background:var(--yellow-bg);color:var(--yellow);border-color:rgba(250,204,21,.35)}
-    .lucky-tag{font-size:9px;font-weight:700;letter-spacing:.7px;color:var(--accent);
-      border:1px solid var(--accent);border-radius:4px;padding:1px 5px;margin-left:5px}
-    .pnl{font-size:13px;font-weight:700;text-align:right}
-    .pnl.pos{color:var(--green)} .pnl.neg{color:var(--red)}
+    /* ── 2x2 Matrix ── */
+    .matrix-section { padding: 1.15rem 1.3rem; border-bottom: 1px solid var(--border); }
+    .matrix-section h3 { margin: 0 0 0.85rem; font-size: 0.88rem; color: var(--text-strong); font-weight: 700; }
+    .matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cell { border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem; background: var(--surface-2); position: relative; }
+    .cell .tag { font-size: 9.5px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--faint); }
+    .cell .big { font-size: 0.97rem; font-weight: 700; color: var(--text-strong); margin: 0.35rem 0 0.25rem; }
+    .cell .why { font-size: 0.83rem; color: var(--muted); margin: 0; }
+    .cell .count { position: absolute; top: .9rem; right: 1.05rem; font-size: 1.35rem; font-weight: 700; color: var(--faint); }
+    .cell.lucky { border-color: rgba(245,158,11,.55); background: linear-gradient(180deg, rgba(245,158,11,.09), var(--surface-2)); }
+    .cell.lucky .big, .cell.lucky .count { color: var(--accent); }
+    .cell.good { border-color: rgba(74,222,128,.32); }
 
-    .warn{border-left:3px solid var(--accent);background:var(--surface-2);padding:.9rem 1.1rem;
-      border-radius:0 12px 12px 0;margin-bottom:1rem;font-size:.9rem}
-    .warn b{color:var(--text-strong)}
-    .msg{padding:2.5rem 1.2rem;text-align:center;color:var(--muted);font-size:.92rem}
-    .msg code{background:var(--surface-2);padding:2px 7px;border-radius:5px;font-size:.85em}
+    /* ── Entries & Details ── */
+    .entries-section { padding: 0; }
+    .entries-head { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.3rem; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .entries-head h3 { margin: 0; font-size: 0.88rem; color: var(--text-strong); font-weight: 700; }
 
-    @media (max-width:720px){
-      .stats{grid-template-columns:1fr 1fr}
-      .stat{border-bottom:1px solid var(--border)}
-      .stat:nth-child(2){border-right:0}
-      .stat:nth-child(3),.stat:nth-child(4){border-bottom:0}
-      .matrix{grid-template-columns:1fr}
-      .entry{grid-template-columns:56px 1fr}
-      .entry .pnl{grid-column:2;text-align:left}
+    .entry {
+      display: grid; grid-template-columns: 70px 1fr auto; gap: 12px;
+      align-items: center; padding: 0.85rem 1.3rem; border-bottom: 1px solid var(--border);
+    }
+    .entry:last-child { border-bottom: 0; }
+    .entry.clickable { cursor: pointer; transition: background 0.12s; }
+    .entry.clickable:hover { background: var(--surface-2); }
+    .chev { font-size: 10px; color: var(--faint); transition: transform .15s; }
+    .entry.open .chev { transform: rotate(90deg); }
+    .entry .t { font-size: 12px; color: var(--faint); }
+    .entry .main { min-width: 0; }
+    .entry .line1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .side {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 2px 8px;
+      border-radius: 5px; text-transform: uppercase;
+    }
+    .side.UP { background: var(--green-bg); color: var(--green); }
+    .side.DOWN { background: var(--red-bg); color: var(--red); }
+    .inst { font-size: 12.5px; color: var(--text-strong); font-weight: 600; }
+    .line2 { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+    .verdict {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.8px; padding: 3px 9px;
+      border-radius: 100px; border: 1px solid transparent; white-space: nowrap;
+    }
+    .verdict.PASS { background: var(--green-bg); color: var(--green); border-color: rgba(74,222,128,.35); }
+    .verdict.FAIL { background: var(--red-bg); color: var(--red); border-color: rgba(248,113,113,.35); }
+    .verdict.UNKNOWN { background: var(--yellow-bg); color: var(--yellow); border-color: rgba(250,204,21,.35); }
+    .pnl { font-size: 13px; font-weight: 700; text-align: right; }
+    .pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); }
+    .lucky-tag {
+      display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .8px;
+      color: var(--accent); border: 1px solid var(--accent); border-radius: 4px;
+      padding: 1px 6px; margin-left: 4px;
+    }
+
+    .detail { padding: 0.8rem 1.3rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 9px; margin: .2rem 0 .9rem; }
+    .chk { border: 1px solid var(--border); border-radius: 11px; padding: .65rem .8rem; background: var(--surface); }
+    .chk .ck { font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--faint); }
+    .chk .cv { font-size: 12.5px; font-weight: 700; margin-top: 3px; }
+    .chk .cw { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+    .cv.ok { color: var(--green); } .cv.no { color: var(--red); } .cv.unk { color: var(--yellow); }
+    .note-lab { font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+    .note {
+      width: 100%; min-height: 62px; resize: vertical; background: var(--surface);
+      color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+      padding: .6rem .75rem; font: inherit; font-size: 12.5px; line-height: 1.5;
+    }
+    .note:focus { outline: none; border-color: var(--accent); }
+    .note-hint { font-size: 10.5px; color: var(--faint); margin-top: 5px; }
+    .saved { color: var(--green); }
+
+    .filter-note {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; flex-wrap: wrap; padding: .6rem 1.3rem; background: var(--surface-2);
+      border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted);
+    }
+    .filter-note button {
+      background: none; border: 1px solid var(--border); color: var(--text);
+      border-radius: 100px; padding: 2px 11px; font: inherit; font-size: 11px; cursor: pointer;
+    }
+
+    .msg { padding: 2.8rem 1.2rem; text-align: center; color: var(--muted); font-size: .92rem; }
+    .msg code { background: var(--surface-2); padding: 2px 7px; border-radius: 5px; font-size: .85em; }
+
+    @media (max-width: 720px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat { border-bottom: 1px solid var(--border); }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(3), .stat:nth-child(4) { border-bottom: 0; }
+      .matrix { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 56px 1fr; }
+      .entry .pnl { grid-column: 2; text-align: left; }
+      .wrap { padding: 0 1rem 3.5rem; }
+      .hero { padding: 2.4rem 0 1.2rem; }
     }
   </style>
 </head>
@@ -186,10 +263,11 @@
     <a href="../../" class="nav-brand">
       <div class="nav-logo">📓</div>
       <div>
-        <div class="nav-brand-text">My Journal</div>
-        <div class="nav-brand-sub">private</div>
+        <div class="nav-brand-text">Discipline Journal</div>
+        <div class="nav-brand-sub">The Mishra Ventures</div>
       </div>
     </a>
+    <a href="../../" class="nav-home">Home</a>
     <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
       <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -205,15 +283,22 @@
   </nav>
 
   <div class="wrap">
-    <div class="top">
+
+    <header class="hero">
+      <span class="eyebrow">Private Trading Journal</span>
       <h1>My Journal</h1>
-      <div style="text-align:right">
-        <span class="private">● Private</span>
-        <div class="stamp" id="stamp"></div>
+      <p class="lede">
+        Scores process, verifies entry rules against published maps, and treats profitable rule-breaks as warnings.
+      </p>
+    </header>
+
+    <!-- ══ APP CONTAINER ══ -->
+    <div id="app">
+      <div class="app">
+        <div class="msg">Loading your journal…</div>
       </div>
     </div>
 
-    <div id="app"><div class="msg">Loading…</div></div>
   </div>
 
   <script>
@@ -243,10 +328,6 @@
         return unit === 'PTS' ? `${s}${n} pts` : `${s}₹${n}`;
       };
 
-      // Notes live on the server so they follow you between phone and laptop.
-      // Null until loaded; `{}` once we know the server has none. The
-      // distinction matters -- a failed load must not look like "no notes" and
-      // silently overwrite what is stored.
       let SERVER_NOTES = null;
       let NOTES_ONLINE = false;
 
@@ -258,15 +339,11 @@
           SERVER_NOTES = j.notes || {};
           NOTES_ONLINE = true;
         } catch (e) {
-          // No PHP, no file, or offline. Fall back to this device only, and
-          // SAY so on every note box rather than pretending it synced.
           SERVER_NOTES = null;
           NOTES_ONLINE = false;
         }
       }
 
-      // Cache-busted so a phone never shows yesterday's journal from cache —
-      // the exact failure that made the live-market page look broken before.
       Promise.all([
         fetch('journal.json?t=' + Date.now(), { cache: 'no-store' }).then(r => {
           if (!r.ok) throw new Error(`journal.json returned ${r.status}`);
@@ -276,29 +353,36 @@
       ])
         .then(([data]) => render(data))
         .catch(err => {
-          // Report the real reason. A generic "no data" message hid a caching
-          // bug for two days on the live-market page.
-          app.innerHTML = `<div class="msg">
+          app.innerHTML = `<div class="app"><div class="msg">
             Could not load your journal.<br><br>
             <code>${String(err.message || err)}</code><br><br>
             The nightly job uploads <code>journal.json</code> next to this page
             after each trading day. If it has never run, there is nothing here yet.
-          </div>`;
+          </div></div>`;
         });
 
       function render(d) {
         const s = d.summary;
-        document.getElementById('stamp').textContent =
-          'updated ' + new Date(d.generated_at).toLocaleString('en-IN',
-            { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const stampText = new Date(d.generated_at).toLocaleString('en-IN',
+          { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
         const parts = [];
 
+        // App Bar Header
+        parts.push(`<div class="app-bar">
+          <div class="app-title">
+            Live Trading Journal
+            <small>NIFTY options · rule: max ${d.rules.max_trades_per_day} trades/day, A-grade zone + confirmation</small>
+          </div>
+          <span class="sync-pill"><span class="dot"></span> Synced from broker · ${stampText}</span>
+        </div>`);
+
         if (s.lucky_exceeds_earned) {
-          parts.push(`<div class="warn"><b>Lucky wins now outnumber earned wins.</b>
+          parts.push(`<div class="warn-banner"><b>Lucky wins now outnumber earned wins.</b>
             Your P&L is telling you a story your process hasn't earned yet.</div>`);
         }
 
+        // Stats Strip
         parts.push(`<div class="stats">
           <div class="stat"><div class="k">Rules followed</div>
             <div class="v ${s.discipline_pct >= 70 ? 'good' : s.discipline_pct === null ? '' : 'bad'}">
@@ -311,11 +395,7 @@
             <div class="v ${(s.net_pnl || 0) >= 0 ? 'good' : 'bad'}">${money(s.net_pnl, s.net_unit)}</div></div>
         </div>`);
 
-        // ── Calendar heatmap ──
-        // A day's colour is its WORST outcome, not its average: one broken
-        // rule in a day of good ones is the thing worth seeing. LUCKY outranks
-        // everything, because a rule broken on a winning day is the failure
-        // most likely to be repeated.
+        // Calendar Heatmap Section
         const byDate = {};
         d.days.forEach(x => { byDate[x.date] = x; });
 
@@ -338,7 +418,6 @@
           const [Y, M] = ym.split('-').map(Number);
           const first = new Date(Y, M - 1, 1);
           const total = new Date(Y, M, 0).getDate();
-          // Monday-first, matching how a trading week is read.
           const lead = (first.getDay() + 6) % 7;
           const cells = [];
           for (let i = 0; i < lead; i++) cells.push('<div class="day pad"></div>');
@@ -361,7 +440,10 @@
             </div></div>`;
         }).join('');
 
-        parts.push(`<div class="panel"><h2>Every logged day</h2><div class="body">
+        parts.push(`<div class="cal-section">
+          <div class="cal-head">
+            <h3>Every trading day this month</h3>
+          </div>
           <div class="cal-wrap">${cals || '<div class="msg">Nothing logged yet.</div>'}</div>
           <div class="legend">
             <span><i style="background:var(--green-bg);border-color:rgba(74,222,128,.45)"></i>Followed</span>
@@ -370,39 +452,37 @@
             <span><i style="background:var(--yellow-bg);border-color:rgba(250,204,21,.45)"></i>No data</span>
             <span><i style="background:var(--surface-2);border-color:var(--border-strong)"></i>No trade</span>
           </div>
-          <div style="margin-top:.6rem;font-size:11.5px;color:var(--faint)">
-            Click a day to see only that day's trades.${s.days_unknown ?
+          <div style="margin-top:.7rem;font-size:11.5px;color:var(--faint)">
+            Click a day to filter trades below.${s.days_unknown ?
             ` ${s.days_unknown} day(s) marked no-data — monitoring gaps, not rule breaks.` : ''}</div>
-        </div></div>`);
+        </div>`);
 
-        // 2x2
+        // 2x2 Matrix Section
         const m = s.matrix;
-        parts.push(`<div class="panel"><h2>Process vs outcome</h2><div class="body">
+        parts.push(`<div class="matrix-section">
+          <h3>Process vs outcome</h3>
           <div class="matrix">
             <div class="cell good"><span class="count">${m.good}</span>
-              <div class="tag">followed · won</div><div class="big">Earned</div></div>
+              <div class="tag">followed · won</div>
+              <div class="big">Earned</div>
+              <p class="why">Repeatable. The only box that compounds.</p></div>
             <div class="cell"><span class="count">${m.fine}</span>
-              <div class="tag">followed · lost</div><div class="big">Acceptable</div></div>
+              <div class="tag">followed · lost</div>
+              <div class="big">Acceptable</div>
+              <p class="why">The process was right. The market wasn't.</p></div>
             <div class="cell lucky"><span class="count">${m.lucky}</span>
-              <div class="tag">broke · won</div><div class="big">Lucky ⚠</div></div>
+              <div class="tag">broke · won</div>
+              <div class="big">Lucky ⚠</div>
+              <p class="why">Paid for breaking a rule — so you'll break it again.</p></div>
             <div class="cell"><span class="count">${m.bad}</span>
-              <div class="tag">broke · lost</div><div class="big">The real cost</div></div>
-          </div></div></div>`);
+              <div class="tag">broke · lost</div>
+              <div class="big">The real cost</div>
+              <p class="why">Honest, and the easiest box to learn from.</p></div>
+          </div>
+        </div>`);
 
-        // ── Trades, newest first, each expandable ──
-        function esc(v) {
-          return String(v == null ? '' : v)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-        }
-        // Note key: date + time + instrument. Deliberately NOT the array index,
-        // so a note stays attached to its trade when a re-sync reorders or
-        // merges rows -- which is exactly what happened when partial fills were
-        // collapsed from three rows into one.
+        // Trade Entries
         const noteKey = (day, t) => `${day.date}:${t.time}:${t.instrument || ''}`;
-        // Server first, local copy as the fallback. The local copy is not a
-        // cache to be trusted -- it is what you get to keep if the phone is on
-        // a dead connection mid-note.
         function getNote(k) {
           if (SERVER_NOTES && k in SERVER_NOTES) return SERVER_NOTES[k];
           try { return localStorage.getItem('jn:' + k) || ''; } catch (e) { return ''; }
@@ -430,6 +510,12 @@
           </div>`;
         }
 
+        function esc(v) {
+          return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
+
         const rows = [];
         d.days.slice().reverse().forEach(day => {
           if (day.flat) {
@@ -450,8 +536,8 @@
             const note = getNote(k);
             rows.push(`<div class="entry clickable" data-toggle="${id}" data-date="${day.date}">
               <div class="t mono">${day.date.slice(5)}<br>${t.time || ''}</div>
-              <div>
-                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="main">
+                <div class="line1">
                   <span class="chev">▶</span>
                   <span class="side ${t.direction}">${t.direction === 'UP' ? 'Bullish' : 'Bearish'}</span>
                   <span class="inst">${esc(t.instrument)}</span>
@@ -476,18 +562,22 @@
             </div>`);
           });
         });
-        parts.push(`<div class="panel"><h2>Trades</h2>
+
+        parts.push(`<div class="entries-section">
+          <div class="entries-head">
+            <h3>Logged Trades</h3>
+          </div>
           <div class="filter-note" id="filterNote" style="display:none">
             <span id="filterText"></span><button type="button" id="clearFilter">Show all</button>
           </div>
-          ${rows.join('') || '<div class="msg">Nothing logged yet.</div>'}</div>`);
+          ${rows.join('') || '<div class="msg">Nothing logged yet.</div>'}
+        </div>`);
 
-        app.innerHTML = parts.join('');
+        app.innerHTML = `<div class="app">${parts.join('')}</div>`;
         wire();
       }
 
       function wire() {
-        // Expand / collapse a trade.
         app.addEventListener('click', e => {
           const row = e.target.closest('[data-toggle]');
           if (row) {
@@ -499,14 +589,11 @@
             }
             return;
           }
-          // Click a calendar day -> show only that day.
           const cell = e.target.closest('.day.has');
           if (cell) { applyFilter(cell.dataset.date); return; }
           if (e.target.id === 'clearFilter') applyFilter(null);
         });
 
-        // Notes. Saved per keystroke (debounced) rather than behind a button --
-        // an unsaved note is worse than no note, and nobody presses save.
         let timer;
         app.addEventListener('input', e => {
           const ta = e.target.closest('.note');
@@ -517,9 +604,7 @@
             const hint = app.querySelector(`[data-hint="${CSS.escape(key)}"]`);
             const say = (html) => { if (hint) hint.innerHTML = html; };
 
-            // Always keep a local copy first. If the network write fails, the
-            // words are still somewhere rather than gone.
-            try { localStorage.setItem('jn:' + key, ta.value); } catch (err) { /* quota */ }
+            try { localStorage.setItem('jn:' + key, ta.value); } catch (err) {}
 
             if (!NOTES_ONLINE) {
               say('<span style="color:var(--accent)">Saved on this device only</span> — notes.php not reachable.');
@@ -537,8 +622,6 @@
               if (SERVER_NOTES) SERVER_NOTES[key] = ta.value;
               say('<span class="saved">Saved</span> — synced to your other devices.');
             } catch (err) {
-              // Name the failure. A note that looks saved and is not is worse
-              // than one that never pretended.
               say('<span style="color:var(--red)">NOT synced</span> — ' +
                   String(err.message || err) + '. Kept on this device.');
             }
@@ -550,13 +633,11 @@
         const note = document.getElementById('filterNote');
         const text = document.getElementById('filterText');
         app.querySelectorAll('.day.sel').forEach(x => x.classList.remove('sel'));
-        // Collapse everything first. Leaving a row expanded while its detail is
-        // filtered out desynchronises the chevron from what is on screen.
         app.querySelectorAll('.detail').forEach(x => { x.style.display = 'none'; });
         app.querySelectorAll('.entry.open').forEach(x => x.classList.remove('open'));
         app.querySelectorAll('.entry[data-date], .detail[data-date]').forEach(el => {
           const show = !date || el.dataset.date === date;
-          if (el.classList.contains('detail')) return;   // stays collapsed
+          if (el.classList.contains('detail')) return;
           el.style.display = show ? '' : 'none';
         });
         if (date) {
@@ -572,3 +653,4 @@
   </script>
 </body>
 </html>
+
