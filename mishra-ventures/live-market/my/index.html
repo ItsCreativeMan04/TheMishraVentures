@@ -151,6 +151,16 @@
     .sizer-lots-label { font-size: 0.72rem; color: var(--muted); }
     .sizer-actual-risk { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
     .sizer-warn { font-size: 0.8rem; color: var(--red); }
+    .sizer-regime-advisory {
+      margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px dashed var(--border);
+      font-size: 0.78rem; line-height: 1.55;
+    }
+    .sizer-regime-advisory .sra-head { font-weight: 700; margin-bottom: 3px; }
+    .sizer-regime-advisory .sra-head.full { color: var(--green); }
+    .sizer-regime-advisory .sra-head.reduced { color: var(--yellow); }
+    .sizer-regime-advisory .sra-head.low { color: var(--red); }
+    .sizer-regime-advisory .sra-reason { color: var(--muted); }
+    .sizer-regime-advisory .sra-lots { font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
 
     .price-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
@@ -788,6 +798,12 @@
       </div>
       <div class="sizer-actual-risk" id="sizerActualRisk"></div>
     </div>
+    <!-- Mechanical, non-predictive size advisory from today's own gap/
+         opening-drive/range vs ATR (core/regime_risk_advisor.py). A sizing
+         input, not a trade call -- see that module's docstring for why this
+         is a different (allowed) thing from the benched regime-prediction
+         model. Hidden entirely until the live feed actually reports one. -->
+    <div class="sizer-regime-advisory" id="sizerRegimeAdvisory" style="display:none;"></div>
   </div>
 
   <div class="price-card">
@@ -966,6 +982,12 @@
   // Worker -- if it doesn't match yet, this page falls back to the same
   // trimmed data the public page gets (fails toward less exposure, not more).
   const LIVE_STATUS_READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
+
+  // Latest regime_risk advisory from the feed (core/regime_risk_advisor.py),
+  // read by the position-size calculator further down. null until the first
+  // successful fetch, or if the agent hasn't published one yet (pre-market,
+  // playback, or ATR unavailable).
+  let latestRegimeRisk = null;
 
   // Indian-convention magnitude labels (L = lakh), matching how OI is
   // normally read here, e.g. 1230000 -> "12.3L", 45200 -> "45.2K".
@@ -1268,7 +1290,33 @@
     const lotsEl = document.getElementById('sizerLots');
     const lotsLabelEl = document.getElementById('sizerLotsLabel');
     const actualEl = document.getElementById('sizerActualRisk');
+    const advisoryEl = document.getElementById('sizerRegimeAdvisory');
     if (!stopEl || !riskEl || !lotSizeEl || !lotsEl) return;
+
+    // Renders the advisory block against WHATEVER lots recalc() just
+    // computed at full risk -- shows both numbers (full-risk lots and the
+    // regime-adjusted suggestion) rather than silently replacing one with
+    // the other, so the multiplier's effect is visible, not hidden.
+    function renderRegimeAdvisory(fullLots) {
+      if (!advisoryEl) return;
+      const rr = latestRegimeRisk;
+      if (!rr || !rr.available || !(fullLots > 0)) {
+        advisoryEl.style.display = 'none';
+        advisoryEl.innerHTML = '';
+        return;
+      }
+      const mult = typeof rr.size_multiplier === 'number' ? rr.size_multiplier : 1.0;
+      const adjLots = Math.floor(fullLots * mult);
+      const cls = mult >= 1.0 ? 'full' : (mult >= 0.5 ? 'reduced' : 'low');
+      const reason = (rr.reasons && rr.reasons[0]) || '';
+      advisoryEl.style.display = '';
+      advisoryEl.innerHTML =
+        `<div class="sra-head ${cls}">Regime-adjusted: ${mult.toFixed(2)}x normal size` +
+        ` → <span class="sra-lots">${adjLots.toLocaleString('en-IN')}</span>` +
+        ` ${adjLots === 1 ? 'lot' : 'lots'} (of ${fullLots.toLocaleString('en-IN')} at full risk)</div>` +
+        (reason ? `<div class="sra-reason">${reason}</div>` : '') +
+        `<div class="sra-reason" style="margin-top:2px;">Sizing input, not a trade call -- direction is not predicted here.</div>`;
+    }
 
     // Lot size is the one input that goes stale on its own -- NSE revises it
     // periodically, most recently to 65 in the January 2026 series. Persist
@@ -1289,6 +1337,7 @@
         lotsLabelEl.textContent = ' lots';
         actualEl.textContent = '';
         actualEl.className = 'sizer-actual-risk';
+        renderRegimeAdvisory(0);
         return;
       }
 
@@ -1300,6 +1349,7 @@
         lotsLabelEl.textContent = ' lots';
         actualEl.textContent = `Even 1 lot risks ₹${Math.round(riskPerLot).toLocaleString('en-IN')} -- over budget. Widen the risk or tighten the stop.`;
         actualEl.className = 'sizer-warn';
+        renderRegimeAdvisory(0);
         return;
       }
 
@@ -1308,6 +1358,7 @@
       lotsLabelEl.textContent = lots === 1 ? ' lot' : ' lots';
       actualEl.textContent = `≈ ₹${Math.round(actualRisk).toLocaleString('en-IN')} risked at this size`;
       actualEl.className = 'sizer-actual-risk';
+      renderRegimeAdvisory(lots);
     }
 
     [stopEl, riskEl].forEach(el => el.addEventListener('input', recalc));
@@ -1316,6 +1367,11 @@
       try { localStorage.setItem('lm-sizer-lotsize', lotSizeEl.value); } catch (err) { /* private mode */ }
     });
     recalc();
+    // Exposed so refresh()'s ~30s status-feed poll (a separate closure,
+    // defined later in the page) can re-run the advisory line as the
+    // multiplier updates through the session, without needing new input in
+    // the stop/risk fields themselves.
+    window.__mmRecalcSizer = recalc;
   })();
 
   // ---- Theme switch -----------------------------------------------------
@@ -1577,6 +1633,14 @@
     try {
       const data = await fetchLiveStatus(activeSymbol || undefined, LIVE_STATUS_READ_TOKEN);
       renderFrameNote(data);
+
+      // Mechanical size advisory (core/regime_risk_advisor.py) -- stored at
+      // module scope so the sizer's recalc() (a separate, input-driven
+      // closure below) can read the latest value without a page reload.
+      // Only present with a valid read token; a public/no-token fetch omits
+      // this field entirely, so `data.regime_risk` is simply undefined there.
+      latestRegimeRisk = data.regime_risk || null;
+      if (typeof window.__mmRecalcSizer === 'function') window.__mmRecalcSizer();
 
       const ago = fmtLiveAgo(data.updated_at);
 
