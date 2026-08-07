@@ -17,8 +17,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live Market Intelligence – The Mishra Ventures</title>
-  <link rel="stylesheet" href="../shared/global.css?v=20260803" />
-  <link rel="stylesheet" href="../shared/components.css?v=20260803" />
+  <link rel="stylesheet" href="../shared/global.css?v=20260807a" />
+  <link rel="stylesheet" href="../shared/components.css?v=20260807a" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -702,7 +702,12 @@
       <div class="stat-value" id="statAtr">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">Morning Regime</div>
+      <div class="stat-label">Today so far</div>
+      <div class="stat-value" id="statIntraday">–</div>
+      <div class="stat-sub" id="statIntradaySub"></div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">Yesterday was</div>
       <div class="stat-value" id="statRegime">–</div>
     </div>
     <div class="stat-tile">
@@ -1391,7 +1396,32 @@
       document.getElementById('statThesis').textContent = data.thesis_status || '–';
       document.getElementById('statVwap').textContent = data.vwap != null ? fmtLivePrice(data.vwap) : '–';
       document.getElementById('statAtr').textContent = data.atr_utilization != null ? `${data.atr_utilization.toFixed(1)}%` : '–';
-      document.getElementById('statRegime').textContent = data.morning_regime || '–';
+      // "Yesterday was" rather than "Morning Regime". The value has always been
+      // the PREVIOUS session's realised label — the forecasting model is
+      // benched — and calling it "Morning Regime" made it read like a call on
+      // today. Strip the "Benched (yday: X)" wrapper and show X.
+      const mr = String(data.morning_regime || '');
+      const yday = (mr.match(/yday:\s*([^)]+)\)/) || [])[1];
+      document.getElementById('statRegime').textContent = (yday || mr || '–').trim();
+
+      // How TODAY has behaved so far. Observation over elapsed bars, not a
+      // forecast — the day type is not callable in advance (AUC 0.539), so the
+      // page must never show a probability for how today ends.
+      const ir = data.intraday_regime || null;
+      const irEl = document.getElementById('statIntraday');
+      const irSub = document.getElementById('statIntradaySub');
+      if (ir && ir.label) {
+        irEl.textContent = ir.label;
+        irEl.style.color = ({
+          TRENDING: 'var(--green)', RANGING: 'var(--yellow)',
+          QUIET: 'var(--muted)', 'TOO EARLY': 'var(--muted)'
+        })[ir.label] || '';
+        irSub.textContent = ir.detail || '';
+      } else {
+        irEl.textContent = '–';
+        irEl.style.color = '';
+        irSub.textContent = '';
+      }
 
       const cprEl = document.getElementById('statCpr');
       if (data.cpr && data.price_vs_cpr) {

@@ -155,6 +155,12 @@ html[data-theme="light"] .theme-switch .ts-opt.is-on {
 .stat-value { font-size: 1.15rem; font-weight: 700; color: var(--text-strong, #fff); font-family: 'JetBrains Mono', monospace; }
 .stat-value.bullish { color: var(--green); }
 .stat-value.bearish { color: var(--red); }
+/* Second line inside a stat tile — the evidence behind the headline value.
+   Used by "Today so far", where the label alone (TRENDING) is not enough:
+   the reader has to see it is 0.92 efficiency over 135 elapsed minutes, or
+   the number carries more authority than it earned. */
+.stat-sub { font-size: .72rem; color: var(--muted); margin-top: 3px; line-height: 1.35;
+            font-family: 'JetBrains Mono', monospace; }
 .stat-value.neutral { color: var(--yellow); }
 
 /* ── Sub-page footer (distinct class from the hub's own footer style) ── */
