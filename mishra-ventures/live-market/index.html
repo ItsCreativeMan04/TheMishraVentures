@@ -219,6 +219,48 @@
     .action-banner.wait      .action-verb { color: var(--muted); }
     .action-banner.urgent .action-pill { background: var(--red-2); color: var(--red); }
 
+    /* Circuit breaker takeover: a real day-loss circuit breaker, not decor.
+       Deliberately harsher than every other panel on this page -- black, not
+       the site's --surface navy, and no dismiss control. This is the one
+       state on the whole site that is designed to be impossible to work
+       around by scrolling past it, because the thing it is competing with is
+       the urge to open one more trade. See journal/circuit_breaker.py in the
+       Trading Research Platform repo for what trips it and why. */
+    .cb-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: #000; color: #fff;
+      align-items: center; justify-content: center; padding: 2rem;
+    }
+    .cb-overlay.show { display: flex; }
+    .cb-box { max-width: 520px; width: 100%; text-align: center; }
+    .cb-tag {
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; color: var(--red);
+      text-transform: uppercase; margin-bottom: 0.6rem;
+    }
+    .cb-pnl {
+      font-size: clamp(3rem, 10vw, 4.5rem); font-weight: 800; line-height: 1;
+      letter-spacing: -1px; color: var(--red); margin-bottom: 0.3rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cb-pnl-note { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 2rem; }
+    .cb-headline {
+      font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; color: #fff;
+      line-height: 1.15; margin-bottom: 1.8rem;
+    }
+    .cb-steps {
+      text-align: left; background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.4); border-radius: 12px;
+      padding: 1.1rem 1.3rem; margin-bottom: 1.6rem;
+    }
+    .cb-step { display: flex; gap: 12px; align-items: flex-start; }
+    .cb-step + .cb-step { margin-top: 12px; }
+    .cb-step-num {
+      font-family: 'JetBrains Mono', monospace; font-weight: 800;
+      color: var(--red); font-size: 0.95rem;
+    }
+    .cb-step-text { font-size: 0.95rem; color: #fff; }
+    .cb-footnote { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
     /* Discipline strip: standing process reminder matching the live engine's HUD */
     .discipline-strip {
       background: var(--surface); border: 1px solid var(--border);
@@ -583,6 +625,31 @@
   </style>
 </head>
 <body>
+
+<!-- Circuit breaker takeover. Hidden (display:none via .cb-overlay, no
+     .show class) until journal/circuit_breaker.py trips on the Trading
+     Research Platform and the live agent publishes circuit_breaker.tripped
+     in the status feed. No dismiss control -- see the CSS comment above
+     .cb-overlay for why. -->
+<div class="cb-overlay" id="cbOverlay" role="alertdialog" aria-live="assertive">
+  <div class="cb-box">
+    <div class="cb-tag">Circuit breaker tripped</div>
+    <div class="cb-pnl" id="cbPnl">–</div>
+    <div class="cb-pnl-note" id="cbPnlNote"></div>
+    <div class="cb-headline" id="cbHeadline">STOP.<br>DO NOT OPEN ANOTHER TRADE.</div>
+    <div class="cb-steps">
+      <div class="cb-step">
+        <div class="cb-step-num">1</div>
+        <div class="cb-step-text">Close this laptop. Right now, not after one more check.</div>
+      </div>
+      <div class="cb-step">
+        <div class="cb-step-num">2</div>
+        <div class="cb-step-text">Open the Angel app and deactivate F&amp;O for today under Settings → Risk Management.</div>
+      </div>
+    </div>
+    <div class="cb-footnote">Every recovery attempt today has made the number bigger, not smaller. That pattern does not break on its own.</div>
+  </div>
+</div>
 
 <nav>
   <a href="../" class="nav-brand">
@@ -1579,6 +1646,35 @@
           : 'Act now';
         pill.textContent = label;
         pill.style.display = label ? '' : 'none';
+      })();
+
+      // ---- Circuit breaker takeover ---------------------------------------
+      // Deliberately separate from renderActionBanner even though both react
+      // to the same trip: the action banner is one panel among several, and
+      // is exactly the kind of thing a re-entry-minded read scrolls past. The
+      // overlay's whole job is to be the one thing on screen, so it gets its
+      // own render path rather than living inside a banner that competes with
+      // price, OI and everything else on the page.
+      (function renderCircuitBreaker() {
+        const cb = data.circuit_breaker;
+        const overlay = document.getElementById('cbOverlay');
+        if (!overlay) return;
+        if (!cb || !cb.tripped) {
+          overlay.classList.remove('show');
+          document.body.style.overflow = '';
+          return;
+        }
+        const pnl = cb.pnl_at_trip;
+        document.getElementById('cbPnl').textContent =
+          (typeof pnl === 'number') ? (pnl >= 0 ? '+' : '') + Math.round(pnl).toLocaleString('en-IN') : '–';
+        const limitWord = cb.reason === 'profit' ? 'profit' : 'loss';
+        document.getElementById('cbPnlNote').textContent =
+          `realized ${limitWord} today, past your configured line`;
+        document.getElementById('cbHeadline').innerHTML = cb.reason === 'profit'
+          ? 'STOP.<br>TAKE THE WIN AND CLOSE.'
+          : 'STOP.<br>DO NOT OPEN ANOTHER TRADE.';
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
       })();
 
       document.getElementById('decisionFocus').textContent = data.decision_focus || 'WAIT';
