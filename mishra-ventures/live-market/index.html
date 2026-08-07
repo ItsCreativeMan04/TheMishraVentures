@@ -121,6 +121,36 @@
     }
     .status-banner.show { display: flex; }
 
+    /* Position size calculator: risk fixed, quantity solved for -- the
+       opposite of Kumar's old habit (quantity fixed at 10/20 lots, risk
+       floating with whatever the stop happened to be that trade). All math
+       is local; nothing here is sent anywhere. */
+    .sizer-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+      padding: 1.3rem 1.5rem; margin-bottom: 1.2rem;
+    }
+    .sizer-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 0.9rem;
+    }
+    .sizer-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .sizer-field { flex: 1 1 140px; min-width: 0; }
+    .sizer-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; display: block; }
+    .sizer-field input {
+      width: 100%; box-sizing: border-box; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 10px; color: var(--text-strong);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; padding: 8px 10px;
+    }
+    .sizer-field input:focus { outline: none; border-color: var(--accent); }
+    .sizer-result {
+      border-top: 1px solid var(--border); padding-top: 0.9rem;
+      display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .sizer-lots { font-size: 1.7rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
+    .sizer-lots-label { font-size: 0.72rem; color: var(--muted); }
+    .sizer-actual-risk { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .sizer-warn { font-size: 0.8rem; color: var(--red); }
+
     .price-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
       padding: 2rem; text-align: center; margin-bottom: 1.2rem;
@@ -728,6 +758,37 @@
     <span class="action-pill" id="actionPill"></span>
   </div>
 
+  <!-- Position size calculator. Risk fixed, quantity solved for it --
+       stop-loss and max risk go in, suggested lots come out. Everything
+       computes locally in JS on input; nothing here calls the status feed
+       or any other endpoint. Lot size defaults to NIFTY's current 65
+       (Jan 2026 revision) but is editable, since NSE revises lot sizes
+       periodically and this must not go quietly stale. -->
+  <div class="sizer-card">
+    <div class="sizer-title">Position size</div>
+    <div class="sizer-row">
+      <div class="sizer-field">
+        <label class="sizer-label" for="sizerStop">Stop-loss (premium points)</label>
+        <input type="number" id="sizerStop" inputmode="decimal" placeholder="e.g. 20" min="0" step="0.05">
+      </div>
+      <div class="sizer-field">
+        <label class="sizer-label" for="sizerRisk">Max risk this trade (₹)</label>
+        <input type="number" id="sizerRisk" inputmode="decimal" placeholder="e.g. 2000" min="0" step="1">
+      </div>
+      <div class="sizer-field">
+        <label class="sizer-label" for="sizerLotSize">Lot size</label>
+        <input type="number" id="sizerLotSize" inputmode="decimal" value="65" min="1" step="1">
+      </div>
+    </div>
+    <div class="sizer-result">
+      <div>
+        <span class="sizer-lots" id="sizerLots">–</span>
+        <span class="sizer-lots-label" id="sizerLotsLabel"> lots</span>
+      </div>
+      <div class="sizer-actual-risk" id="sizerActualRisk"></div>
+    </div>
+  </div>
+
   <div class="price-card">
     <div class="price-symbol" id="symbol">NIFTY</div>
     <div class="price-contract" id="priceContract"></div>
@@ -1179,6 +1240,68 @@
     refresh();
   });
   paintFrameSwitch();
+
+  // ---- Position size calculator ------------------------------------------
+  // Solves for quantity given a risk budget and a stop distance -- the
+  // reverse of fixing quantity and letting risk float with whatever the
+  // stop happened to be. Purely local: reads the three inputs on every
+  // keystroke, writes the result, nothing leaves the page.
+  (function initSizer() {
+    const stopEl = document.getElementById('sizerStop');
+    const riskEl = document.getElementById('sizerRisk');
+    const lotSizeEl = document.getElementById('sizerLotSize');
+    const lotsEl = document.getElementById('sizerLots');
+    const lotsLabelEl = document.getElementById('sizerLotsLabel');
+    const actualEl = document.getElementById('sizerActualRisk');
+    if (!stopEl || !riskEl || !lotSizeEl || !lotsEl) return;
+
+    // Lot size is the one input that goes stale on its own -- NSE revises it
+    // periodically, most recently to 65 in the January 2026 series. Persist
+    // whatever value Kumar last confirmed rather than resetting to the
+    // hardcoded default every visit.
+    try {
+      const saved = localStorage.getItem('lm-sizer-lotsize');
+      if (saved) lotSizeEl.value = saved;
+    } catch (err) { /* private mode */ }
+
+    function recalc() {
+      const stop = parseFloat(stopEl.value);
+      const risk = parseFloat(riskEl.value);
+      const lotSize = parseFloat(lotSizeEl.value);
+
+      if (!(stop > 0) || !(risk > 0) || !(lotSize > 0)) {
+        lotsEl.textContent = '–';
+        lotsLabelEl.textContent = ' lots';
+        actualEl.textContent = '';
+        actualEl.className = 'sizer-actual-risk';
+        return;
+      }
+
+      const riskPerLot = stop * lotSize;
+      const lots = Math.floor(risk / riskPerLot);
+
+      if (lots < 1) {
+        lotsEl.textContent = '0';
+        lotsLabelEl.textContent = ' lots';
+        actualEl.textContent = `Even 1 lot risks ₹${Math.round(riskPerLot).toLocaleString('en-IN')} -- over budget. Widen the risk or tighten the stop.`;
+        actualEl.className = 'sizer-warn';
+        return;
+      }
+
+      const actualRisk = lots * riskPerLot;
+      lotsEl.textContent = lots.toLocaleString('en-IN');
+      lotsLabelEl.textContent = lots === 1 ? ' lot' : ' lots';
+      actualEl.textContent = `≈ ₹${Math.round(actualRisk).toLocaleString('en-IN')} risked at this size`;
+      actualEl.className = 'sizer-actual-risk';
+    }
+
+    [stopEl, riskEl].forEach(el => el.addEventListener('input', recalc));
+    lotSizeEl.addEventListener('input', () => {
+      recalc();
+      try { localStorage.setItem('lm-sizer-lotsize', lotSizeEl.value); } catch (err) { /* private mode */ }
+    });
+    recalc();
+  })();
 
   // ---- Theme switch -----------------------------------------------------
   // The palette itself is applied by the inline pre-paint script in <head>;
