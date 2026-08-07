@@ -1,0 +1,60 @@
+# Keep it out of search engines and prevent public caching
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow, noarchive"
+  Header set Cache-Control "no-store, no-cache, must-revalidate, private"
+</IfModule>
+
+# ============================================================================
+# PASSWORD PROTECTION -- currently OFF. Turn it on before sharing this URL.
+# ============================================================================
+#
+# WHAT THIS DOES AND DOES NOT PROTECT (read this part even if you skip setup)
+#   This gates the PAGE -- the laid-out dashboard with zones, decision
+#   support, trap signals, the position calculator. Once Basic Auth is on,
+#   nobody without the password can load this HTML at all.
+#
+#   It does NOT gate the DATA underneath it. This page reads the same
+#   Cloudflare Worker feed (live-market-status.itscreativeman04.workers.dev)
+#   that the PUBLIC page at ../ also calls, and that Worker's GET endpoint
+#   has no authentication of its own -- confirmed by reading
+#   cloudflare/live_status_worker.js directly. Anyone who opens the public
+#   page's network tab and copies that URL gets the exact same full JSON
+#   this private page shows, Basic Auth or not.
+#
+#   Kumar decided (2026-08-07) to ship the page split first and the feed
+#   split -- publishing a trimmed public payload and a separate full private
+#   one -- later. This password protects against a casual visitor clicking
+#   around the site. It does not protect against someone who thinks to check
+#   the network tab. Treat that as still open until the feed is actually
+#   split.
+#
+# SETUP -- one time, and you have to do it: I cannot create a password file,
+# and you should never paste a password into a chat.
+# ---------------------------------------------------------------------------
+# 1. Easiest: hPanel -> Advanced -> Password Protect Directories, pointed at
+#        public_html/mishra-ventures/live-market/my
+#    That writes .htpasswd for you -- then skip to step 4.
+#
+#    To do it by hand instead, continue:
+#
+# 2. Create the password file OUTSIDE public_html so it can never be served:
+#        /home/<your-user>/.htpasswd-livemarket
+#    hPanel -> Files -> File Manager, or over FTP. Hostinger's password-protect
+#    tool can generate the hashed line for you to paste in.
+#
+# 3. Uncomment the four lines below and set AuthUserFile to that FULL path.
+#    A relative path will not work.
+#
+# 4. Test in a private window. You should get a browser password prompt
+#    before any content appears at:
+#        /mishra-ventures/live-market/my/
+#    If it loads with no prompt, it is still public.
+#
+# Reuse the SAME .htpasswd file as the discipline journal
+# (../../discipline-journal/my/.htpasswd) if you want one password for both
+# private pages instead of a second one to remember.
+
+#AuthType Basic
+#AuthName "Live Market — Private"
+#AuthUserFile /home/REPLACE-WITH-YOUR-USER/.htpasswd-livemarket
+#Require valid-user
