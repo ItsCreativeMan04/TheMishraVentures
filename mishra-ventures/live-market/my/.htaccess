@@ -13,20 +13,27 @@
 #   support, trap signals, the position calculator. Once Basic Auth is on,
 #   nobody without the password can load this HTML at all.
 #
-#   It does NOT gate the DATA underneath it. This page reads the same
-#   Cloudflare Worker feed (live-market-status.itscreativeman04.workers.dev)
-#   that the PUBLIC page at ../ also calls, and that Worker's GET endpoint
-#   has no authentication of its own -- confirmed by reading
-#   cloudflare/live_status_worker.js directly. Anyone who opens the public
-#   page's network tab and copies that URL gets the exact same full JSON
-#   this private page shows, Basic Auth or not.
+#   UPDATE (2026-08-07, later same day): the feed itself is now split too.
+#   The Worker (cloudflare/live_status_worker.js) trims every GET to
+#   price/bias/session fields unless it carries a Bearer READ_TOKEN. This
+#   page's own script sends that token (see LIVE_STATUS_READ_TOKEN near the
+#   top of index.html's inline script); the public page and homepage ticker
+#   send none, so they get the trimmed payload automatically. Copying this
+#   page's network-tab URL now gets you the same trimmed JSON the public
+#   page already shows -- the gap described below is closed, PROVIDED the
+#   Worker has actually been redeployed with the new code and its READ_TOKEN
+#   env var set to match. Until both of those are done on the Cloudflare
+#   side, this page itself falls back to the trimmed view too (fails toward
+#   showing less, not toward leaking more).
 #
-#   Kumar decided (2026-08-07) to ship the page split first and the feed
-#   split -- publishing a trimmed public payload and a separate full private
-#   one -- later. This password protects against a casual visitor clicking
-#   around the site. It does not protect against someone who thinks to check
-#   the network tab. Treat that as still open until the feed is actually
-#   split.
+#   Original note, kept for history: this page reads the same Cloudflare
+#   Worker feed (live-market-status.itscreativeman04.workers.dev) that the
+#   PUBLIC page at ../ also calls. Before the update above, that Worker's GET
+#   endpoint had no authentication at all, so anyone who opened the public
+#   page's network tab and copied that URL got the exact same full JSON this
+#   private page shows, Basic Auth or not. Kumar decided (2026-08-07) to ship
+#   the page split first and the feed split later; the feed split above is
+#   that later part landing the same day.
 #
 # SETUP -- one time, and you have to do it: I cannot create a password file,
 # and you should never paste a password into a chat.

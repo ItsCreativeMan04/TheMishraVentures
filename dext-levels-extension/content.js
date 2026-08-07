@@ -29,6 +29,12 @@
     refreshMs: 30000,
     pos: { right: 18, top: 96 },
     collapsed: false,
+    // 2026-08-07: the Worker now trims every unauthenticated GET to
+    // price/bias/session fields only -- see cloudflare/live_status_worker.js.
+    // This card needs the full snapshot (zones, distances, verdict), so it
+    // sends this as a Bearer token. Same secret as the private website page's
+    // LIVE_STATUS_READ_TOKEN; rotate both together if it ever leaks.
+    readToken: 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111',
   };
 
   let cfg = { ...DEFAULTS };
@@ -205,7 +211,10 @@
       const url = cfg.symbol
         ? `${cfg.statusUrl}?symbol=${encodeURIComponent(cfg.symbol)}`
         : cfg.statusUrl;
-      const res = await fetch(url, { cache: 'no-store' });
+      const res = await fetch(url, {
+        cache: 'no-store',
+        headers: cfg.readToken ? { Authorization: `Bearer ${cfg.readToken}` } : {},
+      });
       // A 404 means this symbol has never published — say which one, rather
       // than showing a market that looks merely quiet.
       if (res.status === 404) throw new Error(`no feed for symbol "${cfg.symbol}"`);

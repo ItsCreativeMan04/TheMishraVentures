@@ -944,7 +944,7 @@
   <a href="../../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Market (Private) &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-market/my/
 </footer>
 
-<script src="../../shared/status-feed.js?v=20260803"></script>
+<script src="../../shared/status-feed.js?v=20260810b"></script>
 <!-- ?v= is a cache-buster. index.html and status-feed.js are separate
      files with separate cache lifetimes: on 2026-07-31 the HTML updated while
      the JS stayed cached, so the page called isSpotSymbol() from a version that
@@ -952,6 +952,20 @@
      STRING whenever status-feed.js changes. -->
 <script>
   const REFRESH_MS = 30000;
+
+  // Read-only key for the FULL feed (2026-08-07). The Worker now trims every
+  // unauthenticated GET down to public-safe fields (price/bias/session
+  // character) -- see cloudflare/live_status_worker.js. This page needs the
+  // full payload (zones, decision support, trades, discipline state), so it
+  // sends this token on every fetchLiveStatus() call below. It is safe to
+  // keep in this file specifically BECAUSE this page already sits behind its
+  // own Basic Auth password (see ../.htaccess) -- only someone who already
+  // has that password ever loads this script to see it. It is a SEPARATE
+  // secret from the agent's WRITE_TOKEN, which never touches a browser.
+  // Must match the READ_TOKEN environment variable set on the Cloudflare
+  // Worker -- if it doesn't match yet, this page falls back to the same
+  // trimmed data the public page gets (fails toward less exposure, not more).
+  const LIVE_STATUS_READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
 
   // Indian-convention magnitude labels (L = lakh), matching how OI is
   // normally read here, e.g. 1230000 -> "12.3L", 45200 -> "45.2K".
@@ -1561,7 +1575,7 @@
     const liveLabel = document.getElementById('liveLabel');
 
     try {
-      const data = await fetchLiveStatus(activeSymbol || undefined);
+      const data = await fetchLiveStatus(activeSymbol || undefined, LIVE_STATUS_READ_TOKEN);
       renderFrameNote(data);
 
       const ago = fmtLiveAgo(data.updated_at);
@@ -1937,8 +1951,8 @@
     if (!sw) return;
     try {
       const [def, spot] = await Promise.allSettled([
-        fetchLiveStatus(undefined),      // whatever the feed defaults to
-        fetchLiveStatus('NIFTY'),        // spot, explicitly
+        fetchLiveStatus(undefined, LIVE_STATUS_READ_TOKEN),      // whatever the feed defaults to
+        fetchLiveStatus('NIFTY', LIVE_STATUS_READ_TOKEN),        // spot, explicitly
       ]);
       const syms = new Set(
         [def, spot].filter(r => r.status === 'fulfilled' && r.value && r.value.symbol)

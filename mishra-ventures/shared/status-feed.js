@@ -25,14 +25,24 @@ const LIVE_STATUS_STALE_AFTER_MIN = 5;
  * SPOT index (levels only, no volume so no entries). They sit ~40-70 pts apart,
  * so a caller that cares which frame it is showing must ASK for it. Omitting
  * it returns the Worker's DEFAULT_SYMBOL, which is the back-compatible path.
+ *
+ * `readToken` (optional, 2026-08-07). The Worker now trims the response to
+ * public-safe fields (price/bias/session character) unless this is passed
+ * and matches its READ_TOKEN. Callers that omit it -- the public live-market
+ * page, the homepage ticker -- need no other change: they simply keep
+ * getting the smaller, public payload, which is all they ever read anyway.
+ * Only the private page (/my/) has a reason to pass one.
  */
-async function fetchLiveStatus(symbol) {
+async function fetchLiveStatus(symbol, readToken) {
   const url = symbol
     ? `${LIVE_STATUS_URL}?symbol=${encodeURIComponent(symbol)}`
     : LIVE_STATUS_URL;
   let res;
   try {
-    res = await fetch(url, { cache: 'no-store' });
+    res = await fetch(url, {
+      cache: 'no-store',
+      headers: readToken ? { Authorization: `Bearer ${readToken}` } : {},
+    });
   } catch (netErr) {
     // A thrown fetch is a NETWORK/CORS failure, not an empty feed. These look
     // identical to the user otherwise, and they need opposite fixes: one is

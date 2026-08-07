@@ -41,6 +41,13 @@
   <label for="ms">Refresh interval (seconds)</label>
   <input id="ms" type="number" min="10" max="300" step="5">
 
+  <label for="tok">Read token</label>
+  <input id="tok" type="text" placeholder="matches the Worker's READ_TOKEN" spellcheck="false">
+  <p class="sub" style="margin:6px 0 0;font-size:11.5px">
+    The feed now trims to price/bias only unless this matches the Worker's
+    READ_TOKEN. Leave the shipped default unless you've rotated it.
+  </p>
+
   <button id="save">Save</button><span class="ok" id="ok"></span>
 
   <div class="note">
