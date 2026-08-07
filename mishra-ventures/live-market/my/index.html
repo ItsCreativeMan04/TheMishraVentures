@@ -688,6 +688,63 @@
     .timeline-sev.important { background: var(--violet-2); color: var(--violet); }
     .timeline-sev.critical { background: var(--red-2); color: var(--red); }
     .timeline-message { color: var(--text); font-size: 0.85rem; line-height: 1.5; }
+
+    /* Mobile bottom-tab navigation, added 2026-08-07. Desktop is completely
+       untouched by design -- Kumar reviewed a desktop revamp and preferred
+       the page as it already was there, so every rule in this block is
+       gated to the SAME 720px breakpoint the rest of the page's responsive
+       CSS already uses (see .plan-decision-card above). Outside that
+       breakpoint [data-tab] elements keep their normal in-flow display and
+       .mobile-tabbar stays display:none -- nothing here can affect desktop
+       even if a rule below were wrong. */
+    .mobile-tabbar { display: none; }
+    @media (max-width: 720px) {
+      /* Hide every tabbed section by default; the active-tab rule below
+         (higher specificity: two attribute selectors) overrides this for
+         whichever one is current. Conditional sections (trap-card,
+         trade-card) already toggle `style.display` between '' and 'none'
+         in JS further down this file -- setting it to '' clears the inline
+         override and lets these same CSS rules decide visibility, so an
+         inactive trap stays hidden even while its tab IS active, and an
+         active trap on a NON-active tab stays hidden until that tab is
+         opened. Neither JS block needed to change. */
+      [data-tab] { display: none; }
+      body[data-mobile-tab="overview"] [data-tab="overview"] { display: block; }
+      body[data-mobile-tab="levels"] [data-tab="levels"] { display: block; }
+      body[data-mobile-tab="journal"] [data-tab="journal"] { display: block; }
+      body[data-mobile-tab="oi"] [data-tab="oi"] { display: block; }
+      /* stats-grid is itself `display:grid`, not `display:block` -- match
+         its own default or the tile columns collapse to one per row. */
+      body[data-mobile-tab="levels"] .stats-grid[data-tab="levels"] { display: grid; }
+
+      /* Pinned to the top of the viewport while scrolling within a tab, so
+         the trade-count/setup/mission line and the verdict banner are never
+         scrolled out of view -- see the wrapper's own comment further up
+         this file for why that specific pair must never be allowed to
+         become easy to lose track of. */
+      .mobile-sticky-top {
+        position: sticky; top: 0; z-index: 45;
+        background: var(--bg); padding-top: 0.4rem; margin: 0 -1rem;
+        padding-left: 1rem; padding-right: 1rem;
+      }
+
+      /* Room at the bottom of the page so the last card in a tab is not
+         permanently hidden behind the fixed tab bar. */
+      body { padding-bottom: 64px; }
+
+      .mobile-tabbar {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+        background: var(--surface); border-top: 1px solid var(--border);
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+      }
+      .mtb-btn {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+        background: none; border: none; color: var(--muted); font-family: 'Sora', sans-serif;
+        font-size: 0.62rem; padding: 4px 2px; cursor: pointer;
+      }
+      .mtb-btn svg { width: 20px; height: 20px; }
+      .mtb-btn.active { color: var(--accent2); }
+    }
   </style>
 </head>
 <body>
@@ -770,28 +827,39 @@
     <div class="fresh-note" id="freshNote"></div>
   </div>
 
-  <!-- Discipline Bar: Standing Process Reminder & Live Trade Rules -->
-  <div class="discipline-strip" id="disciplineStrip">
-    <div class="discipline-left">
-      <span class="discipline-badge" id="discTradeBadge">0 / 3 TRADES</span>
-      <span class="discipline-setup" id="discSetupStatus">SETUP: Checking…</span>
+  <!-- Discipline + verdict, wrapped together and pinned to the top of the
+       viewport on mobile (see .mobile-sticky-top, gated to the same
+       720px breakpoint as the tab bar below). Kumar rejected an earlier
+       desktop-revamp mockup specifically because it shrank this pair into a
+       badge -- on mobile these two must stay large and visible no matter
+       which tab is open or how far down that tab is scrolled, since this is
+       the one part of the page that actually addresses his loss-chasing
+       history. Desktop is completely unaffected -- outside the mobile
+       media query this wrapper adds no positioning at all. -->
+  <div class="mobile-sticky-top">
+    <!-- Discipline Bar: Standing Process Reminder & Live Trade Rules -->
+    <div class="discipline-strip" id="disciplineStrip">
+      <div class="discipline-left">
+        <span class="discipline-badge" id="discTradeBadge">0 / 3 TRADES</span>
+        <span class="discipline-setup" id="discSetupStatus">SETUP: Checking…</span>
+      </div>
+      <div class="discipline-body">
+        <div class="discipline-mission" id="discMission">DO OR DIE: 100% RULE-BASED TRADING.</div>
+        <div class="discipline-sub" id="discSub">Lucky profit is worse than a loss — only system execution counts.</div>
+      </div>
     </div>
-    <div class="discipline-body">
-      <div class="discipline-mission" id="discMission">DO OR DIE: 100% RULE-BASED TRADING.</div>
-      <div class="discipline-sub" id="discSub">Lucky profit is worse than a loss — only system execution counts.</div>
-    </div>
-  </div>
 
-  <!-- The verdict, first on the page. Rendered from decision_focus /
-       decision_reason, which the narrator guarantees is the SAME verdict the
-       commentary opens with -- there is exactly one source of truth. -->
-  <div class="action-banner wait" id="actionBanner">
-    <div class="action-verb" id="actionVerb">–</div>
-    <div class="action-body">
-      <div class="action-reason" id="actionReason">Waiting for the session to start.</div>
-      <div class="action-meta" id="actionMeta"></div>
+    <!-- The verdict, first on the page. Rendered from decision_focus /
+         decision_reason, which the narrator guarantees is the SAME verdict the
+         commentary opens with -- there is exactly one source of truth. -->
+    <div class="action-banner wait" id="actionBanner">
+      <div class="action-verb" id="actionVerb">–</div>
+      <div class="action-body">
+        <div class="action-reason" id="actionReason">Waiting for the session to start.</div>
+        <div class="action-meta" id="actionMeta"></div>
+      </div>
+      <span class="action-pill" id="actionPill"></span>
     </div>
-    <span class="action-pill" id="actionPill"></span>
   </div>
 
   <!-- Position size calculator. Risk fixed, quantity solved for it --
@@ -800,7 +868,7 @@
        or any other endpoint. Lot size defaults to NIFTY's current 65
        (Jan 2026 revision) but is editable, since NSE revises lot sizes
        periodically and this must not go quietly stale. -->
-  <div class="sizer-card">
+  <div class="sizer-card" data-tab="overview">
     <div class="sizer-title">Position size</div>
     <div class="sizer-row">
       <div class="sizer-field">
@@ -831,14 +899,14 @@
     <div class="sizer-regime-advisory" id="sizerRegimeAdvisory" style="display:none;"></div>
   </div>
 
-  <div class="price-card">
+  <div class="price-card" data-tab="overview">
     <div class="price-symbol" id="symbol">NIFTY</div>
     <div class="price-contract" id="priceContract"></div>
     <div class="price-value mono" id="priceValue">–</div>
     <div class="price-updated" id="priceUpdated">Waiting for data…</div>
   </div>
 
-  <div class="stats-grid">
+  <div class="stats-grid" data-tab="levels">
     <div class="stat-tile">
       <div class="stat-label">Session Phase</div>
       <div class="stat-value" id="statPhase">–</div>
@@ -925,12 +993,12 @@
     </div>
   </div>
 
-  <div class="narrative-card">
+  <div class="narrative-card" data-tab="levels">
     <div class="narrative-label">Market Commentary</div>
     <div class="narrative-text" id="narrativeText">No commentary yet — check back once the session starts.</div>
   </div>
 
-  <div class="plan-decision-card" id="planDecisionCard">
+  <div class="plan-decision-card" id="planDecisionCard" data-tab="levels">
     <div class="plan-decision-col">
       <div class="narrative-label">Morning Plan</div>
       <div class="plan-row">
@@ -951,17 +1019,17 @@
     </div>
   </div>
 
-  <div class="trap-card" id="trapCard" style="display: none;">
+  <div class="trap-card" id="trapCard" data-tab="overview" style="display: none;">
     <div class="narrative-label">Active Trap Signal</div>
     <div id="trapList"></div>
   </div>
 
-  <div class="trade-card" id="tradeCard" style="display: none;">
+  <div class="trade-card" id="tradeCard" data-tab="journal" style="display: none;">
     <div class="narrative-label">Trade Tracking</div>
     <div id="tradeList"></div>
   </div>
 
-  <div class="timeline-card">
+  <div class="timeline-card" data-tab="journal">
     <div class="timeline-header">
       <div class="narrative-label" style="margin-bottom: 0;">Session Timeline</div>
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -978,7 +1046,7 @@
     </div>
   </div>
 
-  <div class="oi-card">
+  <div class="oi-card" data-tab="oi">
     <div class="oi-header">
       <div>
         <div class="narrative-label" style="margin-bottom: 0;" id="oiSectionLabel">OI Change by Strike</div>
@@ -1019,6 +1087,30 @@
 <footer class="sub-footer">
   <a href="../../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Market (Private) &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-market/my/
 </footer>
+
+<!-- Mobile-only bottom tab bar. Hidden entirely on desktop (see
+     .mobile-tabbar CSS, gated to the same 720px breakpoint as the
+     [data-tab] show/hide rules). Groups sections that already exist
+     further up the page -- this does not move, duplicate, or alter any of
+     them; it only changes which ones are visible on a phone at once. -->
+<nav class="mobile-tabbar" id="mobileTabbar" aria-label="Page sections">
+  <button type="button" class="mtb-btn active" data-set-tab="overview" aria-current="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
+    <span>Overview</span>
+  </button>
+  <button type="button" class="mtb-btn" data-set-tab="levels" aria-current="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="12" width="4" height="8"/><rect x="10" y="7" width="4" height="13"/><rect x="17" y="3" width="4" height="17"/></svg>
+    <span>Levels</span>
+  </button>
+  <button type="button" class="mtb-btn" data-set-tab="journal" aria-current="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h11a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+    <span>Journal</span>
+  </button>
+  <button type="button" class="mtb-btn" data-set-tab="oi" aria-current="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span>OI</span>
+  </button>
+</nav>
 
 <script src="../../shared/status-feed.js?v=20260810b"></script>
 <!-- ?v= is a cache-buster. index.html and status-feed.js are separate
@@ -1468,6 +1560,40 @@
       if (e.key !== 'Escape') return;
       const openWrap = document.querySelector('.tip-wrap.open');
       if (openWrap) openWrap.classList.remove('open');
+    });
+  })();
+
+  // ---- Mobile tab bar -----------------------------------------------------
+  // No-op above the 720px breakpoint: this only sets a data attribute the
+  // CSS above reads, and that CSS is itself gated to the same breakpoint --
+  // desktop never sees an effect from this running.
+  (function initMobileTabs() {
+    const bar = document.getElementById('mobileTabbar');
+    if (!bar) return;
+    const buttons = Array.from(bar.querySelectorAll('.mtb-btn'));
+
+    function setTab(tab) {
+      document.body.setAttribute('data-mobile-tab', tab);
+      buttons.forEach(b => {
+        const on = b.dataset.setTab === tab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-current', String(on));
+      });
+      try { localStorage.setItem('lm-mobile-tab', tab); } catch (err) { /* private mode */ }
+    }
+
+    let initial = 'overview';
+    try {
+      const saved = localStorage.getItem('lm-mobile-tab');
+      if (saved && buttons.some(b => b.dataset.setTab === saved)) initial = saved;
+    } catch (err) { /* private mode */ }
+    setTab(initial);
+
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.mtb-btn');
+      if (!btn) return;
+      setTab(btn.dataset.setTab);
+      window.scrollTo(0, 0);
     });
   })();
 
