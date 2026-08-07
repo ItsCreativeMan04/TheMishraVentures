@@ -162,6 +162,31 @@
     .sizer-regime-advisory .sra-reason { color: var(--muted); }
     .sizer-regime-advisory .sra-lots { font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
 
+    /* Inline glossary tooltips, added 2026-08-07. Deliberately click/tap-toggle,
+       not CSS :hover -- this page gets used on a phone as much as a desktop,
+       and hover has no equivalent on touch. Scoped to this file, not
+       shared/components.css: only this page's jargon-heavy fields (ATR%,
+       intraday regime, the regime-risk multiplier) need it; the public page
+       and the discipline journal do not carry this component's weight. */
+    .tip-wrap { position: relative; display: inline-flex; align-items: center; gap: 5px; }
+    .tip-icon {
+      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+      background: var(--tint-3); border: 1px solid var(--border); color: var(--muted);
+      font-size: 9px; font-weight: 700; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; user-select: none;
+    }
+    .tip-icon:hover, .tip-icon:focus-visible { background: var(--accent-2); color: var(--text); outline: none; }
+    .tip-bubble {
+      display: none; position: absolute; z-index: 60; bottom: calc(100% + 8px); left: 0;
+      width: 220px; max-width: 60vw; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 11px; font-size: 0.72rem; line-height: 1.55;
+      color: var(--text); font-weight: 400; text-transform: none; letter-spacing: normal;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .tip-wrap.open .tip-bubble { display: block; }
+    @media (max-width: 480px) { .tip-bubble { left: auto; right: 0; width: 200px; } }
+
     .price-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
       padding: 2rem; text-align: center; margin-bottom: 1.2rem;
@@ -835,32 +860,67 @@
       <div class="stat-value" id="statResistance">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">Morning Thesis</div>
+      <div class="stat-label">
+        <span class="tip-wrap">Morning Thesis
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Morning Thesis?">?</span>
+          <span class="tip-bubble">Whether the plan built before market open (structure, zones, bias) still holds given what has actually happened since. VALID / WEAKENING / INVALID -- not a fresh call, a check on the old one.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statThesis">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">VWAP</div>
+      <div class="stat-label">
+        <span class="tip-wrap">VWAP
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is VWAP?">?</span>
+          <span class="tip-bubble">Volume-weighted average price -- today's trades, averaged and weighted by size. Needs real volume; on a spot index feed (no volume) this shows "n/a" rather than a fake number.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statVwap">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">ATR Utilization</div>
+      <div class="stat-label">
+        <span class="tip-wrap">ATR Utilization
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is ATR Utilization?">?</span>
+          <span class="tip-bubble">Today's range so far (high minus low), as a % of a normal day's average range (ATR). Over 100% means today has already moved more than a typical full day usually does.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statAtr">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">Today so far</div>
+      <div class="stat-label">
+        <span class="tip-wrap">Today so far
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Today so far?">?</span>
+          <span class="tip-bubble">How today has ACTUALLY behaved on bars that already printed -- never a forecast for how it ends. RANGING = moved a lot but came back near the open. TRENDING = mostly went one way. Needs 60+ minutes of data to say anything at all.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statIntraday">–</div>
       <div class="stat-sub" id="statIntradaySub"></div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">Yesterday was</div>
+      <div class="stat-label">
+        <span class="tip-wrap">Yesterday was
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Yesterday was?">?</span>
+          <span class="tip-bubble">Yesterday's session, realised and labelled after the fact -- never a call on today. The model that used to try predicting today's regime is benched (tested at AUC 0.54, essentially a coin flip) and is not used here.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statRegime">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">CPR</div>
+      <div class="stat-label">
+        <span class="tip-wrap">CPR
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is CPR?">?</span>
+          <span class="tip-bubble">Central Pivot Range -- a pivot band computed from yesterday's high/low/close. Price above it leans bullish, below leans bearish; a narrow band often precedes a bigger move, a wide one often means more range.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statCpr">–</div>
     </div>
     <div class="stat-tile">
-      <div class="stat-label">Trend Confluence</div>
+      <div class="stat-label">
+        <span class="tip-wrap">Trend Confluence
+          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Trend Confluence?">?</span>
+          <span class="tip-bubble">How many separate structure signals (higher-timeframe bias, CPR position, price action, etc.) currently agree on a direction. More agreeing factors = a cleaner read; a mixed reading means the signals disagree with each other.</span>
+        </span>
+      </div>
       <div class="stat-value" id="statConfluence">–</div>
     </div>
   </div>
@@ -1372,6 +1432,43 @@
     // multiplier updates through the session, without needing new input in
     // the stop/risk fields themselves.
     window.__mmRecalcSizer = recalc;
+  })();
+
+  // ---- Glossary tooltips -------------------------------------------------
+  // Click/tap-toggle, not :hover -- this page is read on a phone as much as
+  // a desktop, and CSS hover has no equivalent on touch. Delegated from
+  // document so it also covers the dynamically-rendered regime advisory
+  // block if a tip-icon is ever added there later, with no extra listener.
+  (function initTooltips() {
+    document.addEventListener('click', (e) => {
+      const icon = e.target.closest('.tip-icon');
+      const openWrap = document.querySelector('.tip-wrap.open');
+
+      if (icon) {
+        const wrap = icon.closest('.tip-wrap');
+        const wasOpen = wrap.classList.contains('open');
+        if (openWrap && openWrap !== wrap) openWrap.classList.remove('open');
+        wrap.classList.toggle('open', !wasOpen);
+        e.stopPropagation();
+        return;
+      }
+      // Any other click (including inside an open bubble, e.g. selecting
+      // text) closes it -- a tooltip that never goes away is as unhelpful
+      // as one that never appears.
+      if (openWrap) openWrap.classList.remove('open');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const icon = document.activeElement;
+      if (!icon || !icon.classList || !icon.classList.contains('tip-icon')) return;
+      e.preventDefault();
+      icon.click();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const openWrap = document.querySelector('.tip-wrap.open');
+      if (openWrap) openWrap.classList.remove('open');
+    });
   })();
 
   // ---- Theme switch -----------------------------------------------------
