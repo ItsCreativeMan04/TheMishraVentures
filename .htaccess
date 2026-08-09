@@ -5,6 +5,14 @@
 # (mishra-ventures/live-market/, etc.) is left untouched.
 RedirectMatch 301 ^/$ /mishra-ventures/
 
+# ── Live Strategy Monitor public route ──
+# Exposes /live-strategy/ publicly while serving the internal page at
+# mishra-ventures/sell-ce-paper-agent/index.html without a visible browser redirect.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^live-strategy/?$ mishra-ventures/sell-ce-paper-agent/index.html [L]
+</IfModule>
+
 # ── Don't let browsers cache the HTML ──
 #
 # WHY: the credit-spread pages were removed from the repo and the host on
