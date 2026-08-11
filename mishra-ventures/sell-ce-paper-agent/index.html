@@ -529,6 +529,26 @@
     const STALE_AFTER_MIN = 5;
     const LOT_SIZE = 65; // NIFTY options lot size
 
+    function formatFreshness(minsOld) {
+      if (minsOld === undefined || minsOld === null || !isFinite(minsOld) || minsOld < 0) {
+        return '--';
+      }
+      const totalSec = Math.floor(minsOld * 60);
+      if (totalSec < 60) {
+        return `${totalSec} ${totalSec === 1 ? 'second' : 'seconds'} ago`;
+      }
+      const totalMin = Math.floor(totalSec / 60);
+      if (totalMin < 60) {
+        return `${totalMin} ${totalMin === 1 ? 'minute' : 'minutes'} ago`;
+      }
+      const totalHours = Math.floor(totalMin / 60);
+      if (totalHours < 24) {
+        return `${totalHours} ${totalHours === 1 ? 'hour' : 'hours'} ago`;
+      }
+      const totalDays = Math.floor(totalHours / 24);
+      return `${totalDays} ${totalDays === 1 ? 'day' : 'days'} ago`;
+    }
+
     async function fetchPaperStatus() {
       const liveDot = document.getElementById('liveDot');
       const liveLabel = document.getElementById('liveLabel');
@@ -627,8 +647,7 @@
         ? '<span class="badge green">OK</span>'
         : `<span class="badge amber">${connStatus}</span>`;
 
-      const freshnessSec = minsOld < 1000 ? Math.round(minsOld * 60) : null;
-      document.getElementById('valFreshness').textContent = freshnessSec !== null ? `${freshnessSec}s ago` : '--';
+      document.getElementById('valFreshness').textContent = formatFreshness(minsOld);
 
       // Panel 2: Market
       document.getElementById('valSpot').textContent = data.nifty_spot ? Number(data.nifty_spot).toFixed(2) : '--';
