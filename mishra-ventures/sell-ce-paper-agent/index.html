@@ -222,25 +222,48 @@
     /* Activity Log Box */
     .card-activity {
       grid-column: 1 / -1;
+      position: relative;
     }
     .activity-log-box {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 12px 14px;
-      max-height: 180px;
+      max-height: 220px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 6px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.78rem;
+      scroll-behavior: smooth;
     }
     .activity-log-line {
       color: var(--text);
       line-height: 1.4;
       border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
       padding-bottom: 4px;
+    }
+    .new-events-pill {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2563eb;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .new-events-pill.hidden {
+      display: none;
     }
 
     /* No-Trade Card */
@@ -675,14 +698,76 @@
 
       const activityBox = document.getElementById('boxActivityLogs');
       if (activityBox) {
-        const activityList = data.activity || data.events || data.logs || [];
-        if (Array.isArray(activityList) && activityList.length > 0) {
-          activityBox.innerHTML = activityList.map(line => `<div class="activity-log-line">${line}</div>`).join('');
-          document.getElementById('badgeActivityCount').textContent = `${activityList.length} LOGS`;
+        if (!window._activeSessionId || window._activeSessionId !== data.session_id) {
+          window._activeSessionId = data.session_id;
+          window._renderedEvents = new Set();
+          window._isUserScrolledUp = false;
+          activityBox.innerHTML = '';
+        }
+
+        if (!activityBox._scrollListenerAdded) {
+          activityBox._scrollListenerAdded = true;
+          activityBox.addEventListener('scroll', () => {
+            const distanceFromBottom = activityBox.scrollHeight - activityBox.clientHeight - activityBox.scrollTop;
+            window._isUserScrolledUp = distanceFromBottom > 45;
+            const pill = document.getElementById('btnNewEventsPill');
+            if (pill && !window._isUserScrolledUp) {
+              pill.classList.add('hidden');
+            }
+          });
+        }
+
+        const activityList = Array.isArray(data.activity) && data.activity.length > 0
+          ? data.activity
+          : (Array.isArray(data.events) && data.events.length > 0 ? data.events : []);
+
+        let addedNew = false;
+        if (activityList.length > 0) {
+          activityList.forEach((line) => {
+            if (!window._renderedEvents.has(line)) {
+              window._renderedEvents.add(line);
+              const div = document.createElement('div');
+              div.className = 'activity-log-line';
+              div.textContent = line;
+              activityBox.appendChild(div);
+              addedNew = true;
+            }
+          });
+          document.getElementById('badgeActivityCount').textContent = `${window._renderedEvents.size} LOGS`;
         } else {
           const lastMsg = data.exit_reason ? `Session completed via ${data.exit_reason}.` : (data.no_trade_reason ? `Resolved ${data.no_trade_reason}` : `State: ${data.state}`);
-          activityBox.innerHTML = `<div class="activity-log-line">${updateStr} — ${lastMsg}</div>`;
-          document.getElementById('badgeActivityCount').textContent = 'LIVE';
+          const fallbackLine = `${updateStr} — ${lastMsg}`;
+          if (!window._renderedEvents.has(fallbackLine)) {
+            window._renderedEvents.add(fallbackLine);
+            const div = document.createElement('div');
+            div.className = 'activity-log-line';
+            div.textContent = fallbackLine;
+            activityBox.appendChild(div);
+            addedNew = true;
+          }
+          document.getElementById('badgeActivityCount').textContent = `${window._renderedEvents.size} LOGS`;
+        }
+
+        if (addedNew) {
+          if (!window._isUserScrolledUp) {
+            activityBox.scrollTop = activityBox.scrollHeight;
+          } else {
+            let pill = document.getElementById('btnNewEventsPill');
+            const cardAct = activityBox.closest('.card-activity');
+            if (!pill && cardAct) {
+              pill = document.createElement('button');
+              pill.id = 'btnNewEventsPill';
+              pill.className = 'new-events-pill';
+              pill.textContent = 'New events ↓';
+              pill.onclick = () => {
+                activityBox.scrollTop = activityBox.scrollHeight;
+                pill.classList.add('hidden');
+                window._isUserScrolledUp = false;
+              };
+              cardAct.appendChild(pill);
+            }
+            if (pill) pill.classList.remove('hidden');
+          }
         }
       }
 
