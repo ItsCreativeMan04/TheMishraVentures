@@ -243,6 +243,30 @@
     .pnl-positive { color: var(--green); font-weight: 700; }
     .pnl-negative { color: var(--red); font-weight: 700; }
 
+    /* Activity Log Box */
+    .card-activity {
+      grid-column: 1 / -1;
+    }
+    .activity-log-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+    }
+    .activity-log-line {
+      color: var(--text);
+      line-height: 1.4;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+      padding-bottom: 4px;
+    }
+
     /* No-Trade Card */
     .card-notrade {
       grid-column: 1 / -1;
@@ -462,7 +486,18 @@
         </div>
       </div>
 
-      <!-- Panel 5: No-Trade Resolution Audit (Conditional) -->
+      <!-- Panel 5: Activity & Decision Stream -->
+      <div class="dash-card card-activity" id="cardActivity">
+        <div class="dash-card-header">
+          <span class="dash-card-title">📜 Activity &amp; Decision Stream</span>
+          <span class="badge" id="badgeActivityCount">LIVE</span>
+        </div>
+        <div class="activity-log-box" id="boxActivityLogs">
+          <div class="activity-log-line">Waiting for session activity…</div>
+        </div>
+      </div>
+
+      <!-- Panel 6: No-Trade Resolution Audit (Conditional) -->
       <div class="dash-card card-notrade hidden" id="cardNoTrade">
         <div class="dash-card-header">
           <span class="dash-card-title">🚫 No-Trade Resolution Audit</span>
@@ -602,10 +637,10 @@
       document.getElementById('valOptionSymbol').textContent = data.option_symbol || '--';
 
       // Panel 3: Position
-      const posStatus = data.position_status || 'NONE';
+      const posStatus = data.position_status || (data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED' ? 'CLOSED' : 'NONE');
       const posBadge = document.getElementById('badgePositionStatus');
       posBadge.textContent = posStatus;
-      posBadge.className = posStatus === 'OPEN' ? 'badge green' : 'badge';
+      posBadge.className = posStatus === 'OPEN' ? 'badge green' : (posStatus === 'CLOSED' ? 'badge red' : 'badge');
 
       document.getElementById('valEntryPrice').textContent = data.entry_price ? `₹${Number(data.entry_price).toFixed(2)}` : '--';
 
@@ -651,7 +686,7 @@
         ? `${Number(data.final_net_rupees) >= 0 ? '+' : ''}₹${Number(data.final_net_rupees).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '--';
 
       const outcomeBadge = document.getElementById('badgeOutcome');
-      if (data.state === 'SESSION_COMPLETE') {
+      if (data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED') {
         outcomeBadge.textContent = 'COMPLETE';
         outcomeBadge.className = 'badge green';
       } else if (data.state === 'NO_TRADE') {
@@ -662,7 +697,21 @@
         outcomeBadge.className = 'badge cyan';
       }
 
-      // Panel 5: No-Trade Audit
+      // Activity & Decision Stream
+      const activityBox = document.getElementById('boxActivityLogs');
+      if (activityBox) {
+        const activityList = data.activity || data.events || data.logs || [];
+        if (Array.isArray(activityList) && activityList.length > 0) {
+          activityBox.innerHTML = activityList.map(line => `<div class="activity-log-line">${line}</div>`).join('');
+          document.getElementById('badgeActivityCount').textContent = `${activityList.length} LOGS`;
+        } else {
+          const lastMsg = data.exit_reason ? `Session completed via ${data.exit_reason}.` : (data.no_trade_reason ? `Resolved ${data.no_trade_reason}` : `State: ${data.state}`);
+          activityBox.innerHTML = `<div class="activity-log-line">${updateStr} — ${lastMsg}</div>`;
+          document.getElementById('badgeActivityCount').textContent = 'LIVE';
+        }
+      }
+
+      // Panel 6: No-Trade Audit
       const cardNoTrade = document.getElementById('cardNoTrade');
       if (data.state === 'NO_TRADE' || data.no_trade_reason) {
         cardNoTrade.classList.remove('hidden');
