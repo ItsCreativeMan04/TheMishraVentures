@@ -534,8 +534,8 @@
       const liveLabel = document.getElementById('liveLabel');
       
       try {
-        // Pure GET request with no-store cache control
-        const res = await fetch(WORKER_URL, {
+        // Pure GET request with no-store cache control & timestamp cache-buster
+        const res = await fetch(`${WORKER_URL}?t=${Date.now()}`, {
           method: 'GET',
           cache: 'no-store',
           headers: { 'Accept': 'application/json' }
