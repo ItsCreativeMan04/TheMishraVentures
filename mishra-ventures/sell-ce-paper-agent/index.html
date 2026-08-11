@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Live monitoring dashboard for systematic market strategy — Simulation Only." />
+  <meta name="description" content="Live monitoring dashboard for systematic market strategy." />
   <title>Live Strategy Monitor – The Mishra Ventures</title>
 
   <!-- Inline blocking theme switcher script: prevents white theme flash -->
@@ -95,30 +95,6 @@
       color: var(--muted);
       max-width: 620px;
       margin: 0 auto 1.2rem;
-    }
-
-    /* Mandatory Safety Banner */
-    .safety-banner {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--amber-bg);
-      border: 1px solid var(--amber-border);
-      padding: 8px 20px;
-      border-radius: 100px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--amber);
-      letter-spacing: 0.75px;
-      margin-bottom: 1.5rem;
-    }
-    .pulse-dot-amber {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: var(--amber);
-      box-shadow: 0 0 10px var(--amber);
-      animation: pulse 1.8s infinite;
     }
 
     .wrap {
@@ -319,7 +295,6 @@
 </head>
 <body>
 
-  <!-- Navigation -->
   <nav>
     <a href="/mishra-ventures/" class="nav-brand">
       <div class="nav-logo">📊</div>
@@ -343,7 +318,6 @@
     <a href="/mishra-ventures/" class="nav-home">← All Ventures</a>
   </nav>
 
-  <!-- Hero Section -->
   <section class="hero">
     <div class="hero-badge">
       <span class="live-dot" id="liveDot"></span>
@@ -351,34 +325,24 @@
     </div>
     
     <h1 class="hero-title">Live Strategy Monitor</h1>
-    <p class="hero-sub">Real-time monitoring of a systematic market strategy. Simulation only — zero order-placement code paths exist in this engine or website.</p>
-    
-    <div class="safety-banner">
-      <span class="pulse-dot-amber"></span>
-      <span>SIMULATION ONLY — NO REAL ORDERS</span>
-    </div>
+    <p class="hero-sub">Real-time monitoring of a systematic market strategy.</p>
   </section>
 
-  <!-- Main Wrap -->
   <div class="wrap">
 
-    <!-- Connectivity Test Banner (Rendered when test status is active) -->
     <div id="cardTestNotice" class="test-notice-card hidden">
       <span class="test-badge">CONNECTIVITY TEST</span>
       <span>Cloudflare Worker KV round-trip active (<code>DASHBOARD_CONNECTIVITY_TEST</code>). Displaying verified test payload.</span>
     </div>
 
-    <!-- Initial Waiting / Offline Alert Box -->
     <div id="cardStatusAlert" class="status-alert-card hidden">
       <div id="alertIcon" style="font-size: 2rem;">⏳</div>
-      <div class="status-alert-title" id="alertTitle">WAITING FOR FIRST PAPER SESSION</div>
+      <div class="status-alert-title" id="alertTitle">WAITING FOR FIRST SESSION</div>
       <div class="status-alert-sub" id="alertSub">The strategy monitor updates status snapshots during active market sessions (09:15 – 15:30 IST).</div>
     </div>
 
-    <!-- Dashboard Main Grid -->
     <div id="dashboardGrid" class="sections-grid">
 
-      <!-- Panel 1: Session Status -->
       <div class="dash-card">
         <div class="dash-card-header">
           <span class="dash-card-title">⏱️ Session Status</span>
@@ -406,7 +370,6 @@
         </div>
       </div>
 
-      <!-- Panel 2: Market Parameters -->
       <div class="dash-card">
         <div class="dash-card-header">
           <span class="dash-card-title">📊 Market Parameters</span>
@@ -432,10 +395,9 @@
         </div>
       </div>
 
-      <!-- Panel 3: Paper Position -->
       <div class="dash-card">
         <div class="dash-card-header">
-          <span class="dash-card-title">📌 Paper Position</span>
+          <span class="dash-card-title">📌 Position</span>
           <span class="badge" id="badgePositionStatus">NONE</span>
         </div>
         <div class="hero-metric-grid">
@@ -444,7 +406,7 @@
             <span class="hero-metric-val" id="valUnrealizedPts">0.00 pts</span>
           </div>
           <div class="hero-metric-box">
-            <span class="hero-metric-label">Est. Paper P&L (₹)</span>
+            <span class="hero-metric-label">Est. P&L (₹)</span>
             <span class="hero-metric-val" id="valUnrealizedRs">₹0.00</span>
           </div>
         </div>
@@ -466,7 +428,6 @@
         </div>
       </div>
 
-      <!-- Panel 4: Session Result -->
       <div class="dash-card">
         <div class="dash-card-header">
           <span class="dash-card-title">🏆 Session Result</span>
@@ -481,12 +442,11 @@
           <span class="metric-val mono" id="valFinalPoints">--</span>
         </div>
         <div class="metric-row">
-          <span class="metric-label">Final Paper P&L</span>
+          <span class="metric-label">Final P&L</span>
           <span class="metric-val mono" id="valFinalRupees">--</span>
         </div>
       </div>
 
-      <!-- Panel 5: Activity & Decision Stream -->
       <div class="dash-card card-activity" id="cardActivity">
         <div class="dash-card-header">
           <span class="dash-card-title">📜 Activity &amp; Decision Stream</span>
@@ -497,7 +457,6 @@
         </div>
       </div>
 
-      <!-- Panel 6: No-Trade Resolution Audit (Conditional) -->
       <div class="dash-card card-notrade hidden" id="cardNoTrade">
         <div class="dash-card-header">
           <span class="dash-card-title">🚫 No-Trade Resolution Audit</span>
@@ -512,7 +471,7 @@
     </div>
 
     <p class="disclaimer">
-      SIMULATION ONLY — Decision support &amp; paper execution tracking.<br>
+      Decision support &amp; execution tracking.<br>
       Data auto-refreshes every 10 seconds via dedicated Cloudflare Worker.
     </p>
 
@@ -522,12 +481,11 @@
     <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; Live Strategy Monitor &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-strategy/
   </footer>
 
-  <!-- Status Fetch & UI Controller Script -->
   <script>
     const WORKER_URL = 'https://sell-ce-paper-status.itscreativeman04.workers.dev';
-    const REFRESH_MS = 10000; // 10s poll
+    const REFRESH_MS = 10000;
     const STALE_AFTER_MIN = 5;
-    const LOT_SIZE = 65; // NIFTY options lot size
+    const LOT_SIZE = 65;
 
     function formatFreshness(minsOld) {
       if (minsOld === undefined || minsOld === null || !isFinite(minsOld) || minsOld < 0) {
@@ -554,7 +512,6 @@
       const liveLabel = document.getElementById('liveLabel');
       
       try {
-        // Pure GET request with no-store cache control & timestamp cache-buster
         const res = await fetch(`${WORKER_URL}?t=${Date.now()}`, {
           method: 'GET',
           cache: 'no-store',
@@ -567,7 +524,6 @@
 
         const data = await res.json();
 
-        // Calculate data freshness
         let minsOld = Infinity;
         if (data.last_update) {
           minsOld = (Date.now() - new Date(data.last_update).getTime()) / 60000;
@@ -577,7 +533,6 @@
 
         const isStale = minsOld > STALE_AFTER_MIN;
 
-        // Update live indicator
         if (isStale) {
           liveDot.className = 'live-dot offline';
           liveLabel.textContent = 'STALE DATA';
@@ -608,26 +563,22 @@
       const grid = document.getElementById('dashboardGrid');
       const testCard = document.getElementById('cardTestNotice');
 
-      // Initial unpopulated state check
       if (data.status === 'no data published yet') {
         alertCard.classList.remove('hidden');
         document.getElementById('alertIcon').textContent = '⏳';
-        document.getElementById('alertTitle').textContent = 'WAITING FOR FIRST PAPER SESSION';
+        document.getElementById('alertTitle').textContent = 'WAITING FOR FIRST SESSION';
         document.getElementById('alertSub').textContent = 'The strategy monitor updates status snapshots during active market sessions (09:15 – 15:30 IST).';
         grid.classList.add('hidden');
         testCard.classList.add('hidden');
         return;
       }
 
-      // Hide alert card and show main grid
       alertCard.classList.add('hidden');
       grid.classList.remove('hidden');
 
-      // Connectivity test check
       const isTest = data.status === 'DASHBOARD_CONNECTIVITY_TEST' || data.connection_status === 'CONNECTIVITY_TEST';
       testCard.classList.toggle('hidden', !isTest);
 
-      // Panel 1: Session
       document.getElementById('badgeState').textContent = data.state || 'UNKNOWN';
       document.getElementById('valSessionId').textContent = data.session_id || '--';
       document.getElementById('valDate').textContent = data.date || '--';
@@ -649,13 +600,11 @@
 
       document.getElementById('valFreshness').textContent = formatFreshness(minsOld);
 
-      // Panel 2: Market
       document.getElementById('valSpot').textContent = data.nifty_spot ? Number(data.nifty_spot).toFixed(2) : '--';
       document.getElementById('valAtr10').textContent = data.atr10 ? Number(data.atr10).toFixed(2) : '--';
       document.getElementById('valSelectedStrike').textContent = data.selected_strike ? `${Number(data.selected_strike).toFixed(0)} CE` : '--';
       document.getElementById('valOptionSymbol').textContent = data.option_symbol || '--';
 
-      // Panel 3: Position
       const posStatus = data.position_status || (data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED' ? 'CLOSED' : 'NONE');
       const posBadge = document.getElementById('badgePositionStatus');
       posBadge.textContent = posStatus;
@@ -671,12 +620,21 @@
         document.getElementById("valOptionQuote").textContent = '--';
       }
 
-      const unPts = data.unrealized_pnl_points;
+      let unPts = data.unrealized_pnl_points;
+      if (unPts === undefined || unPts === null) {
+        if (data.final_net_points !== undefined && data.final_net_points !== null) {
+          unPts = data.final_net_points;
+        }
+      }
+
       const ptsEl = document.getElementById('valUnrealizedPts');
       const rsEl = document.getElementById('valUnrealizedRs');
       if (unPts !== null && unPts !== undefined) {
         const pts = Number(unPts);
-        const rs = pts * LOT_SIZE;
+        let rs = pts * LOT_SIZE;
+        if (data.final_net_rupees !== undefined && data.final_net_rupees !== null && (data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED')) {
+          rs = Number(data.final_net_rupees);
+        }
         const sign = pts >= 0 ? '+' : '';
         ptsEl.textContent = `${sign}${pts.toFixed(2)} pts`;
         rsEl.textContent = `${sign}₹${Math.abs(rs).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -697,7 +655,6 @@
         ? '<span class="badge red">TRIGGERED</span>'
         : '<span class="badge green">NOT TRIGGERED</span>';
 
-      // Panel 4: Result
       document.getElementById('valExitReason').textContent = data.exit_reason || '--';
       document.getElementById('valFinalPoints').textContent = data.final_net_points !== null && data.final_net_points !== undefined
         ? `${Number(data.final_net_points) >= 0 ? '+' : ''}${Number(data.final_net_points).toFixed(2)} pts` : '--';
@@ -716,7 +673,6 @@
         outcomeBadge.className = 'badge cyan';
       }
 
-      // Activity & Decision Stream
       const activityBox = document.getElementById('boxActivityLogs');
       if (activityBox) {
         const activityList = data.activity || data.events || data.logs || [];
@@ -730,7 +686,6 @@
         }
       }
 
-      // Panel 6: No-Trade Audit
       const cardNoTrade = document.getElementById('cardNoTrade');
       if (data.state === 'NO_TRADE' || data.no_trade_reason) {
         cardNoTrade.classList.remove('hidden');
@@ -742,7 +697,6 @@
       }
     }
 
-    // Theme Switch Controller
     (function initTheme() {
       const sw = document.getElementById('themeSwitch');
       if (!sw) return;
@@ -773,7 +727,6 @@
       }
     })();
 
-    // Initial fetch & setup interval
     fetchPaperStatus();
     setInterval(fetchPaperStatus, REFRESH_MS);
   </script>
