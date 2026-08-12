@@ -1,12 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NIFTY Live Market Intelligence | Dynamic Trading Desk</title>
+    <title>NIFTY Live Market Intelligence | The Mishra Ventures</title>
+
+    <link rel="stylesheet" href="../../shared/global.css?v=20260807a" />
+    <link rel="stylesheet" href="../../shared/components.css?v=20260807a" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('lm-theme');
+          var theme = saved || (window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) { /* private mode */ }
+      })();
+
+      function initThemeSwitch() {
+        var sw = document.getElementById('themeSwitch');
+        if (!sw) return;
+        function update() {
+          var current = document.documentElement.getAttribute('data-theme') || 'dark';
+          var opts = sw.querySelectorAll('.ts-opt');
+          opts.forEach(function (btn) {
+            var isTarget = btn.getAttribute('data-set-theme') === current;
+            btn.classList.toggle('is-on', isTarget);
+            btn.setAttribute('aria-pressed', isTarget ? 'true' : 'false');
+          });
+        }
+        sw.addEventListener('click', function (e) {
+          var btn = e.target.closest('.ts-opt');
+          if (!btn) return;
+          var target = btn.getAttribute('data-set-theme');
+          document.documentElement.setAttribute('data-theme', target);
+          try { localStorage.setItem('lm-theme', target); } catch (ex) {}
+          update();
+        });
+        update();
+      }
+      document.addEventListener('DOMContentLoaded', initThemeSwitch);
+    </script>
+
     <style>
         :root {
             --bg-dark: #090d16;
@@ -26,6 +65,24 @@
             --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
         }
 
+        html[data-theme="light"] {
+            --bg-dark: #f4f7fc;
+            --surface-1: #ffffff;
+            --surface-2: #eef2f9;
+            --card-bg: #ffffff;
+            --card-border: rgba(15, 23, 42, 0.12);
+            --border-highlight: rgba(29, 78, 216, 0.2);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent-blue: #1d4ed8;
+            --accent-green: #15803d;
+            --accent-red: #b91c1c;
+            --accent-amber: #b45309;
+            --accent-purple: #6d28d9;
+            --shadow-glow: 0 4px 20px 0 rgba(0, 0, 0, 0.06);
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -33,17 +90,19 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', 'Sora', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-primary);
-            padding: 20px;
+            padding: 0 0 30px 0;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 1350px;
+            margin: 20px auto 0;
+            padding: 0 16px;
             display: flex;
             flex-direction: column;
             gap: 20px;
@@ -138,6 +197,7 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
+        /* STATUS BADGES */
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -152,11 +212,12 @@
         .badge-green { background: rgba(34, 197, 94, 0.18); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.3); }
         .badge-amber { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
         .badge-blue { background: rgba(56, 189, 248, 0.18); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-neutral { background: rgba(100, 116, 139, 0.18); color: var(--text-muted); border: 1px solid rgba(100, 116, 139, 0.3); }
 
         /* GRID LAYOUTS */
         .grid-2col {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
             gap: 20px;
         }
 
@@ -170,6 +231,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+            min-width: 0;
         }
 
         .card-header {
@@ -205,12 +267,13 @@
 
         .snapshot-item {
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
             padding: 10px 12px;
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             gap: 4px;
+            min-width: 0;
         }
 
         .snapshot-val {
@@ -218,6 +281,9 @@
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* BULLET & CALLOUT LISTS */
@@ -234,6 +300,7 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             line-height: 1.4;
+            word-break: break-word;
         }
 
         .bullet-list li::before {
@@ -263,7 +330,7 @@
             gap: 4px;
             padding: 10px;
             background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
             border-radius: 8px;
         }
 
@@ -410,17 +477,26 @@
             color: var(--text-secondary);
         }
 
-        /* 10. PROVENANCE TABLE */
+        /* 10. PROVENANCE TABLE & MOBILE WRAPPING FIX */
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .prov-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
+            min-width: 300px;
         }
 
         .prov-table th, .prov-table td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid var(--card-border);
+            word-break: break-word;
+            white-space: normal;
         }
 
         .prov-table th {
@@ -430,16 +506,44 @@
             letter-spacing: 0.05em;
         }
 
-        /* RESPONSIVE DESIGN */
+        /* RESPONSIVE DESIGN (320px, 375px, 390px, 430px) */
         @media (max-width: 768px) {
-            body { padding: 12px; }
+            .container { padding: 0 12px; margin-top: 12px; }
             .grid-2col { grid-template-columns: 1fr; }
             .snapshot-grid { grid-template-columns: repeat(2, 1fr); }
-            .header-metrics { width: 100%; justify-content: space-between; }
+            .header-metrics { width: 100%; justify-content: space-between; gap: 12px; }
+            .live-header { padding: 16px; }
+            .card { padding: 16px; }
         }
     </style>
 </head>
 <body>
+
+  <!-- RESTORED SITE HEADER / NAVIGATION -->
+  <nav>
+    <a href="../../" class="nav-brand">
+      <div class="nav-logo">📈</div>
+      <div>
+        <div class="nav-brand-text">Live Market Intelligence</div>
+        <div class="nav-brand-sub">The Mishra Ventures</div>
+      </div>
+    </a>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="../../" class="nav-home">Home</a>
+      <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
+        <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+          </svg>
+        </button>
+        <button type="button" class="ts-opt" data-set-theme="dark" aria-pressed="false" title="Dark theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
 
 <div class="container">
 
@@ -460,11 +564,11 @@
             </div>
             <div class="metric-box">
                 <span class="metric-label">Market Bias</span>
-                <span class="status-badge badge-red" id="val-bias">BEARISH</span>
+                <span class="status-badge badge-neutral" id="val-bias">--</span>
             </div>
             <div class="metric-box">
                 <span class="metric-label">Market Phase</span>
-                <span class="metric-value" style="font-size: 1.1rem;" id="val-phase">TREND CONTINUATION</span>
+                <span class="metric-value" style="font-size: 1.1rem;" id="val-phase">--</span>
             </div>
             <div class="metric-box">
                 <span class="metric-label">Last Updated</span>
@@ -488,15 +592,15 @@
             <div class="snapshot-grid">
                 <div class="snapshot-item">
                     <span class="metric-label">1H Structure</span>
-                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-1h-bias">Bearish</span>
+                    <span class="snapshot-val" id="val-1h-bias">--</span>
                 </div>
                 <div class="snapshot-item">
                     <span class="metric-label">15m Structure</span>
-                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-15m-bias">Bearish</span>
+                    <span class="snapshot-val" id="val-15m-bias">--</span>
                 </div>
                 <div class="snapshot-item">
                     <span class="metric-label">5m Structure</span>
-                    <span class="snapshot-val" style="color: var(--accent-green);" id="val-5m-bias">Bullish</span>
+                    <span class="snapshot-val" id="val-5m-bias">--</span>
                 </div>
                 <div class="snapshot-item">
                     <span class="metric-label">ATR Utilization</span>
@@ -504,11 +608,11 @@
                 </div>
                 <div class="snapshot-item">
                     <span class="metric-label">CPR Range</span>
-                    <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-snapshot">24482–24503</span>
+                    <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-snapshot">--</span>
                 </div>
                 <div class="snapshot-item">
                     <span class="metric-label">PCR Ratio</span>
-                    <span class="snapshot-val" id="val-pcr-snapshot">0.65</span>
+                    <span class="snapshot-val" id="val-pcr-snapshot">--</span>
                 </div>
             </div>
 
@@ -527,18 +631,18 @@
                     <h2 class="card-title">MORNING PLAN</h2>
                     <span class="card-subtitle">Is today's original thesis still valid?</span>
                 </div>
-                <span class="status-badge badge-red" id="val-plan-status">❌ INVALIDATED</span>
+                <span class="status-badge badge-neutral" id="val-plan-status">--</span>
             </div>
 
             <div style="display: flex; gap: 16px; align-items: center;">
                 <span class="metric-label">Original Thesis:</span>
-                <span style="font-weight: 700; color: var(--text-primary);" id="val-plan-thesis">BEARISH</span>
+                <span style="font-weight: 700; color: var(--text-primary);" id="val-plan-thesis">--</span>
             </div>
 
             <div>
                 <span class="metric-label">Why Was It Invalidated?</span>
                 <ul class="bullet-list" id="list-plan-why" style="margin-top: 4px;">
-                    <li>Price broke invalidation level: 24435.05</li>
+                    <li>--</li>
                 </ul>
             </div>
 
@@ -551,7 +655,7 @@
 
             <div class="callout-box callout-red">
                 <div style="font-weight: 700; color: var(--accent-red); font-size: 0.85rem;" id="val-plan-meaning">
-                    • Original bearish morning plan is OFF today.
+                    • Original morning plan status.
                 </div>
                 <div style="font-size: 0.8rem; color: var(--text-secondary);" id="val-plan-warning">
                     • Important: This does NOT mean BUY. Wait for a NEW qualified setup.
@@ -577,25 +681,25 @@
                 <div class="level-row">
                     <div class="level-header">
                         <span class="metric-label" style="color: var(--accent-red);">Resistance</span>
-                        <span class="level-price" id="val-res-price">24,358.35</span>
+                        <span class="level-price" id="val-res-price">--</span>
                     </div>
-                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-res-dist">69.5 pts ABOVE</div>
+                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-res-dist">--</div>
                     <div class="level-meaning" id="val-res-meaning">Reclaiming this level would improve short-term structure.</div>
                 </div>
 
                 <div class="level-row">
                     <div class="level-header">
                         <span class="metric-label" style="color: var(--accent-green);">Support</span>
-                        <span class="level-price" id="val-sup-price">24,283.45</span>
+                        <span class="level-price" id="val-sup-price">--</span>
                     </div>
-                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-sup-dist">5.5 pts BELOW</div>
+                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-sup-dist">--</div>
                     <div class="level-meaning" id="val-sup-meaning">Watch the reaction here; a break could weaken structure further.</div>
                 </div>
 
                 <div class="level-row">
                     <div class="level-header">
                         <span class="metric-label" style="color: var(--accent-amber);">Morning Invalidation</span>
-                        <span class="level-price" id="val-inval-price">24,435.05</span>
+                        <span class="level-price" id="val-inval-price">--</span>
                     </div>
                     <div class="level-meaning" id="val-inval-meaning">Break of this level invalidated today's morning plan.</div>
                 </div>
@@ -613,14 +717,14 @@
                     <h2 class="card-title">MARKET SUMMARY / OI</h2>
                     <span class="card-subtitle">Options interest distribution & sentiment</span>
                 </div>
-                <span class="status-badge badge-amber" id="val-pcr-pill">PCR 0.65</span>
+                <span class="status-badge badge-neutral" id="val-pcr-pill">PCR --</span>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div class="level-row">
                     <div class="level-header">
                         <span class="metric-label" style="color: var(--accent-green);">Put Wall (Support)</span>
-                        <span class="level-price" id="val-put-wall">24,000</span>
+                        <span class="level-price" id="val-put-wall">N/A</span>
                     </div>
                     <div class="level-meaning" id="val-put-wall-meaning">Highest Put Open Interest concentration acting as structural downside support.</div>
                 </div>
@@ -628,7 +732,7 @@
                 <div class="level-row">
                     <div class="level-header">
                         <span class="metric-label" style="color: var(--accent-red);">Call Wall (Resistance)</span>
-                        <span class="level-price" id="val-call-wall">24,500</span>
+                        <span class="level-price" id="val-call-wall">N/A</span>
                     </div>
                     <div class="level-meaning" id="val-call-wall-meaning">Highest Call Open Interest concentration acting as overhead resistance.</div>
                 </div>
@@ -637,7 +741,7 @@
             <div class="callout-box callout-amber" style="margin-top: 4px;">
                 <span class="metric-label" style="color: var(--accent-amber);">OI Interpretation</span>
                 <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
-                    Call-heavy OI (0.65) indicates strong overhead resistance positioning by sellers.
+                    OI distribution analysis.
                 </div>
             </div>
         </div>
@@ -664,17 +768,17 @@
             <div>
                 <span class="metric-label">Reason</span>
                 <div style="font-size: 0.85rem; color: var(--text-secondary);" id="val-ds-why">
-                    The original bearish morning thesis is invalidated and cannot be reused.
+                    The original morning thesis is invalidated and cannot be reused.
                 </div>
             </div>
 
             <div class="callout-box callout-blue">
                 <span class="metric-label" style="color: var(--accent-blue);">Next Level To Watch</span>
                 <div style="font-weight: 700; color: var(--accent-blue); font-size: 0.95rem;" id="val-ds-next">
-                    Support 24283.45 · 5.5 pts BELOW
+                    --
                 </div>
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="val-ds-next-why">
-                    Nearest important downside reference. Watch reaction or acceptance below.
+                    Nearest important reference level. Watch reaction or acceptance.
                 </div>
             </div>
 
@@ -693,31 +797,31 @@
                     <h2 class="card-title" style="color: var(--accent-amber);">ORDER FLOW</h2>
                     <span class="card-subtitle">Shadow Mode · Research Only</span>
                 </div>
-                <span class="status-badge badge-amber">SHADOW MODE</span>
+                <span class="status-badge badge-amber" id="val-of-badge">SHADOW MODE</span>
             </div>
 
             <div class="of-grid">
                 <div>
-                    <span class="metric-label">Feed Status</span>
-                    <div style="font-weight: 700; color: var(--accent-green);" id="val-of-feed">LIVE</div>
+                    <span class="metric-label">Feed Freshness</span>
+                    <div style="font-weight: 700;" id="val-of-feed">--</div>
                 </div>
                 <div>
                     <span class="metric-label">Pressure</span>
-                    <div style="font-weight: 700; color: var(--accent-green);" id="val-of-pressure">BUYING</div>
+                    <div style="font-weight: 700;" id="val-of-pressure">--</div>
                 </div>
                 <div>
                     <span class="metric-label">Estimated CVD</span>
-                    <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-blue);" id="val-of-cvd">+2,405</div>
+                    <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-blue);" id="val-of-cvd">--</div>
                 </div>
                 <div>
                     <span class="metric-label">Alignment</span>
-                    <div style="font-weight: 700; color: var(--accent-amber);" id="val-of-align">OPPOSING</div>
+                    <div style="font-weight: 700;" id="val-of-align">--</div>
                 </div>
             </div>
 
             <ul class="bullet-list" style="font-size: 0.8rem;">
                 <li id="val-of-cvd-note">CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.</li>
-                <li id="val-of-qual-note">74.5% combined updates (single packet contains multiple trades).</li>
+                <li id="val-of-qual-note">Combined updates (single packet contains multiple trades).</li>
             </ul>
 
             <div class="disclaimer-banner">
@@ -740,17 +844,14 @@
             <div class="facts-box">
                 <div class="facts-title">FACTS</div>
                 <ul class="bullet-list" id="list-comm-facts">
-                    <li>Price is trading below CPR (24492).</li>
-                    <li>1H & 15m structure remain Bearish, while 5m structure turned Bullish.</li>
-                    <li>Morning bearish thesis was invalidated at 24435.05.</li>
-                    <li>Order Flow shows buying pressure (+2405 CVD) opposing broader bias.</li>
+                    <li>Loading facts...</li>
                 </ul>
             </div>
 
             <div>
                 <span class="metric-label">INTERPRETATION</span>
                 <div class="interpretation-box" id="val-comm-interp">
-                    The broader market structure remains bearish across 1H and 15m, but the short 5m timeframe is moving counter to the trend. Because the invalidation level was broken, the morning plan is dead and cannot be reused. Order Flow buying is currently opposing the broader bearish context.
+                    Loading interpretation...
                 </div>
             </div>
 
@@ -758,7 +859,7 @@
                 <div>
                     <span class="metric-label">BOTTOM LINE</span>
                     <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);" id="val-comm-bottom">
-                        The market currently lacks a clean qualified setup.
+                        Loading bottom line...
                     </div>
                 </div>
                 <div>
@@ -780,14 +881,7 @@
 
         <div class="timeline-container" id="timeline-list">
             <div class="timeline-item">
-                <span class="timeline-time">13:40 IST</span>
-                <span class="timeline-event">5m Bullish CHOCH at 24300.7</span>
-                <span class="timeline-meaning">Structure turned up on 5m. Sellers lost immediate control.</span>
-            </div>
-            <div class="timeline-item">
-                <span class="timeline-time">11:42 IST</span>
-                <span class="timeline-event">Morning Plan Invalidated</span>
-                <span class="timeline-meaning">Price reclaimed 24435.05 invalidation reference level.</span>
+                <span class="timeline-meaning">Loading session timeline...</span>
             </div>
         </div>
     </div>
@@ -801,37 +895,39 @@
             </div>
         </div>
 
-        <table class="prov-table">
-            <thead>
-                <tr>
-                    <th>Metric</th>
-                    <th>Status / Value</th>
-                    <th>Provenance Note</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Market Feed</td>
-                    <td><span class="status-badge badge-green" id="prov-mkt-feed">LIVE</span></td>
-                    <td>NSE spot & NFO futures stream active on GCP VM</td>
-                </tr>
-                <tr>
-                    <td>Order Flow Feed</td>
-                    <td><span class="status-badge badge-green" id="prov-of-feed">LIVE</span></td>
-                    <td>OrderFlowShadowController active (CVD start = 0)</td>
-                </tr>
-                <tr>
-                    <td>Historical Contamination Check</td>
-                    <td><span class="status-badge badge-green" id="prov-leak-check">NONE DETECTED</span></td>
-                    <td>Zero historical CVD leakage verified</td>
-                </tr>
-                <tr>
-                    <td>Yesterday Model Status</td>
-                    <td><span class="status-badge badge-amber" id="prov-yday-model">BENCHED</span></td>
-                    <td>Raw price action used due to low confidence rule</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-wrap">
+            <table class="prov-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Status / Value</th>
+                        <th>Provenance Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Market Feed</td>
+                        <td><span class="status-badge badge-neutral" id="prov-mkt-feed">--</span></td>
+                        <td id="prov-mkt-note">NSE spot & NFO futures stream on GCP VM</td>
+                    </tr>
+                    <tr>
+                        <td>Order Flow Feed</td>
+                        <td><span class="status-badge badge-neutral" id="prov-of-feed">--</span></td>
+                        <td id="prov-of-note">OrderFlowShadowController active (CVD start = 0)</td>
+                    </tr>
+                    <tr>
+                        <td>Historical Contamination Check</td>
+                        <td><span class="status-badge badge-green" id="prov-leak-check">NONE DETECTED</span></td>
+                        <td>Zero historical CVD leakage verified</td>
+                    </tr>
+                    <tr>
+                        <td>Yesterday Model Status</td>
+                        <td><span class="status-badge badge-amber" id="prov-yday-model">BENCHED</span></td>
+                        <td>Raw price action used due to low confidence rule</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 </div>
@@ -841,9 +937,31 @@
     const READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
     const REFRESH_MS = 30000;
 
+    // SAFE NUMERIC FORMATTER (Defect 3 Fix)
+    function isFiniteNum(val) {
+        if (val === null || val === undefined || val === '') return false;
+        const num = Number(val);
+        return Number.isFinite(num);
+    }
+
     function fmtPrice(val) {
-        if (val == null || isNaN(val)) return 'UNAVAILABLE';
+        if (!isFiniteNum(val)) return 'N/A';
         return '₹' + Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtStrike(val) {
+        if (!isFiniteNum(val)) return 'N/A';
+        return Number(val).toLocaleString('en-IN');
+    }
+
+    // STRUCTURE COLOR SEMANTICS HELPER (Defect 2 Fix)
+    function getStructureBadgeHTML(val) {
+        if (!val || val === '--') return '<span class="status-badge badge-neutral">N/A</span>';
+        const str = String(val).toUpperCase();
+        if (str.includes('BULL')) return `<span class="status-badge badge-green">${val}</span>`;
+        if (str.includes('BEAR')) return `<span class="status-badge badge-red">${val}</span>`;
+        if (str.includes('NEUTRAL') || str.includes('MIXED')) return `<span class="status-badge badge-amber">${val}</span>`;
+        return `<span class="status-badge badge-neutral">${val}</span>`;
     }
 
     function formatTime(isoStr) {
@@ -852,7 +970,7 @@
             const d = new Date(isoStr);
             return d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false }) + ' IST';
         } catch (e) {
-            return isoStr;
+            return String(isoStr);
         }
     }
 
@@ -889,8 +1007,11 @@
 
     function renderDashboard(data) {
         const wi = data.web_intelligence || {};
+
+        // CANONICAL FRESHNESS CALCULATION (Defect 4 Fix)
         const ageMin = calcAgeMinutes(data.updated_at);
         const isStale = ageMin > 5 || data._isStale;
+        const roundedAge = Math.round(ageMin);
 
         // 1. LIVE HEADER
         const livePill = document.getElementById('val-live-pill');
@@ -900,7 +1021,7 @@
         if (isStale) {
             if (livePill) livePill.className = 'live-pill stale';
             if (liveDot) liveDot.className = 'dot amber';
-            if (liveText) liveText.textContent = `STALE (${Math.round(ageMin)}m ago)`;
+            if (liveText) liveText.textContent = `STALE (${roundedAge}m ago)`;
         } else {
             if (livePill) livePill.className = 'live-pill live';
             if (liveDot) liveDot.className = 'dot green';
@@ -911,33 +1032,43 @@
         document.getElementById('val-price').textContent = fmtPrice(data.current_price);
 
         const biasEl = document.getElementById('val-bias');
-        const biasVal = data.bias || 'BEARISH';
+        const biasVal = data.bias || 'NEUTRAL';
         biasEl.textContent = biasVal.toUpperCase();
         biasEl.className = biasVal.toUpperCase().includes('BEAR') ? 'status-badge badge-red' :
                            (biasVal.toUpperCase().includes('BULL') ? 'status-badge badge-green' : 'status-badge badge-amber');
 
-        document.getElementById('val-phase').textContent = data.phase || 'TREND CONTINUATION';
+        document.getElementById('val-phase').textContent = data.phase || 'N/A';
         document.getElementById('val-updated-time').textContent = formatTime(data.updated_at);
 
-        // 2. MARKET SNAPSHOT
+        // 2. MARKET SNAPSHOT (Defect 2 Structure Semantics Fix)
         const tf = wi.timeframe_structure || {};
-        document.getElementById('val-1h-bias').textContent = tf.bias_1h || 'Bearish';
-        document.getElementById('val-15m-bias').textContent = tf.bias_15m || 'Bearish';
-        document.getElementById('val-5m-bias').textContent = tf.bias_5m || 'Bullish';
+        const h1 = tf.bias_1h || (data.bias ? data.bias : 'N/A');
+        const m15 = tf.bias_15m || (data.bias ? data.bias : 'N/A');
+        const m5 = tf.bias_5m || 'N/A';
 
-        document.getElementById('val-atr-used').textContent = data.atr_utilization != null ?
-            Number(data.atr_utilization).toFixed(1) + '%' : 'UNAVAILABLE';
+        document.getElementById('val-1h-bias').parentNode.replaceChild(
+            createSnapshotSpan('val-1h-bias', h1), document.getElementById('val-1h-bias')
+        );
+        document.getElementById('val-15m-bias').parentNode.replaceChild(
+            createSnapshotSpan('val-15m-bias', m15), document.getElementById('val-15m-bias')
+        );
+        document.getElementById('val-5m-bias').parentNode.replaceChild(
+            createSnapshotSpan('val-5m-bias', m5), document.getElementById('val-5m-bias')
+        );
 
-        if (data.cpr) {
+        document.getElementById('val-atr-used').textContent = isFiniteNum(data.atr_utilization) ?
+            Number(data.atr_utilization).toFixed(1) + '%' : 'N/A';
+
+        if (data.cpr && isFiniteNum(data.cpr.cpr_low) && isFiniteNum(data.cpr.cpr_high)) {
             document.getElementById('val-cpr-snapshot').textContent = `${data.cpr.cpr_low}–${data.cpr.cpr_high}`;
         } else {
-            document.getElementById('val-cpr-snapshot').textContent = 'UNAVAILABLE';
+            document.getElementById('val-cpr-snapshot').textContent = 'N/A';
         }
 
-        document.getElementById('val-pcr-snapshot').textContent = data.oi_summary && data.oi_summary.pcr != null ?
-            data.oi_summary.pcr : 'UNAVAILABLE';
+        document.getElementById('val-pcr-snapshot').textContent = (data.oi_summary && isFiniteNum(data.oi_summary.pcr)) ?
+            data.oi_summary.pcr : 'N/A';
 
-        document.getElementById('val-vwap-note').textContent = data.vwap_valid ?
+        document.getElementById('val-vwap-note').textContent = data.vwap_valid && isFiniteNum(data.vwap) ?
             `VWAP: ₹${data.vwap}` : 'VWAP unavailable — NIFTY spot feed has no traded volume.';
 
         // 3. MORNING PLAN
@@ -958,11 +1089,11 @@
         skippedList.innerHTML = skippedItems.map(item => `<li>${item}</li>`).join('');
 
         const meanings = mp.what_it_means || [
-            'Original bearish morning plan is OFF today.',
-            'Important: This does NOT mean BUY. Wait for a NEW qualified setup.'
+            '• Original bearish morning plan is OFF today.',
+            '• Important: This does NOT mean BUY. Wait for a NEW qualified setup.'
         ];
-        document.getElementById('val-plan-meaning').textContent = meanings[0] || 'Original morning plan is OFF today.';
-        document.getElementById('val-plan-warning').textContent = meanings[1] || 'Important: This does NOT mean BUY.';
+        document.getElementById('val-plan-meaning').textContent = meanings[0] || '• Original morning plan is OFF today.';
+        document.getElementById('val-plan-warning').textContent = meanings[1] || '• Important: This does NOT mean BUY.';
 
         // 4. KEY LEVELS
         const kl = wi.key_levels || {};
@@ -970,44 +1101,71 @@
         const sup = kl.support || {};
         const inv = kl.invalidation || {};
 
-        document.getElementById('val-res-price').textContent = res.price ? fmtPrice(res.price) : (data.nearest_resistance ? fmtPrice(data.nearest_resistance) : 'UNAVAILABLE');
-        document.getElementById('val-res-dist').textContent = res.distance_pts != null ? `${Math.abs(res.distance_pts).toFixed(1)} pts ABOVE` : '';
+        document.getElementById('val-res-price').textContent = isFiniteNum(res.price) ? fmtPrice(res.price) : (isFiniteNum(data.nearest_resistance) ? fmtPrice(data.nearest_resistance) : 'N/A');
+        document.getElementById('val-res-dist').textContent = isFiniteNum(res.distance_pts) ? `${Math.abs(res.distance_pts).toFixed(1)} pts ABOVE` : '';
         document.getElementById('val-res-meaning').textContent = res.meaning || 'Reclaiming this level would improve short-term structure.';
 
-        document.getElementById('val-sup-price').textContent = sup.price ? fmtPrice(sup.price) : (data.nearest_support ? fmtPrice(data.nearest_support) : 'UNAVAILABLE');
-        document.getElementById('val-sup-dist').textContent = sup.distance_pts != null ? `${Math.abs(sup.distance_pts).toFixed(1)} pts BELOW` : '';
+        document.getElementById('val-sup-price').textContent = isFiniteNum(sup.price) ? fmtPrice(sup.price) : (isFiniteNum(data.nearest_support) ? fmtPrice(data.nearest_support) : 'N/A');
+        document.getElementById('val-sup-dist').textContent = isFiniteNum(sup.distance_pts) ? `${Math.abs(sup.distance_pts).toFixed(1)} pts BELOW` : '';
         document.getElementById('val-sup-meaning').textContent = sup.meaning || 'Watch the reaction here; a break could weaken structure further.';
 
-        document.getElementById('val-inval-price').textContent = inv.price ? fmtPrice(inv.price) : (data.levels?.invalidation ? fmtPrice(data.levels.invalidation) : 'UNAVAILABLE');
+        document.getElementById('val-inval-price').textContent = isFiniteNum(inv.price) ? fmtPrice(inv.price) : (isFiniteNum(data.levels?.invalidation) ? fmtPrice(data.levels.invalidation) : 'N/A');
         document.getElementById('val-inval-meaning').textContent = inv.meaning || "Break of this level invalidated today's morning plan.";
 
-        // 5. MARKET SUMMARY / OI
+        // 5. MARKET SUMMARY / OI (Defect 3 NaN Elimination Fix)
         const oi = data.oi_summary || {};
-        document.getElementById('val-put-wall').textContent = oi.put_wall ? Number(oi.put_wall).toLocaleString('en-IN') : 'UNAVAILABLE — no put wall';
-        document.getElementById('val-call-wall').textContent = oi.call_wall ? Number(oi.call_wall).toLocaleString('en-IN') : 'UNAVAILABLE — no call wall';
-        document.getElementById('val-pcr-pill').textContent = oi.pcr_read || (oi.pcr != null ? `PCR ${oi.pcr}` : 'PCR UNAVAILABLE');
-        document.getElementById('val-oi-read').textContent = oi.pcr_read ? `${oi.pcr_read} indicates resistance positioning.` : 'Call-heavy OI (0.65) indicates strong overhead resistance positioning.';
+        const putWallStr = fmtStrike(oi.put_wall);
+        const callWallStr = fmtStrike(oi.call_wall);
+
+        document.getElementById('val-put-wall').textContent = putWallStr !== 'N/A' ? putWallStr : 'N/A';
+        document.getElementById('val-call-wall').textContent = callWallStr !== 'N/A' ? callWallStr : 'N/A';
+
+        document.getElementById('val-put-wall-meaning').textContent = putWallStr !== 'N/A' ?
+            'Highest Put Open Interest concentration acting as structural downside support.' :
+            'Put Wall unavailable in latest snapshot — no reliable put-side OI wall detected.';
+
+        document.getElementById('val-call-wall-meaning').textContent = callWallStr !== 'N/A' ?
+            'Highest Call Open Interest concentration acting as overhead resistance.' :
+            'Call Wall unavailable in latest snapshot — no reliable call-side OI wall detected.';
+
+        document.getElementById('val-pcr-pill').textContent = oi.pcr_read || (isFiniteNum(oi.pcr) ? `PCR ${oi.pcr}` : 'PCR N/A');
+        document.getElementById('val-oi-read').textContent = oi.pcr_read ? `${oi.pcr_read} indicates resistance positioning.` : (isFiniteNum(oi.pcr) ? `PCR ${oi.pcr} indicates options positioning.` : 'Options OI distribution unavailable.');
 
         // 6. DECISION SUPPORT
         const ds = wi.decision_support || {};
         document.getElementById('val-ds-focus').textContent = ds.current_focus || data.action_verdict || 'STAND ASIDE';
         document.getElementById('val-ds-why').textContent = ds.why || data.decision_reason || 'Morning thesis is invalidated and cannot be reused.';
-        document.getElementById('val-ds-next').textContent = ds.next_level_to_watch || data.decision_next_event || 'Support 24283.45 · 5.5 pts BELOW';
+        document.getElementById('val-ds-next').textContent = ds.next_level_to_watch || data.decision_next_event || 'Support 24283.45';
         document.getElementById('val-ds-next-why').textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
         document.getElementById('val-ds-instruction').textContent = ds.instruction || 'WAIT FOR NEW QUALIFIED SETUP';
 
-        // 7. ORDER FLOW SHADOW
+        // 7. ORDER FLOW SHADOW (Defect 4 Freshness Sync Fix)
         const ofs = wi.order_flow_shadow || data.order_flow_shadow || {};
-        document.getElementById('val-of-feed').textContent = ofs.feed_status || 'LIVE';
-        document.getElementById('val-of-pressure').textContent = ofs.pressure || 'BUYING';
-        document.getElementById('val-of-pressure').className = (ofs.pressure || '').includes('BUY') ? 'snapshot-val style-green' : 'snapshot-val style-red';
+        const ofFeedEl = document.getElementById('val-of-feed');
+        const rawOfFeed = ofs.feed_status || 'LIVE';
+
+        if (isStale) {
+            ofFeedEl.innerHTML = `<span class="status-badge badge-amber">STALE (${roundedAge}m ago)</span>`;
+        } else {
+            ofFeedEl.innerHTML = `<span class="status-badge badge-green">${rawOfFeed}</span>`;
+        }
+
+        const ofPressEl = document.getElementById('val-of-pressure');
+        const pressVal = ofs.pressure || 'N/A';
+        const pressBadge = getStructureBadgeHTML(pressVal);
+        ofPressEl.innerHTML = pressBadge;
 
         const cvdVal = ofs.estimated_cvd;
-        document.getElementById('val-of-cvd').textContent = cvdVal != null ? (cvdVal > 0 ? '+' : '') + Number(cvdVal).toLocaleString('en-IN') : '0';
-        document.getElementById('val-of-align').textContent = ofs.alignment || 'OPPOSING';
+        document.getElementById('val-of-cvd').textContent = isFiniteNum(cvdVal) ? (cvdVal > 0 ? '+' : '') + Number(cvdVal).toLocaleString('en-IN') : 'N/A';
+
+        const alignEl = document.getElementById('val-of-align');
+        const alignVal = ofs.alignment || 'N/A';
+        alignEl.innerHTML = getStructureBadgeHTML(alignVal);
 
         document.getElementById('val-of-cvd-note').textContent = ofs.cvd_provenance_note || 'CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.';
-        document.getElementById('val-of-qual-note').textContent = (ofs.combined_updates_pct || 74.5) + '% combined updates (single packet contains multiple trades).';
+        document.getElementById('val-of-qual-note').textContent = isStale ?
+            `Snapshot age: ${roundedAge}m ago (Last observed backend feed state: ${rawOfFeed}).` :
+            `${ofs.combined_updates_pct || 74.55}% combined updates (single packet contains multiple trades).`;
 
         // 8. MARKET COMMENTARY
         const mc = wi.market_commentary || {};
@@ -1041,11 +1199,51 @@
             tlList.innerHTML = `<div class="timeline-item"><span class="timeline-meaning">No new structural event since 09:15 IST.</span></div>`;
         }
 
-        // 10. DATA PROVENANCE
+        // 10. DATA FRESHNESS & SYSTEM HEALTH (Defect 4 Freshness Sync & Defect 5 Mobile Wrap Fix)
         const prov = wi.data_provenance || {};
-        document.getElementById('prov-mkt-feed').textContent = prov.market_feed || 'LIVE';
-        document.getElementById('prov-of-feed').textContent = prov.order_flow_feed || 'LIVE';
+        const mktFeedEl = document.getElementById('prov-mkt-feed');
+        const ofFeedProvEl = document.getElementById('prov-of-feed');
+        const rawMktFeed = prov.market_feed || 'LIVE';
+        const rawOfFeedProv = prov.order_flow_feed || 'LIVE';
+
+        if (isStale) {
+            mktFeedEl.className = 'status-badge badge-amber';
+            mktFeedEl.textContent = `STALE (${roundedAge}m ago)`;
+            ofFeedProvEl.className = 'status-badge badge-amber';
+            ofFeedProvEl.textContent = `STALE (${roundedAge}m ago)`;
+            document.getElementById('prov-mkt-note').textContent = `Snapshot age ${roundedAge}m ago (Last backend state: ${rawMktFeed})`;
+            document.getElementById('prov-of-note').textContent = `Snapshot age ${roundedAge}m ago (Last backend state: ${rawOfFeedProv})`;
+        } else {
+            mktFeedEl.className = 'status-badge badge-green';
+            mktFeedEl.textContent = 'LIVE';
+            ofFeedProvEl.className = 'status-badge badge-green';
+            ofFeedProvEl.textContent = 'LIVE';
+            document.getElementById('prov-mkt-note').textContent = 'NSE spot & NFO futures stream active on GCP VM';
+            document.getElementById('prov-of-note').textContent = 'OrderFlowShadowController active (CVD start = 0)';
+        }
+
         document.getElementById('prov-leak-check').textContent = prov.historical_leakage || 'NONE DETECTED';
+    }
+
+    function createSnapshotSpan(id, val) {
+        const span = document.createElement('span');
+        span.id = id;
+        const str = String(val).toUpperCase();
+        if (str.includes('BULL')) {
+            span.className = 'snapshot-val';
+            span.style.color = 'var(--accent-green)';
+        } else if (str.includes('BEAR')) {
+            span.className = 'snapshot-val';
+            span.style.color = 'var(--accent-red)';
+        } else if (str.includes('NEUTRAL') || str.includes('MIXED')) {
+            span.className = 'snapshot-val';
+            span.style.color = 'var(--accent-amber)';
+        } else {
+            span.className = 'snapshot-val';
+            span.style.color = 'var(--text-muted)';
+        }
+        span.textContent = val;
+        return span;
     }
 
     // Initial fetch and loop
