@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRIVATE — Nifty Automated Strategy Telemetry | The Mishra Ventures</title>
+    <link rel="stylesheet" href="../../shared/global.css?v=20260812" />
+    <link rel="stylesheet" href="../../shared/components.css?v=20260812" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --surface-1: #111726;
+            --surface-2: #182238;
+            --card-bg: rgba(18, 26, 43, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-red: #f87171;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; margin-bottom: 20px; }
+        .title-group h1 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--accent-blue); }
+        .title-group p { margin: 4px 0 0; font-size: 0.85rem; color: var(--text-secondary); }
+        .badge-private { background: rgba(248, 113, 113, 0.15); border: 1px solid rgba(248, 113, 113, 0.3); color: var(--accent-red); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
+        .card-header { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px; }
+        .card-value { font-size: 1.6rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+        .card-sub { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+        .val-positive { color: var(--accent-green); }
+        .val-negative { color: var(--accent-red); }
+        .table-container { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; overflow-x: auto; margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--card-border); }
+        th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+        .log-box { background: #05080f; border: 1px solid var(--card-border); border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #a7f3d0; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1>OPERATOR TELEMETRY DASHBOARD [PRIVATE]</h1>
+                <p>Internal Strategy Diagnostics & Raw Execution Feed</p>
+            </div>
+            <span class="badge-private">RESTRICTED OPERATOR ACCESS</span>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">Strategy Identity</div>
+                <div class="card-value" id="priv-strategy">SELL_CE (V1)</div>
+                <div class="card-sub" id="priv-session-id">SELL_CE_PAPER_20260812</div>
+            </div>
+            <div class="card">
+                <div class="card-header">Contract & Strike</div>
+                <div class="card-value" id="priv-symbol">NIFTY24550CE</div>
+                <div class="card-sub" id="priv-strike-math">Theoretical: 24530.69 | Selected: 24550.0</div>
+            </div>
+            <div class="card">
+                <div class="card-header">Session P&L (Net)</div>
+                <div class="card-value val-positive" id="priv-pnl">+38.75 pts</div>
+                <div class="card-sub" id="priv-pnl-rupees">+₹2,518.75 (Lot 65)</div>
+            </div>
+            <div class="card">
+                <div class="card-header">Execution Validity</div>
+                <div class="card-value" id="priv-exec-status">VALID (100%)</div>
+                <div class="card-sub" id="priv-exec-rule">bid_ask_v1 (Entry 110.7 / Exit 71.95)</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="card-header">Technical Telemetry Breakdown</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Source / Logic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>ATR(10)</td><td id="t-atr">195.10</td><td>Angel Instrument Master</td></tr>
+                    <tr><td>Spot (09:30 IST)</td><td id="t-spot">24,452.65</td><td>NIFTY 50 Index Spot</td></tr>
+                    <tr><td>MFE / MAE</td><td id="t-mfe-mae">+60.90 / -0.25 pts</td><td>Intraday Tick Range</td></tr>
+                    <tr><td>Holding Duration</td><td id="t-duration">20,391.85s (~5.66h)</td><td>09:30:24 to 15:10:16 IST</td></tr>
+                    <tr><td>Exit Trigger</td><td id="t-exit-reason">TIME_EXIT (15:10 IST)</td><td>Rule: Hard Time Exit at 15:10 IST</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-header">System Diagnostics & Worker Status</div>
+        <div class="log-box" id="sys-logs">
+[INFO] 2026-08-12 09:14:00 IST - System initialized. SQLite read-only URI mode enabled.
+[INFO] 2026-08-12 09:30:24 IST - Strategy entry triggered. Selected strike: 24550 CE @ 110.7.
+[INFO] 2026-08-12 15:10:16 IST - Strategy exit triggered (TIME_EXIT). Fill @ 71.95.
+[OK] Cloudflare KV Worker payload synchronized. Status: 200 OK.
+        </div>
+    </div>
+
+    <script>
+        const PRIVATE_API_URL = '/api/private';
+        async function fetchPrivateTelemetry() {
+            try {
+                const res = await fetch(PRIVATE_API_URL);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.session_id) document.getElementById('priv-session-id').innerText = data.session_id;
+                if (data.strategy_name) document.getElementById('priv-strategy').innerText = data.strategy_name;
+            } catch(e) {}
+        }
+        setInterval(fetchPrivateTelemetry, 10000);
+    </script>
+</body>
+</html>

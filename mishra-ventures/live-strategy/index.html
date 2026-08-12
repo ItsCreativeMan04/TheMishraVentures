@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Nifty Strategy | Live Session Performance | The Mishra Ventures</title>
+
+    <link rel="stylesheet" href="../shared/global.css?v=20260812" />
+    <link rel="stylesheet" href="../shared/components.css?v=20260812" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --surface-1: #111726;
+            --surface-2: #182238;
+            --card-bg: rgba(18, 26, 43, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #38bdf8;
+            --accent-green: #34d399;
+            --accent-amber: #fbbf24;
+            --accent-red: #f87171;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            border-bottom: 1px solid var(--card-border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(9, 13, 22, 0.8);
+            backdrop-filter: blur(12px);
+        }
+
+        .brand-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-badge {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--accent-blue);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .live-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            color: var(--accent-green);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .main-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 32px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(24, 34, 56, 0.6) 0%, rgba(17, 23, 38, 0.9) 100%);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+        }
+
+        .hero-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .card-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .val-positive { color: var(--accent-green); }
+        .val-negative { color: var(--accent-red); }
+        .val-neutral { color: var(--accent-amber); }
+
+        .timeline-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .timeline-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .timeline-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 0.9rem;
+        }
+
+        .timeline-row:last-child {
+            border-bottom: none;
+        }
+
+        .t-label { color: var(--text-secondary); }
+        .t-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+        .premarket-box {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            border-radius: 12px;
+            padding: 20px;
+            color: var(--accent-amber);
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .footer {
+            border-top: 1px solid var(--card-border);
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand-title">
+            The Mishra Ventures
+            <span class="brand-badge">Automated Nifty Strategy</span>
+        </div>
+        <div class="live-status-pill" id="livePill">
+            <div class="status-dot"></div>
+            <span id="livePillText">Live Data Active</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Pre-Market Freshness Banner -->
+        <div class="premarket-box" id="premarketBanner">
+            <strong>Session Initializing:</strong> Today's trading session is preparing. Entry window opens at 09:30 IST.
+        </div>
+
+        <div class="hero-banner">
+            <h1 class="hero-title">Automated Nifty Trading Session</h1>
+            <p class="hero-sub" id="sessionLabel">Trading Session — Active Session</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-label">Position Status</div>
+                <div class="card-value" id="posStatus">CLOSED</div>
+                <div class="card-sub" id="posSub">Session Complete</div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Session P&L (Points)</div>
+                <div class="card-value val-positive" id="pnlPoints">+38.75 pts</div>
+                <div class="card-sub" id="pnlPointsSub">Index Points Captured</div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Session P&L (Rupees)</div>
+                <div class="card-value val-positive" id="pnlRupees">+₹2,518.75</div>
+                <div class="card-sub" id="pnlRupeesSub">Net Realized Result</div>
+            </div>
+        </div>
+
+        <div class="timeline-card">
+            <div class="timeline-title">Session Milestones & Execution Timing</div>
+            <div class="timeline-row">
+                <span class="t-label">Entry Timestamp</span>
+                <span class="t-val" id="timeEntry">09:30:24 IST</span>
+            </div>
+            <div class="timeline-row">
+                <span class="t-label">Exit Timestamp</span>
+                <span class="t-val" id="timeExit">15:10:16 IST</span>
+            </div>
+            <div class="timeline-row">
+                <span class="t-label">Session Exit Reason</span>
+                <span class="t-val" id="exitReason">TIME_EXIT</span>
+            </div>
+            <div class="timeline-row">
+                <span class="t-label">Data Feed Freshness</span>
+                <span class="t-val" id="timeUpdated">Just now</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Disclosure: Performance shown is from an automated simulation environment. All telemetry is updated in near-real-time.
+    </div>
+
+    <script>
+        const PUBLIC_API_URL = 'https://sell-ce-paper-status.itscreativeman04.workers.dev/';
+
+        function evaluateFreshness(payload) {
+            const now = new Date();
+            const istDateStr = new Date(now.getTime() + (5.5 * 3600 * 1000)).toISOString().split('T')[0];
+            const istHours = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCHours();
+            const istMinutes = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCMinutes();
+
+            const isPreMarket = (istHours === 9 && istMinutes < 30);
+            const payloadDate = payload.date || '';
+
+            if (payloadDate && payloadDate !== istDateStr && isPreMarket) {
+                document.getElementById('premarketBanner').style.display = 'block';
+                document.getElementById('livePillText').innerText = 'Session Initializing';
+                return true;
+            }
+            document.getElementById('premarketBanner').style.display = 'none';
+            document.getElementById('livePillText').innerText = 'Live Data Active';
+            return false;
+        }
+
+        async function fetchPublicData() {
+            try {
+                const response = await fetch(PUBLIC_API_URL, { cache: 'no-store' });
+                if (!response.ok) return;
+                const data = await response.json();
+
+                if (evaluateFreshness(data)) return;
+
+                if (data.date) {
+                    document.getElementById('sessionLabel').innerText = `Trading Session — ${data.date}`;
+                }
+                if (data.position_status) {
+                    document.getElementById('posStatus').innerText = data.position_status;
+                }
+                if (data.net_pnl_points !== undefined) {
+                    const pts = parseFloat(data.net_pnl_points);
+                    const el = document.getElementById('pnlPoints');
+                    el.innerText = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts`;
+                    el.className = `card-value ${pts >= 0 ? 'val-positive' : 'val-negative'}`;
+                }
+                if (data.net_pnl_rupees !== undefined) {
+                    const rs = parseFloat(data.net_pnl_rupees);
+                    const el = document.getElementById('pnlRupees');
+                    el.innerText = `${rs >= 0 ? '+₹' : '-₹'}${Math.abs(rs).toLocaleString('en-IN')}`;
+                    el.className = `card-value ${rs >= 0 ? 'val-positive' : 'val-negative'}`;
+                }
+                if (data.entry_time) document.getElementById('timeEntry').innerText = data.entry_time;
+                if (data.exit_time) document.getElementById('timeExit').innerText = data.exit_time;
+                if (data.exit_reason) document.getElementById('exitReason').innerText = data.exit_reason;
+                if (data.updated_at) {
+                    document.getElementById('timeUpdated').innerText = new Date(data.updated_at).toLocaleTimeString('en-IN');
+                }
+            } catch (err) {
+                console.warn('Public dashboard update error:', err);
+            }
+        }
+
+        fetchPublicData();
+        setInterval(fetchPublicData, 10000);
+    </script>
+</body>
+</html>
