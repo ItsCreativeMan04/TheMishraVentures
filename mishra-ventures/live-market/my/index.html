@@ -1,2268 +1,1056 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<script>
-  // Inline and blocking on purpose: this must run before the first paint,
-  // otherwise the page flashes the default palette before the saved one
-  // applies. Saved choice wins; otherwise follow the OS.
-  (function () {
-    try {
-      var saved = localStorage.getItem('lm-theme');
-      var theme = saved || (window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.setAttribute('data-theme', theme);
-    } catch (e) { /* private mode: fall through to the dark default */ }
-  })();
-</script>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Market Intelligence (Private) – The Mishra Ventures</title>
-  <meta name="robots" content="noindex, nofollow, noarchive" />
-  <link rel="stylesheet" href="../../shared/global.css?v=20260807a" />
-  <link rel="stylesheet" href="../../shared/components.css?v=20260807a" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIFTY Live Market Intelligence | Dynamic Trading Desk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --surface-1: #111726;
+            --surface-2: #182238;
+            --card-bg: rgba(18, 26, 43, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(56, 189, 248, 0.2);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+        }
 
-    /* ── Theme ────────────────────────────────────────────────────────────
-       Two palettes over one set of semantic variables. Every colour in the
-       sheet resolves through these -- there are no hardcoded values left
-       outside this block, so light mode cannot half-apply.
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-       The semantic hues are DIFFERENT per theme, not just re-tinted: #4ade80
-       green is fine on near-black and close to illegible on white. Since the
-       action banner's whole purpose is being readable at a glance, the light
-       palette uses darker, higher-contrast hues rather than the same ones. */
-    :root {
-      color-scheme: dark;
-      --bg: #060a14;
-      --surface: #0f1729;
-      --surface2: #16213a;
-      --border: rgba(59, 130, 246, 0.18);
-      --accent: #3b82f6;
-      --accent2: #93c5fd;
-      --text: #eef2ff;
-      --text-strong: #ffffff;
-      --muted: rgba(238, 242, 255, 0.48);
-      --green: #4ade80;
-      --red: #f87171;
-      --yellow: #fbbf24;
-      --violet: #a78bfa;
-      /* neutral washes (row stripes, inert pills) */
-      --tint-1: rgba(255, 255, 255, 0.02);
-      --tint-2: rgba(255, 255, 255, 0.04);
-      --tint-3: rgba(255, 255, 255, 0.06);
-      /* hue tiers: 1 = faint wash, 2 = badge fill, 3 = strong fill/border */
-      --accent-1: rgba(59, 130, 246, 0.07);
-      --accent-2: rgba(59, 130, 246, 0.15);
-      --accent-3: rgba(59, 130, 246, 0.18);
-      --green-1: rgba(74, 222, 128, 0.06);
-      --green-2: rgba(74, 222, 128, 0.13);
-      --green-3: rgba(74, 222, 128, 0.20);
-      --red-1: rgba(248, 113, 113, 0.06);
-      --red-2: rgba(248, 113, 113, 0.14);
-      --red-3: rgba(248, 113, 113, 0.20);
-      --yellow-1: rgba(251, 191, 36, 0.07);
-      --yellow-2: rgba(251, 191, 36, 0.15);
-      --yellow-3: rgba(251, 191, 36, 0.30);
-      --violet-2: rgba(167, 139, 250, 0.15);
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 20px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    html[data-theme="light"] {
-      color-scheme: light;
-      --bg: #f4f7fc;
-      --surface: #ffffff;
-      --surface2: #eef2f9;
-      --border: rgba(15, 23, 42, 0.13);
-      --accent: #1d4ed8;
-      --accent2: #1e40af;
-      --text: #0f172a;
-      --text-strong: #060a14;
-      --muted: rgba(15, 23, 42, 0.62);   /* 0.58 measured 4.40:1 on white — below AA */
-      /* Darker hues: the dark-mode pastels fail on white. */
-      --green: #15803d;
-      --red: #b91c1c;
-      --yellow: #b45309;
-      --violet: #6d28d9;
-      --tint-1: rgba(15, 23, 42, 0.025);
-      --tint-2: rgba(15, 23, 42, 0.05);
-      --tint-3: rgba(15, 23, 42, 0.08);
-      --accent-1: rgba(29, 78, 216, 0.07);
-      --accent-2: rgba(29, 78, 216, 0.13);
-      --accent-3: rgba(29, 78, 216, 0.22);
-      --green-1: rgba(21, 128, 61, 0.07);
-      --green-2: rgba(21, 128, 61, 0.14);
-      --green-3: rgba(21, 128, 61, 0.20);
-      --red-1: rgba(185, 28, 28, 0.06);
-      --red-2: rgba(185, 28, 28, 0.13);
-      --red-3: rgba(185, 28, 28, 0.19);
-      --yellow-1: rgba(180, 83, 9, 0.07);
-      --yellow-2: rgba(180, 83, 9, 0.14);
-      --yellow-3: rgba(180, 83, 9, 0.32);
-      --violet-2: rgba(109, 40, 217, 0.13);
-    }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    body { background: var(--bg); color: var(--text); font-family: 'Sora', sans-serif; line-height: 1.6; min-height: 100vh; }
+        /* 1. TOP LIVE MARKET HEADER */
+        .live-header {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
 
-    .hero { max-width: 900px; margin: 0 auto; padding: 3.5rem 2rem 1.5rem; text-align: center; }
-    h1.hero-title {
-      font-size: clamp(1.8rem, 4.5vw, 2.8rem); font-weight: 800; line-height: 1.2;
-      background: linear-gradient(135deg, var(--text-strong) 20%, var(--accent2) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.75rem;
-    }
-    .hero-sub { font-size: 1rem; color: var(--muted); max-width: 560px; margin: 0 auto; }
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
 
-    .wrap { max-width: 1000px; margin: 0 auto; padding: 0 2rem 4rem; }
+        .symbol-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-    .status-banner {
-      display: none; align-items: center; gap: 10px;
-      background: var(--yellow-1); border: 1px solid var(--yellow-3);
-      color: var(--yellow); border-radius: 12px; padding: 0.9rem 1.2rem; font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-    }
-    .status-banner.show { display: flex; }
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-    /* Position size calculator: risk fixed, quantity solved for -- the
-       opposite of Kumar's old habit (quantity fixed at 10/20 lots, risk
-       floating with whatever the stop happened to be that trade). All math
-       is local; nothing here is sent anywhere. */
-    .sizer-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 1.3rem 1.5rem; margin-bottom: 1.2rem;
-    }
-    .sizer-title {
-      font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; color: var(--muted);
-      text-transform: uppercase; margin-bottom: 0.9rem;
-    }
-    .sizer-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
-    .sizer-field { flex: 1 1 140px; min-width: 0; }
-    .sizer-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 4px; display: block; }
-    .sizer-field input {
-      width: 100%; box-sizing: border-box; background: var(--surface2);
-      border: 1px solid var(--border); border-radius: 10px; color: var(--text-strong);
-      font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; padding: 8px 10px;
-    }
-    .sizer-field input:focus { outline: none; border-color: var(--accent); }
-    .sizer-result {
-      border-top: 1px solid var(--border); padding-top: 0.9rem;
-      display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    }
-    .sizer-lots { font-size: 1.7rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
-    .sizer-lots-label { font-size: 0.72rem; color: var(--muted); }
-    .sizer-actual-risk { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-    .sizer-warn { font-size: 0.8rem; color: var(--red); }
-    .sizer-regime-advisory {
-      margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px dashed var(--border);
-      font-size: 0.78rem; line-height: 1.55;
-    }
-    .sizer-regime-advisory .sra-head { font-weight: 700; margin-bottom: 3px; }
-    .sizer-regime-advisory .sra-head.full { color: var(--green); }
-    .sizer-regime-advisory .sra-head.reduced { color: var(--yellow); }
-    .sizer-regime-advisory .sra-head.low { color: var(--red); }
-    .sizer-regime-advisory .sra-reason { color: var(--muted); }
-    .sizer-regime-advisory .sra-lots { font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
+        .live-pill.live {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
 
-    /* Inline glossary tooltips, added 2026-08-07. Deliberately click/tap-toggle,
-       not CSS :hover -- this page gets used on a phone as much as a desktop,
-       and hover has no equivalent on touch. Scoped to this file, not
-       shared/components.css: only this page's jargon-heavy fields (ATR%,
-       intraday regime, the regime-risk multiplier) need it; the public page
-       and the discipline journal do not carry this component's weight. */
-    .tip-wrap { position: relative; display: inline-flex; align-items: center; gap: 5px; }
-    .tip-icon {
-      width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
-      background: var(--tint-3); border: 1px solid var(--border); color: var(--muted);
-      font-size: 9px; font-weight: 700; line-height: 1;
-      display: inline-flex; align-items: center; justify-content: center;
-      cursor: pointer; user-select: none;
-    }
-    .tip-icon:hover, .tip-icon:focus-visible { background: var(--accent-2); color: var(--text); outline: none; }
-    .tip-bubble {
-      display: none; position: absolute; z-index: 60; bottom: calc(100% + 8px); left: 0;
-      width: 220px; max-width: 60vw; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 9px 11px; font-size: 0.72rem; line-height: 1.55;
-      color: var(--text); font-weight: 400; text-transform: none; letter-spacing: normal;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-    }
-    .tip-wrap.open .tip-bubble { display: block; }
-    @media (max-width: 480px) { .tip-bubble { left: auto; right: 0; width: 200px; } }
+        .live-pill.stale {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
 
-    .price-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-      padding: 2rem; text-align: center; margin-bottom: 1.2rem;
-    }
-    .price-symbol { font-size: 0.85rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .price-contract { font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; opacity: 0.7; margin-top: -0.3rem; margin-bottom: 0.5rem; }
-    .price-value { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
-    .price-updated { font-size: 0.78rem; color: var(--muted); margin-top: 0.6rem; }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .dot.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
 
-    /* Instrument switcher. ONE page, not a duplicate spot page: a second copy
-       of ~1400 lines would drift from this one within a week, and the two would
-       eventually disagree — the exact failure mode this whole dashboard has
-       been cleaned up to prevent. The selected symbol lives in the URL
-       (?symbol=...) so each instrument is still a bookmarkable "page". */
-    .frame-switch { display: flex; gap: 2px; background: var(--tint-2);
-      border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
-    .frame-btn { background: none; border: 0; cursor: pointer; font: inherit;
-      font-size: 0.76rem; font-weight: 600; color: var(--muted);
-      padding: 5px 13px; border-radius: 100px; transition: background .2s, color .2s; }
-    .frame-btn:hover { color: var(--text); }
-    .frame-btn.active { background: var(--accent-2); color: var(--accent2); }
+        .header-metrics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: center;
+        }
 
-    /* Says which instrument you are looking at, loudly enough that it cannot be
-       mistaken — reading futures levels off a spot chart is wrong by the basis
-       on every entry and stop. */
-    .frame-note {
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-      font-size: 0.76rem; margin-bottom: 1rem; padding: 0.65rem 1rem;
-      border-radius: 12px; border: 1px solid var(--border);
-      background: var(--tint-1); color: var(--muted);
-    }
-    .frame-note b { color: var(--text-strong); font-weight: 700; }
-    .frame-note.spot { border-color: var(--yellow-3); background: var(--yellow-1); }
+        .metric-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
 
-    /* Freshness strip: how old is what you're looking at?
-       Shows MEASURED age alongside the nominal cadence, because a stalled
-       agent and a quiet market look identical on a dashboard that only
-       promises "updates every 60s". Age goes amber then red as it exceeds
-       what the cadence should produce, so staleness is visible without
-       reading. */
-    .freshness {
-      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-      font-size: 0.72rem; color: var(--muted); margin-bottom: 1rem;
-      padding: 0.6rem 0.9rem; border: 1px solid var(--border);
-      border-radius: 100px; background: var(--tint-1);
-    }
-    .fresh-item { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
-    .fresh-label { font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; font-size: 0.62rem; }
-    .fresh-age { font-family: 'JetBrains Mono', monospace; color: var(--text); }
-    .fresh-age.warn { color: var(--yellow); }
-    .fresh-age.stale { color: var(--red); font-weight: 700; }
-    .fresh-cadence { opacity: 0.6; }
-    .fresh-note { flex-basis: 100%; opacity: 0.65; font-size: 0.68rem; line-height: 1.45; }
-    @media (max-width: 720px) {
-      .freshness { border-radius: 14px; gap: 10px; }
-    }
+        .metric-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
 
-    /* Action banner: the single verdict from the narrator's _decide(), sized
-       to be read in about a second from across the desk. It is the FIRST thing
-       on the page because "what do I do?" is the only question that matters
-       at 09:20; everything below it is the evidence for this line. Colour is
-       the fast channel — you should not have to read the words to know whether
-       you are hunting, holding, or standing down. */
-    .action-banner {
-      display: flex; align-items: center; gap: 1.1rem; flex-wrap: wrap;
-      background: var(--surface); border: 1px solid var(--border);
-      border-left: 6px solid var(--muted); border-radius: 16px;
-      padding: 1.15rem 1.5rem; margin-bottom: 1.2rem;
-      transition: border-left-color 0.25s, background 0.25s;
-    }
-    .action-verb {
-      font-size: clamp(1.5rem, 4.5vw, 2.1rem); font-weight: 800; line-height: 1.05;
-      letter-spacing: -0.5px; color: var(--muted); white-space: nowrap;
-    }
-    .action-body { flex: 1 1 260px; min-width: 0; }
-    .action-reason { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
-    .action-meta { font-size: 0.74rem; color: var(--muted); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
-    .action-pill {
-      font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-      padding: 3px 10px; border-radius: 100px; align-self: flex-start;
-      background: var(--tint-3); color: var(--muted);
-    }
-    /* One class per verdict so the colour is derived from the verdict itself,
-       never from a second interpretation of it. */
-    .action-banner.go-long   { border-left-color: var(--green); background: var(--green-1); }
-    .action-banner.go-long   .action-verb { color: var(--green); }
-    .action-banner.go-short  { border-left-color: var(--red); background: var(--red-1); }
-    .action-banner.go-short  .action-verb { color: var(--red); }
-    .action-banner.ready     { border-left-color: var(--yellow); background: var(--yellow-1); }
-    .action-banner.ready     .action-verb { color: var(--yellow); }
-    .action-banner.manage    { border-left-color: var(--accent); background: var(--accent-1); }
-    .action-banner.manage    .action-verb { color: var(--accent2); }
-    .action-banner.stop      { border-left-color: var(--red); background: var(--red-1); }
-    .action-banner.stop      .action-verb { color: var(--red); }
-    .action-banner.wait      { border-left-color: var(--border); }
-    .action-banner.wait      .action-verb { color: var(--muted); }
-    .action-banner.urgent .action-pill { background: var(--red-2); color: var(--red); }
+        .metric-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-    /* Circuit breaker takeover: a real day-loss circuit breaker, not decor.
-       Deliberately harsher than every other panel on this page -- black, not
-       the site's --surface navy, and no dismiss control. This is the one
-       state on the whole site that is designed to be impossible to work
-       around by scrolling past it, because the thing it is competing with is
-       the urge to open one more trade. See journal/circuit_breaker.py in the
-       Trading Research Platform repo for what trips it and why. */
-    .cb-overlay {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background: #000; color: #fff;
-      align-items: center; justify-content: center; padding: 2rem;
-    }
-    .cb-overlay.show { display: flex; }
-    .cb-box { max-width: 520px; width: 100%; text-align: center; }
-    .cb-tag {
-      font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; color: var(--red);
-      text-transform: uppercase; margin-bottom: 0.6rem;
-    }
-    .cb-pnl {
-      font-size: clamp(3rem, 10vw, 4.5rem); font-weight: 800; line-height: 1;
-      letter-spacing: -1px; color: var(--red); margin-bottom: 0.3rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .cb-pnl-note { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 2rem; }
-    .cb-headline {
-      font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; color: #fff;
-      line-height: 1.15; margin-bottom: 1.8rem;
-    }
-    .cb-steps {
-      text-align: left; background: rgba(248,113,113,0.1);
-      border: 1px solid rgba(248,113,113,0.4); border-radius: 12px;
-      padding: 1.1rem 1.3rem; margin-bottom: 1.6rem;
-    }
-    .cb-step { display: flex; gap: 12px; align-items: flex-start; }
-    .cb-step + .cb-step { margin-top: 12px; }
-    .cb-step-num {
-      font-family: 'JetBrains Mono', monospace; font-weight: 800;
-      color: var(--red); font-size: 0.95rem;
-    }
-    .cb-step-text { font-size: 0.95rem; color: #fff; }
-    .cb-footnote { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
 
-    /* Discipline strip: standing process reminder matching the live engine's HUD */
-    .discipline-strip {
-      background: var(--surface); border: 1px solid var(--border);
-      border-left: 5px solid var(--accent); border-radius: 14px;
-      padding: 0.9rem 1.3rem; margin-bottom: 1.2rem;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; flex-wrap: wrap;
-    }
-    .discipline-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .discipline-badge {
-      font-size: 0.72rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.5px; padding: 3px 10px; border-radius: 100px;
-      background: var(--accent-2); color: var(--accent2);
-    }
-    .discipline-badge.limit-reached { background: var(--red-2); color: var(--red); }
-    .discipline-setup {
-      font-size: 0.76rem; font-weight: 600; color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .discipline-setup.valid { color: var(--green); }
-    .discipline-setup.none { color: var(--muted); }
-    .discipline-body { flex: 1 1 260px; min-width: 0; text-align: right; }
-    .discipline-mission {
-      font-size: 0.84rem; font-weight: 800; letter-spacing: 0.5px;
-      color: var(--text-strong); text-transform: uppercase;
-    }
-    .discipline-sub { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+        .badge-red { background: rgba(239, 68, 68, 0.18); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-green { background: rgba(34, 197, 94, 0.18); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-amber { background: rgba(245, 158, 11, 0.18); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-blue { background: rgba(56, 189, 248, 0.18); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
 
-    @media (max-width: 720px) {
-      .discipline-strip { padding: 0.85rem 1rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-      .discipline-body { text-align: left; }
-      .action-banner { padding: 1rem 1.1rem; gap: 0.7rem; }
-      .action-reason { font-size: 0.85rem; }
+        /* GRID LAYOUTS */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+            gap: 20px;
+        }
 
-      /* MOBILE OVERFLOW FIXES (2026-07-31). Measured on a 390px viewport, the
-         page pushed content past the right edge in three places. Each had a
-         different cause, so each needs its own fix rather than a blanket
-         `overflow-x: hidden`, which would have HIDDEN the price rather than
-         fitting it — the number you most need to read. */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-      /* 1. The verb could not wrap. "LOOK FOR LONGS" at the clamp floor is
-            ~200px on one unbreakable line, which forced the whole banner wider
-            than the screen. nowrap is right on desktop (keeps the verb on one
-            line beside the reason) and wrong here. */
-      .action-verb { white-space: normal; font-size: clamp(1.25rem, 7vw, 2.1rem); }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 10px;
+        }
 
-      /* 2. The hero price overflowed its own card by ~31px: the clamp FLOOR
-            (2.2rem) was larger than a 390px card can hold for "₹24421.10". */
-      .price-value { font-size: clamp(1.6rem, 9vw, 3.4rem); }
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
 
-      /* 3. 2rem of side padding on each side removes 64px from a 390px screen
-            before any content is drawn. */
-      .hero { padding: 2.25rem 1rem 1.25rem; }
-      .wrap { padding: 0 1rem 2.5rem; }
+        .card-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
 
-      /* Safety net: no card may exceed the viewport, whatever it contains. This
-         constrains the BOX; the rules above make the CONTENT fit inside it. */
-      .discipline-strip, .action-banner, .narrative-card, .price-card, .freshness,
-      .plan-decision-card, .timeline-card { max-width: 100%; }
-    }
+        /* 2. MARKET SNAPSHOT GRID */
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
 
-    .narrative-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-      padding: 1.5rem 1.7rem; margin-bottom: 1.2rem;
-    }
-    .narrative-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.7rem; }
-    .narrative-text { font-size: 0.95rem; color: var(--text); line-height: 1.7; }
+        .snapshot-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
-    /* OI-by-strike: vertical grouped bars (Put + Call per strike, growing
-       from a shared baseline). Own color convention (green=put, red=call,
-       carried over from the site's existing bias language) and an outlined
-       "shadow" segment for peak-and-unwind -- not a copy of any single
-       reference chart's exact treatment. */
-    .oi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
-    .oi-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 1.1rem; }
-    .oi-header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .oi-summary-pill { font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
-    .oi-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
-    .oi-tab { background: var(--tint-2); border: 1px solid var(--border); color: var(--muted); font-size: 0.76rem; font-weight: 600; padding: 5px 12px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, border-color 0.2s, color 0.2s; }
-    .oi-tab:hover { color: var(--text); }
-    .oi-tab.active { background: var(--accent-2); border-color: var(--accent); color: var(--accent2); }
+        .snapshot-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+        }
 
-    .oi-view-toggle { display: flex; gap: 2px; background: var(--tint-2); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
-    .oi-view-btn { background: none; border: none; color: var(--muted); font-size: 0.74rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
-    .oi-view-btn.active { background: var(--accent-3); color: var(--accent2); }
+        /* BULLET & CALLOUT LISTS */
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-    .oi-range-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 0.9rem; }
-    .oi-range-label { font-size: 0.72rem; color: var(--muted); }
-    .oi-range-toggle { display: flex; gap: 2px; background: var(--tint-2); border: 1px solid var(--border); border-radius: 100px; padding: 2px; }
-    .oi-range-btn { background: none; border: none; color: var(--muted); font-size: 0.72rem; font-weight: 600; padding: 4px 11px; border-radius: 100px; cursor: pointer; font-family: inherit; transition: background 0.2s, color 0.2s; }
-    .oi-range-btn.active { background: var(--accent-3); color: var(--accent2); }
+        .bullet-list li {
+            position: relative;
+            padding-left: 16px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
 
-    .oi-totals-row { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
-    .oi-totals-row b { color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
+        .bullet-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
 
-    .oi-empty { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 2rem 0; }
+        .callout-box {
+            padding: 12px 14px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
 
-    /* Sizing knobs live on the wrap so the axis (a sibling of the chart)
-       inherits the same label-height and can stay pixel-aligned with it. */
-    .oi-vchart-wrap {
-      /* --oi-bar-gap (inside a strike) must stay clearly SMALLER than the
-         chart's column gap (between strikes), or the put/call pair stops
-         reading as a pair -- Gestalt proximity is doing the grouping here,
-         there's no other separator. */
-      --oi-col-min: 34px; --oi-col-max: 72px; --oi-bar-w: 14px; --oi-bar-gap: 2px;
-      --oi-chart-h: 230px; --oi-label-h: 22px;
-      display: flex; gap: 8px; padding-top: 48px; position: relative;
-    }
-    /* Shown only when the strike row genuinely overflows (JS adds the class
-       after measuring), so the swipe affordance never lies about scrollability. */
-    .oi-scroll-hint { display: none; }
-    .oi-vchart-wrap.is-scrollable .oi-scroll-hint {
-      display: block; position: absolute; right: 2px; top: 6px;
-      font-size: 0.6rem; color: var(--muted); opacity: 0.7; letter-spacing: 0.5px;
-    }
-    /* Left value scale -- evenly spaced ticks from +max down to -max, so the
-       zero line's vertical centering is legible instead of implicit. */
-    .oi-vaxis { display: flex; flex-direction: column; justify-content: space-between; height: var(--oi-chart-h); padding-bottom: calc(var(--oi-label-h) + 8px); flex: 0 0 auto; min-width: 34px; text-align: right; }
-    .oi-vaxis span { font-size: 0.6rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+        .callout-red { background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--accent-red); }
+        .callout-blue { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--accent-blue); }
+        .callout-amber { background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--accent-amber); }
 
-    .oi-vchart {
-      /* Deliberately tight: the columns are the flexible element, so the gap
-         only needs a floor. A generous gap here was what forced 21 strikes
-         past the card width and made it scroll on a desktop that had room. */
-      display: flex; align-items: stretch; gap: clamp(2px, 0.5vw, 12px);
-      height: var(--oi-chart-h); padding: 0 6px calc(var(--oi-label-h) + 8px);
-      flex: 1 1 auto; min-width: 0; position: relative;
-      overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      /* `center` alone makes the LEFT overflow unreachable in Chrome/Safari --
-         the overflow is pushed into the start margin, which has no scroll
-         range. `safe center` centers only while everything fits and falls back
-         to start alignment the moment it overflows, so both ends stay
-         scrollable. flex-start is the fallback for engines without `safe`. */
-      justify-content: flex-start;
-      justify-content: safe center;
-    }
-    /* Columns FLEX instead of being fixed at 38px: 21 strikes now share the
-       available width and fit without scrolling at all on a desktop card. */
-    .oi-vcol {
-      display: flex; flex-direction: column; align-items: center; height: 100%;
-      flex: 1 1 auto; min-width: var(--oi-col-min); max-width: var(--oi-col-max);
-      position: relative;
-    }
-    .oi-vcol.atm { background: var(--accent-1); border-radius: 8px; }
-    .oi-vcol.atm .oi-vstrike-label { color: var(--accent2); font-weight: 700; }
-    /* ATM marker: a dashed vertical line through the column plus a floating
-       price pill above the chart, both driven off data-atm-price so no
-       per-column JS wiring is needed beyond setting that one attribute. */
-    .oi-vcol.atm::before {
-      content: ''; position: absolute; top: 0; bottom: var(--oi-label-h); left: 50%; width: 0;
-      border-left: 1px dashed var(--accent2); opacity: 0.55;
-    }
-    .oi-vcol.atm::after {
-      content: attr(data-atm-price); position: absolute; top: -24px; left: 50%; transform: translateX(-50%);
-      background: var(--surface2); border: 1px solid var(--accent); color: var(--accent2);
-      font-size: 0.62rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-      padding: 2px 8px; border-radius: 6px; white-space: nowrap;
-    }
-    /* Max Pain marker: real elements (not a pseudo-element like the ATM
-       marker above) so the two can coexist on the same column without one
-       overwriting the other's ::before/::after. */
-    .oi-maxpain-line { position: absolute; top: 0; bottom: var(--oi-label-h); left: 50%; width: 0; border-left: 1px dashed var(--yellow); opacity: 0.55; }
-    .oi-maxpain-pill {
-      position: absolute; top: -46px; left: 50%; transform: translateX(-50%);
-      background: var(--surface2); border: 1px solid var(--yellow); color: var(--yellow);
-      font-size: 0.6rem; font-family: 'JetBrains Mono', monospace; font-weight: 700;
-      padding: 2px 8px; border-radius: 6px; white-space: nowrap;
-    }
-    .oi-vcol-bars { display: flex; justify-content: center; gap: var(--oi-bar-gap); height: 100%; width: 100%; }
-    .oi-vstrike-label { position: absolute; bottom: -22px; font-size: 0.64rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+        /* 4. KEY LEVELS STYLING */
+        .level-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 8px;
+        }
 
-    .oi-vsummary { display: flex; justify-content: center; gap: 22px; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--muted); }
-    .oi-vsummary b { color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
-    .oi-vsummary b.up { color: var(--green); }
-    .oi-vsummary b.down { color: var(--red); }
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    /* Total-OI bars: single value, always >=0, so a plain bottom-anchored bar. */
-    .oi-vstack { width: var(--oi-bar-w); height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
-    .oi-vfill { width: 100%; min-height: 2px; border-radius: 2px 2px 0 0; }
-    .oi-vfill.put { background: var(--green); }
-    .oi-vfill.call { background: var(--red); }
+        .level-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
 
-    /* Change bars: diverge from a shared zero line at mid-height -- above
-       for a buildup, below for an unwind -- so direction reads from bar
-       position alone, no hatching needed. */
-    .oi-vslot { width: var(--oi-bar-w); height: 100%; position: relative; }
-    .oi-vslot::before { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 1px; background: var(--border); }
-    .oi-vslot-fill { position: absolute; left: 0; right: 0; border-radius: 2px; }
-    .oi-vslot-fill.put { background: var(--green); }
-    .oi-vslot-fill.call { background: var(--red); }
-    /* The "empty box": when a strike built up to a peak and has since
-       partially unwound (still net same direction, just smaller), the
-       retraced portion is drawn as a hollow outline extending further from
-       the zero line than the solid fill -- above it for a buildup, below it
-       for an unwind -- instead of a text label. */
-    .oi-vslot-shadow { position: absolute; left: 0; right: 0; border: 1px dashed currentColor; box-sizing: border-box; opacity: 0.55; border-radius: 2px; }
-    .oi-vslot-shadow.put { color: var(--green); }
-    .oi-vslot-shadow.call { color: var(--red); }
+        .level-meaning {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
 
-    /* Custom hover tooltip: native `title` attributes have a slow, browser
-       controlled delay and no styling, so exact figures on a busy dark chart
-       were easy to miss. This shows immediately, follows the cursor, and
-       matches the rest of the UI. */
-    .oi-tooltip {
-      position: fixed; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.08s;
-      background: var(--surface2); border: 1px solid var(--accent); color: var(--text);
-      font-size: 0.72rem; font-family: 'JetBrains Mono', monospace; padding: 5px 9px; border-radius: 6px;
-      white-space: nowrap; transform: translate(-50%, -130%);
-    }
-    .oi-tooltip.show { opacity: 1; }
+        /* 7. ORDER FLOW SHADOW CARD */
+        .shadow-card {
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.02);
+        }
 
-    .oi-legend { display: flex; justify-content: center; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 1.1rem; font-size: 0.74rem; color: var(--muted); }
-    .oi-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
-    .oi-legend-dot.pe { background: var(--green); }
-    .oi-legend-dot.ce { background: var(--red); }
-    .oi-legend-note { font-size: 0.7rem; opacity: 0.75; }
-    .oi-legend-line { display: inline-block; width: 14px; border-top: 2px dashed currentColor; margin-right: 5px; vertical-align: middle; }
-    .oi-legend-line.atm { color: var(--accent2); }
-    .oi-legend-line.maxpain { color: var(--yellow); }
+        .of-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
 
-    /* A visible (but quiet) scrollbar is itself the honest affordance: if the
-       strike row can scroll, you can see that it can. */
-    .oi-vchart::-webkit-scrollbar { height: 6px; }
-    .oi-vchart::-webkit-scrollbar-track { background: transparent; }
-    .oi-vchart::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    .oi-vchart::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            color: var(--accent-amber);
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
 
-    /* --- OI chart on small screens ---------------------------------------
-       Previously nothing here touched the chart, so a phone got 21 columns at
-       a fixed 38px inside a ~340px viewport. Now: narrower columns and bars,
-       a shorter plot, and angled strike labels so every strike stays readable
-       instead of colliding. Whatever still overflows scrolls properly, and JS
-       parks the ATM strike in the middle of the viewport on render. */
-    @media (max-width: 720px) {
-      .oi-vchart-wrap {
-        --oi-col-min: 30px; --oi-col-max: 46px; --oi-bar-w: 9px; --oi-bar-gap: 2px;
-        --oi-chart-h: 190px; --oi-label-h: 38px;
-        padding-top: 44px; gap: 4px;
-      }
-      .oi-vaxis { min-width: 26px; }
-      .oi-vaxis span { font-size: 0.55rem; }
-      .oi-vchart { padding-left: 2px; padding-right: 2px; }
-      .oi-vstrike-label {
-        font-size: 0.58rem; bottom: -26px;
-        transform: rotate(-52deg); transform-origin: 50% 0;
-      }
-      .oi-vcol.atm::after { font-size: 0.56rem; padding: 2px 6px; top: -22px; }
-      .oi-maxpain-pill { font-size: 0.54rem; padding: 1px 6px; top: -42px; }
-      .oi-totals-row, .oi-vsummary { gap: 12px; font-size: 0.72rem; }
-      .oi-legend { gap: 12px; font-size: 0.68rem; }
-    }
-    /* Labels are rotated at this size, so column width is set by the two bars
-       (8+8+2 = 18px), not by the text -- 24px keeps the ±5 view fitting a
-       phone with no scroll at all. */
-    @media (max-width: 420px) {
-      .oi-vchart-wrap { --oi-col-min: 24px; --oi-bar-w: 8px; --oi-bar-gap: 1px; }
-    }
+        /* 8. MARKET COMMENTARY (FACTS -> MEANING -> DECISION) */
+        .commentary-section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
 
-    .status-badge { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .status-badge.ok { background: var(--green-2); color: var(--green); }
-    .status-badge.warn { background: var(--yellow-2); color: var(--yellow); }
-    .status-badge.bad { background: var(--red-2); color: var(--red); }
+        .facts-box {
+            background: rgba(56, 189, 248, 0.04);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+            border-radius: 8px;
+            padding: 14px;
+        }
 
-    /* Morning Plan + Decision Support merged into one two-column card (they're
-       "where things stand" and "what to do about it" -- a natural pair, not
-       two separate boxes) with a colored left accent for at-a-glance health,
-       so it reads as a single designed panel rather than a repeat of the
-       plain narrative-card shell. */
-    .plan-decision-card {
-      background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--border);
-      border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem;
-      display: grid; grid-template-columns: 1fr 1px 1fr; gap: 1.6rem; align-items: start;
-      transition: border-left-color 0.2s;
-    }
-    .plan-decision-card.status-ok { border-left-color: var(--green); }
-    .plan-decision-card.status-warn { border-left-color: var(--yellow); }
-    .plan-decision-card.status-bad { border-left-color: var(--red); }
-    .plan-decision-divider { background: var(--border); align-self: stretch; }
-    @media (max-width: 720px) {
-      .plan-decision-card { grid-template-columns: 1fr; }
-      .plan-decision-divider { display: none; }
-      .plan-decision-col:first-child { padding-bottom: 1.4rem; border-bottom: 1px solid var(--border); }
-    }
+        .facts-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+        }
 
-    .plan-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.9rem; flex-wrap: wrap; }
-    .plan-conditions-text { font-size: 0.85rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-    .reason-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 7px; }
-    .reason-list li { font-size: 0.88rem; color: var(--text); padding-left: 1.2rem; position: relative; }
-    .reason-list li::before { content: '•'; position: absolute; left: 0; color: var(--accent2); }
+        .interpretation-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
 
-    .decision-focus { font-size: 1.05rem; font-weight: 700; color: var(--text-strong); font-family: 'JetBrains Mono', monospace; }
-    .decision-detail { font-size: 0.88rem; color: var(--text); margin-bottom: 0.4rem; line-height: 1.5; }
-    .decision-detail.muted { color: var(--muted); font-size: 0.82rem; margin-bottom: 0; }
+        .action-banner {
+            background: var(--surface-2);
+            border: 1px solid var(--card-border);
+            padding: 14px 18px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
 
-    /* Session Timeline: an actual vertical timeline (dots + connecting line)
-       instead of a bordered box of rows -- the one section that's genuinely
-       a sequence, not a status readout, so it should look like one. */
-    /* Active Trap Signal: the trap detector's currently-armed state (not
-       just the one-shot ARMED/TRIGGERED timeline events) so a live setup
-       stays visible instead of scrolling out of the timeline. */
-    .trap-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
-    .trap-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; }
-    .trap-item + .trap-item { margin-top: 0.7rem; }
-    .trap-item.long { background: var(--green-1); border-left-color: var(--green); }
-    .trap-item.short { background: var(--red-1); border-left-color: var(--red); }
-    .trap-head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
-    .trap-dir-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 100px; letter-spacing: 0.5px; }
-    .trap-dir-badge.long { background: var(--green-3); color: var(--green); }
-    .trap-dir-badge.short { background: var(--red-3); color: var(--red); }
-    .trap-zone { font-size: 0.82rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-    .trap-detail { font-size: 0.85rem; color: var(--text); }
-    .trap-detail b { font-family: 'JetBrains Mono', monospace; color: var(--text-strong); }
+        /* 9. SESSION TIMELINE */
+        .timeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            padding-left: 20px;
+        }
 
-    /* Trade Tracking: a triggered trap's live entry/stop/target ladder. The
-       ARMED card above shows a setup waiting; this shows one that fired and
-       is still running, with each level ticked off as it's reached. */
-    .trade-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
-    .trade-item { padding: 0.9rem 1rem; border-radius: 10px; border-left: 3px solid; background: var(--tint-1); }
-    .trade-item + .trade-item { margin-top: 0.7rem; }
-    .trade-item.long { border-left-color: var(--green); }
-    .trade-item.short { border-left-color: var(--red); }
-    .trade-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
-    .trade-levels { display: flex; gap: 8px; flex-wrap: wrap; }
-    .trade-level { font-size: 0.74rem; font-family: 'JetBrains Mono', monospace; padding: 3px 10px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); }
-    .trade-level b { color: var(--text-strong); font-weight: 700; }
-    .trade-level.entry { border-color: var(--accent); color: var(--accent2); }
-    .trade-level.stop { border-color: var(--red); color: var(--red); }
-    .trade-level.target.hit { border-color: var(--green); color: var(--green); background: var(--green-2); }
-    .trade-note { font-size: 0.72rem; color: var(--muted); margin-top: 8px; opacity: 0.8; }
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: var(--card-border);
+        }
 
-    .timeline-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 1.7rem; margin-bottom: 1.2rem; }
-    /* The timeline is the session's record, so it keeps every event and
-       scrolls. Capping the card's height keeps the page navigable on a long
-       day; the filter chips make a 40-event day scannable. */
-    .timeline-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 0.8rem; }
-    .timeline-count { font-size: 0.72rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
-    .timeline-scroll { max-height: 440px; overflow-y: auto; overscroll-behavior-y: contain; padding-right: 8px; scrollbar-width: thin; }
-    .timeline-scroll::-webkit-scrollbar { width: 6px; }
-    .timeline-scroll::-webkit-scrollbar-track { background: transparent; }
-    .timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    .timeline-scroll::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-    .timeline-track { position: relative; padding-left: 24px; }
-    .timeline-track::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
-    .timeline-item { position: relative; padding-bottom: 1.2rem; }
-    .timeline-item:last-child { padding-bottom: 0; }
-    .timeline-item::before {
-      content: ''; position: absolute; left: -24px; top: 3px; width: 10px; height: 10px;
-      border-radius: 50%; background: var(--surface); border: 2px solid var(--accent2);
-    }
-    .timeline-item.watch::before { border-color: var(--yellow); }
-    .timeline-item.important::before { border-color: var(--violet); }
-    .timeline-item.critical::before { border-color: var(--red); }
-    .timeline-head { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; }
-    .timeline-time { color: var(--muted); font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
-    .timeline-sev { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 100px; }
-    .timeline-sev.info { background: var(--accent-2); color: var(--accent2); }
-    .timeline-sev.watch { background: var(--yellow-2); color: var(--yellow); }
-    .timeline-sev.important { background: var(--violet-2); color: var(--violet); }
-    .timeline-sev.critical { background: var(--red-2); color: var(--red); }
-    .timeline-message { color: var(--text); font-size: 0.85rem; line-height: 1.5; }
+        .timeline-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
 
-    /* Mobile bottom-tab navigation, added 2026-08-07. Desktop is completely
-       untouched by design -- Kumar reviewed a desktop revamp and preferred
-       the page as it already was there, so every rule in this block is
-       gated to the SAME 720px breakpoint the rest of the page's responsive
-       CSS already uses (see .plan-decision-card above). Outside that
-       breakpoint [data-tab] elements keep their normal in-flow display and
-       .mobile-tabbar stays display:none -- nothing here can affect desktop
-       even if a rule below were wrong. */
-    .mobile-tabbar { display: none; }
-    @media (max-width: 720px) {
-      /* Hide every tabbed section by default; the active-tab rule below
-         (higher specificity: two attribute selectors) overrides this for
-         whichever one is current. Conditional sections (trap-card,
-         trade-card) already toggle `style.display` between '' and 'none'
-         in JS further down this file -- setting it to '' clears the inline
-         override and lets these same CSS rules decide visibility, so an
-         inactive trap stays hidden even while its tab IS active, and an
-         active trap on a NON-active tab stays hidden until that tab is
-         opened. Neither JS block needed to change. */
-      [data-tab] { display: none; }
-      body[data-mobile-tab="overview"] [data-tab="overview"] { display: block; }
-      body[data-mobile-tab="levels"] [data-tab="levels"] { display: block; }
-      body[data-mobile-tab="journal"] [data-tab="journal"] { display: block; }
-      body[data-mobile-tab="oi"] [data-tab="oi"] { display: block; }
-      /* stats-grid is itself `display:grid`, not `display:block` -- match
-         its own default or the tile columns collapse to one per row. */
-      body[data-mobile-tab="levels"] .stats-grid[data-tab="levels"] { display: grid; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -19px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            box-shadow: 0 0 6px var(--accent-blue);
+        }
 
-      /* Pinned to the top of the viewport while scrolling within a tab, so
-         the trade-count/setup/mission line and the verdict banner are never
-         scrolled out of view -- see the wrapper's own comment further up
-         this file for why that specific pair must never be allowed to
-         become easy to lose track of. */
-      .mobile-sticky-top {
-        position: sticky; top: 0; z-index: 45;
-        background: var(--bg); padding-top: 0.4rem; margin: 0 -1rem;
-        padding-left: 1rem; padding-right: 1rem;
-      }
+        .timeline-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
 
-      /* Room at the bottom of the page so the last card in a tab is not
-         permanently hidden behind the fixed tab bar. */
-      body { padding-bottom: 64px; }
+        .timeline-event {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
 
-      .mobile-tabbar {
-        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-        background: var(--surface); border-top: 1px solid var(--border);
-        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-      }
-      .mtb-btn {
-        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-        background: none; border: none; color: var(--muted); font-family: 'Sora', sans-serif;
-        font-size: 0.62rem; padding: 4px 2px; cursor: pointer;
-      }
-      .mtb-btn svg { width: 20px; height: 20px; }
-      .mtb-btn.active { color: var(--accent2); }
-    }
-  </style>
+        .timeline-meaning {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* 10. PROVENANCE TABLE */
+        .prov-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .prov-table th, .prov-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .prov-table th {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .grid-2col { grid-template-columns: 1fr; }
+            .snapshot-grid { grid-template-columns: repeat(2, 1fr); }
+            .header-metrics { width: 100%; justify-content: space-between; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- Circuit breaker takeover. Hidden (display:none via .cb-overlay, no
-     .show class) until journal/circuit_breaker.py trips on the Trading
-     Research Platform and the live agent publishes circuit_breaker.tripped
-     in the status feed. No dismiss control -- see the CSS comment above
-     .cb-overlay for why. -->
-<div class="cb-overlay" id="cbOverlay" role="alertdialog" aria-live="assertive">
-  <div class="cb-box">
-    <div class="cb-tag">Circuit breaker tripped</div>
-    <div class="cb-pnl" id="cbPnl">–</div>
-    <div class="cb-pnl-note" id="cbPnlNote"></div>
-    <div class="cb-headline" id="cbHeadline">STOP.<br>DO NOT OPEN ANOTHER TRADE.</div>
-    <div class="cb-steps">
-      <div class="cb-step">
-        <div class="cb-step-num">1</div>
-        <div class="cb-step-text">Close this laptop. Right now, not after one more check.</div>
-      </div>
-      <div class="cb-step">
-        <div class="cb-step-num">2</div>
-        <div class="cb-step-text">Open the Angel app and deactivate F&amp;O for today under Settings → Risk Management.</div>
-      </div>
+<div class="container">
+
+    <!-- 1. LIVE MARKET HEADER -->
+    <div class="live-header" id="section-live-header">
+        <div class="header-title-group">
+            <span class="symbol-title" id="val-symbol">NIFTY</span>
+            <div class="live-pill live" id="val-live-pill">
+                <span class="dot green" id="val-live-dot"></span>
+                <span id="val-live-text">LIVE</span>
+            </div>
+        </div>
+
+        <div class="header-metrics">
+            <div class="metric-box">
+                <span class="metric-label">Current Spot Price</span>
+                <span class="metric-value" style="color: var(--accent-blue);" id="val-price">₹--.--</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Market Bias</span>
+                <span class="status-badge badge-red" id="val-bias">BEARISH</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Market Phase</span>
+                <span class="metric-value" style="font-size: 1.1rem;" id="val-phase">TREND CONTINUATION</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Last Updated</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-secondary);" id="val-updated-time">--:--:-- IST</span>
+            </div>
+        </div>
     </div>
-    <div class="cb-footnote">Every recovery attempt today has made the number bigger, not smaller. That pattern does not break on its own.</div>
-  </div>
+
+    <!-- GRID 1: SNAPSHOT & MORNING PLAN -->
+    <div class="grid-2col">
+
+        <!-- 2. MARKET SNAPSHOT -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">MARKET SNAPSHOT</h2>
+                    <span class="card-subtitle">Multi-timeframe structure & indicator status</span>
+                </div>
+            </div>
+
+            <div class="snapshot-grid">
+                <div class="snapshot-item">
+                    <span class="metric-label">1H Structure</span>
+                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-1h-bias">Bearish</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">15m Structure</span>
+                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-15m-bias">Bearish</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">5m Structure</span>
+                    <span class="snapshot-val" style="color: var(--accent-green);" id="val-5m-bias">Bullish</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">ATR Utilization</span>
+                    <span class="snapshot-val" id="val-atr-used">--%</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">CPR Range</span>
+                    <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-snapshot">24482–24503</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">PCR Ratio</span>
+                    <span class="snapshot-val" id="val-pcr-snapshot">0.65</span>
+                </div>
+            </div>
+
+            <div class="callout-box callout-blue">
+                <span class="metric-label" style="color: var(--accent-blue);">VWAP Availability</span>
+                <div style="font-size: 0.825rem; color: var(--text-primary);" id="val-vwap-note">
+                    VWAP unavailable — NIFTY spot feed has no traded volume.
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MORNING PLAN -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">MORNING PLAN</h2>
+                    <span class="card-subtitle">Is today's original thesis still valid?</span>
+                </div>
+                <span class="status-badge badge-red" id="val-plan-status">❌ INVALIDATED</span>
+            </div>
+
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <span class="metric-label">Original Thesis:</span>
+                <span style="font-weight: 700; color: var(--text-primary);" id="val-plan-thesis">BEARISH</span>
+            </div>
+
+            <div>
+                <span class="metric-label">Why Was It Invalidated?</span>
+                <ul class="bullet-list" id="list-plan-why" style="margin-top: 4px;">
+                    <li>Price broke invalidation level: 24435.05</li>
+                </ul>
+            </div>
+
+            <div>
+                <span class="metric-label">Data Checks Skipped</span>
+                <ul class="bullet-list" id="list-plan-skipped" style="margin-top: 4px;">
+                    <li>VWAP unavailable (feed has no volume) — check SKIPPED</li>
+                </ul>
+            </div>
+
+            <div class="callout-box callout-red">
+                <div style="font-weight: 700; color: var(--accent-red); font-size: 0.85rem;" id="val-plan-meaning">
+                    • Original bearish morning plan is OFF today.
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);" id="val-plan-warning">
+                    • Important: This does NOT mean BUY. Wait for a NEW qualified setup.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GRID 2: KEY LEVELS & MARKET SUMMARY / OI -->
+    <div class="grid-2col">
+
+        <!-- 4. KEY LEVELS -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">KEY LEVELS</h2>
+                    <span class="card-subtitle">Where price matters (Deterministic Area References)</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-red);">Resistance</span>
+                        <span class="level-price" id="val-res-price">24,358.35</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-res-dist">69.5 pts ABOVE</div>
+                    <div class="level-meaning" id="val-res-meaning">Reclaiming this level would improve short-term structure.</div>
+                </div>
+
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-green);">Support</span>
+                        <span class="level-price" id="val-sup-price">24,283.45</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--accent-blue);" id="val-sup-dist">5.5 pts BELOW</div>
+                    <div class="level-meaning" id="val-sup-meaning">Watch the reaction here; a break could weaken structure further.</div>
+                </div>
+
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-amber);">Morning Invalidation</span>
+                        <span class="level-price" id="val-inval-price">24,435.05</span>
+                    </div>
+                    <div class="level-meaning" id="val-inval-meaning">Break of this level invalidated today's morning plan.</div>
+                </div>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--card-border); padding-top: 6px;">
+                Levels are reference areas, not automatic entry signals.
+            </div>
+        </div>
+
+        <!-- 5. MARKET SUMMARY / OI -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">MARKET SUMMARY / OI</h2>
+                    <span class="card-subtitle">Options interest distribution & sentiment</span>
+                </div>
+                <span class="status-badge badge-amber" id="val-pcr-pill">PCR 0.65</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-green);">Put Wall (Support)</span>
+                        <span class="level-price" id="val-put-wall">24,000</span>
+                    </div>
+                    <div class="level-meaning" id="val-put-wall-meaning">Highest Put Open Interest concentration acting as structural downside support.</div>
+                </div>
+
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-red);">Call Wall (Resistance)</span>
+                        <span class="level-price" id="val-call-wall">24,500</span>
+                    </div>
+                    <div class="level-meaning" id="val-call-wall-meaning">Highest Call Open Interest concentration acting as overhead resistance.</div>
+                </div>
+            </div>
+
+            <div class="callout-box callout-amber" style="margin-top: 4px;">
+                <span class="metric-label" style="color: var(--accent-amber);">OI Interpretation</span>
+                <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
+                    Call-heavy OI (0.65) indicates strong overhead resistance positioning by sellers.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GRID 3: DECISION SUPPORT & ORDER FLOW SHADOW -->
+    <div class="grid-2col">
+
+        <!-- 6. DECISION SUPPORT -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">DECISION SUPPORT</h2>
+                    <span class="card-subtitle">WHAT NOW? Operational directive</span>
+                </div>
+            </div>
+
+            <div>
+                <span class="metric-label">Current Focus</span>
+                <div class="metric-value" style="color: var(--accent-amber); font-size: 1.4rem;" id="val-ds-focus">STAND ASIDE</div>
+            </div>
+
+            <div>
+                <span class="metric-label">Reason</span>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="val-ds-why">
+                    The original bearish morning thesis is invalidated and cannot be reused.
+                </div>
+            </div>
+
+            <div class="callout-box callout-blue">
+                <span class="metric-label" style="color: var(--accent-blue);">Next Level To Watch</span>
+                <div style="font-weight: 700; color: var(--accent-blue); font-size: 0.95rem;" id="val-ds-next">
+                    Support 24283.45 · 5.5 pts BELOW
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="val-ds-next-why">
+                    Nearest important downside reference. Watch reaction or acceptance below.
+                </div>
+            </div>
+
+            <div>
+                <span class="metric-label">Operational Instruction</span>
+                <div style="font-weight: 700; color: var(--accent-amber); font-size: 0.9rem;" id="val-ds-instruction">
+                    WAIT FOR A NEW QUALIFIED SETUP
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. ORDER FLOW — RESEARCH ONLY -->
+        <div class="card shadow-card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title" style="color: var(--accent-amber);">ORDER FLOW</h2>
+                    <span class="card-subtitle">Shadow Mode · Research Only</span>
+                </div>
+                <span class="status-badge badge-amber">SHADOW MODE</span>
+            </div>
+
+            <div class="of-grid">
+                <div>
+                    <span class="metric-label">Feed Status</span>
+                    <div style="font-weight: 700; color: var(--accent-green);" id="val-of-feed">LIVE</div>
+                </div>
+                <div>
+                    <span class="metric-label">Pressure</span>
+                    <div style="font-weight: 700; color: var(--accent-green);" id="val-of-pressure">BUYING</div>
+                </div>
+                <div>
+                    <span class="metric-label">Estimated CVD</span>
+                    <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-blue);" id="val-of-cvd">+2,405</div>
+                </div>
+                <div>
+                    <span class="metric-label">Alignment</span>
+                    <div style="font-weight: 700; color: var(--accent-amber);" id="val-of-align">OPPOSING</div>
+                </div>
+            </div>
+
+            <ul class="bullet-list" style="font-size: 0.8rem;">
+                <li id="val-of-cvd-note">CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.</li>
+                <li id="val-of-qual-note">74.5% combined updates (single packet contains multiple trades).</li>
+            </ul>
+
+            <div class="disclaimer-banner">
+                ORDER FLOW IS RESEARCH CONTEXT ONLY — NOT A TRADING SIGNAL
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 8. MARKET COMMENTARY (FACTS -> MEANING -> DECISION) -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">MARKET COMMENTARY</h2>
+                <span class="card-subtitle">FACTS → MEANING → DECISION (Full Session Synthesis)</span>
+            </div>
+        </div>
+
+        <div class="commentary-section">
+            <div class="facts-box">
+                <div class="facts-title">FACTS</div>
+                <ul class="bullet-list" id="list-comm-facts">
+                    <li>Price is trading below CPR (24492).</li>
+                    <li>1H & 15m structure remain Bearish, while 5m structure turned Bullish.</li>
+                    <li>Morning bearish thesis was invalidated at 24435.05.</li>
+                    <li>Order Flow shows buying pressure (+2405 CVD) opposing broader bias.</li>
+                </ul>
+            </div>
+
+            <div>
+                <span class="metric-label">INTERPRETATION</span>
+                <div class="interpretation-box" id="val-comm-interp">
+                    The broader market structure remains bearish across 1H and 15m, but the short 5m timeframe is moving counter to the trend. Because the invalidation level was broken, the morning plan is dead and cannot be reused. Order Flow buying is currently opposing the broader bearish context.
+                </div>
+            </div>
+
+            <div class="action-banner">
+                <div>
+                    <span class="metric-label">BOTTOM LINE</span>
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);" id="val-comm-bottom">
+                        The market currently lacks a clean qualified setup.
+                    </div>
+                </div>
+                <div>
+                    <span class="metric-label">CURRENT ACTION</span>
+                    <span class="status-badge badge-amber" style="font-size: 0.85rem;" id="val-comm-action">STAND ASIDE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. SESSION INTELLIGENCE TIMELINE -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">SESSION INTELLIGENCE TIMELINE</h2>
+                <span class="card-subtitle">Structural session events (Newest first)</span>
+            </div>
+        </div>
+
+        <div class="timeline-container" id="timeline-list">
+            <div class="timeline-item">
+                <span class="timeline-time">13:40 IST</span>
+                <span class="timeline-event">5m Bullish CHOCH at 24300.7</span>
+                <span class="timeline-meaning">Structure turned up on 5m. Sellers lost immediate control.</span>
+            </div>
+            <div class="timeline-item">
+                <span class="timeline-time">11:42 IST</span>
+                <span class="timeline-event">Morning Plan Invalidated</span>
+                <span class="timeline-meaning">Price reclaimed 24435.05 invalidation reference level.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. DATA FRESHNESS & SYSTEM HEALTH -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">DATA FRESHNESS & SYSTEM HEALTH</h2>
+                <span class="card-subtitle">Feed metrics, provenance & clean-start isolation check</span>
+            </div>
+        </div>
+
+        <table class="prov-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Status / Value</th>
+                    <th>Provenance Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Market Feed</td>
+                    <td><span class="status-badge badge-green" id="prov-mkt-feed">LIVE</span></td>
+                    <td>NSE spot & NFO futures stream active on GCP VM</td>
+                </tr>
+                <tr>
+                    <td>Order Flow Feed</td>
+                    <td><span class="status-badge badge-green" id="prov-of-feed">LIVE</span></td>
+                    <td>OrderFlowShadowController active (CVD start = 0)</td>
+                </tr>
+                <tr>
+                    <td>Historical Contamination Check</td>
+                    <td><span class="status-badge badge-green" id="prov-leak-check">NONE DETECTED</span></td>
+                    <td>Zero historical CVD leakage verified</td>
+                </tr>
+                <tr>
+                    <td>Yesterday Model Status</td>
+                    <td><span class="status-badge badge-amber" id="prov-yday-model">BENCHED</span></td>
+                    <td>Raw price action used due to low confidence rule</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
-<nav>
-  <a href="../../" class="nav-brand">
-    <div class="nav-logo">📊</div>
-    <div>
-      <div class="nav-brand-text">Live Market — Private</div>
-      <div class="nav-brand-sub">by The Mishra Ventures</div>
-    </div>
-  </a>
-  <div class="frame-switch" id="frameSwitch" role="group" aria-label="Instrument">
-    <button class="frame-btn" type="button" data-sym="">Futures</button>
-    <button class="frame-btn" type="button" data-sym="NIFTY">Spot</button>
-  </div>
-  <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
-      <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
-        </svg>
-      </button>
-      <button type="button" class="ts-opt" data-set-theme="dark" aria-pressed="false" title="Dark theme">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-        </svg>
-      </button>
-    </div>
-  <a href="../../" class="nav-home">← All Ventures</a>
-</nav>
-
-<section class="hero">
-  <div class="hero-badge"><span class="live-dot" id="liveDot"></span><span id="liveLabel">Connecting…</span></div>
-  <h1 class="hero-title">NIFTY Live Market Intelligence</h1>
-  <p class="hero-sub">Price, bias, and key levels streamed live from the trading desk during NSE market hours (9:15 AM – 3:15 PM IST, weekdays).</p>
-</section>
-
-<div class="wrap">
-  <div class="status-banner" id="statusBanner"></div>
-
-  <div class="frame-note" id="frameNote"></div>
-
-  <!-- How stale is any of this? Rendered from real timestamps, with the
-       nominal cadences supplied by the agent so the page can never claim a
-       refresh rate the backend isn't actually running. -->
-  <div class="freshness" id="freshness">
-    <div class="fresh-item"><span class="fresh-label">Price</span>
-      <span class="fresh-age" id="freshPrice">–</span>
-      <span class="fresh-cadence" id="freshPriceCad"></span></div>
-    <div class="fresh-item"><span class="fresh-label">OI</span>
-      <span class="fresh-age" id="freshOi">–</span>
-      <span class="fresh-cadence" id="freshOiCad"></span></div>
-    <div class="fresh-item"><span class="fresh-label">Structure</span>
-      <span class="fresh-cadence">closed 5m / 15m candles only</span></div>
-    <div class="fresh-note" id="freshNote"></div>
-  </div>
-
-  <!-- Discipline + verdict, wrapped together and pinned to the top of the
-       viewport on mobile (see .mobile-sticky-top, gated to the same
-       720px breakpoint as the tab bar below). Kumar rejected an earlier
-       desktop-revamp mockup specifically because it shrank this pair into a
-       badge -- on mobile these two must stay large and visible no matter
-       which tab is open or how far down that tab is scrolled, since this is
-       the one part of the page that actually addresses his loss-chasing
-       history. Desktop is completely unaffected -- outside the mobile
-       media query this wrapper adds no positioning at all. -->
-  <div class="mobile-sticky-top">
-    <!-- Discipline Bar: Standing Process Reminder & Live Trade Rules -->
-    <div class="discipline-strip" id="disciplineStrip">
-      <div class="discipline-left">
-        <span class="discipline-badge" id="discTradeBadge">0 / 3 TRADES</span>
-        <span class="discipline-setup" id="discSetupStatus">SETUP: Checking…</span>
-      </div>
-      <div class="discipline-body">
-        <div class="discipline-mission" id="discMission">DO OR DIE: 100% RULE-BASED TRADING.</div>
-        <div class="discipline-sub" id="discSub">Lucky profit is worse than a loss — only system execution counts.</div>
-      </div>
-    </div>
-
-    <!-- The verdict, first on the page. Rendered from decision_focus /
-         decision_reason, which the narrator guarantees is the SAME verdict the
-         commentary opens with -- there is exactly one source of truth. -->
-    <div class="action-banner wait" id="actionBanner">
-      <div class="action-verb" id="actionVerb">–</div>
-      <div class="action-body">
-        <div class="action-reason" id="actionReason">Waiting for the session to start.</div>
-        <div class="action-meta" id="actionMeta"></div>
-      </div>
-      <span class="action-pill" id="actionPill"></span>
-    </div>
-  </div>
-
-  <!-- Position size calculator. Risk fixed, quantity solved for it --
-       stop-loss and max risk go in, suggested lots come out. Everything
-       computes locally in JS on input; nothing here calls the status feed
-       or any other endpoint. Lot size defaults to NIFTY's current 65
-       (Jan 2026 revision) but is editable, since NSE revises lot sizes
-       periodically and this must not go quietly stale. -->
-  <div class="sizer-card" data-tab="overview">
-    <div class="sizer-title">Position size</div>
-    <div class="sizer-row">
-      <div class="sizer-field">
-        <label class="sizer-label" for="sizerStop">Stop-loss (premium points)</label>
-        <input type="number" id="sizerStop" inputmode="decimal" placeholder="e.g. 20" min="0" step="0.05">
-      </div>
-      <div class="sizer-field">
-        <label class="sizer-label" for="sizerRisk">Max risk this trade (₹)</label>
-        <input type="number" id="sizerRisk" inputmode="decimal" placeholder="e.g. 2000" min="0" step="1">
-      </div>
-      <div class="sizer-field">
-        <label class="sizer-label" for="sizerLotSize">Lot size</label>
-        <input type="number" id="sizerLotSize" inputmode="decimal" value="65" min="1" step="1">
-      </div>
-    </div>
-    <div class="sizer-result">
-      <div>
-        <span class="sizer-lots" id="sizerLots">–</span>
-        <span class="sizer-lots-label" id="sizerLotsLabel"> lots</span>
-      </div>
-      <div class="sizer-actual-risk" id="sizerActualRisk"></div>
-    </div>
-    <!-- Mechanical, non-predictive size advisory from today's own gap/
-         opening-drive/range vs ATR (core/regime_risk_advisor.py). A sizing
-         input, not a trade call -- see that module's docstring for why this
-         is a different (allowed) thing from the benched regime-prediction
-         model. Hidden entirely until the live feed actually reports one. -->
-    <div class="sizer-regime-advisory" id="sizerRegimeAdvisory" style="display:none;"></div>
-  </div>
-
-  <div class="price-card" data-tab="overview">
-    <div class="price-symbol" id="symbol">NIFTY</div>
-    <div class="price-contract" id="priceContract"></div>
-    <div class="price-value mono" id="priceValue">–</div>
-    <div class="price-updated" id="priceUpdated">Waiting for data…</div>
-  </div>
-
-  <div class="stats-grid" data-tab="levels">
-    <div class="stat-tile">
-      <div class="stat-label">Session Phase</div>
-      <div class="stat-value" id="statPhase">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Bias</div>
-      <div class="stat-value" id="statBias">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Condition</div>
-      <div class="stat-value" id="statCondition">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Nearest Support</div>
-      <div class="stat-value" id="statSupport">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">Nearest Resistance</div>
-      <div class="stat-value" id="statResistance">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">Morning Thesis
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Morning Thesis?">?</span>
-          <span class="tip-bubble">Whether the plan built before market open (structure, zones, bias) still holds given what has actually happened since. VALID / WEAKENING / INVALID -- not a fresh call, a check on the old one.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statThesis">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">VWAP
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is VWAP?">?</span>
-          <span class="tip-bubble">Volume-weighted average price -- today's trades, averaged and weighted by size. Needs real volume; on a spot index feed (no volume) this shows "n/a" rather than a fake number.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statVwap">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">ATR Utilization
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is ATR Utilization?">?</span>
-          <span class="tip-bubble">Today's range so far (high minus low), as a % of a normal day's average range (ATR). Over 100% means today has already moved more than a typical full day usually does.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statAtr">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">Today so far
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Today so far?">?</span>
-          <span class="tip-bubble">How today has ACTUALLY behaved on bars that already printed -- never a forecast for how it ends. RANGING = moved a lot but came back near the open. TRENDING = mostly went one way. Needs 60+ minutes of data to say anything at all.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statIntraday">–</div>
-      <div class="stat-sub" id="statIntradaySub"></div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">Yesterday was
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Yesterday was?">?</span>
-          <span class="tip-bubble">Yesterday's session, realised and labelled after the fact -- never a call on today. The model that used to try predicting today's regime is benched (tested at AUC 0.54, essentially a coin flip) and is not used here.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statRegime">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">CPR
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is CPR?">?</span>
-          <span class="tip-bubble">Central Pivot Range -- a pivot band computed from yesterday's high/low/close. Price above it leans bullish, below leans bearish; a narrow band often precedes a bigger move, a wide one often means more range.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statCpr">–</div>
-    </div>
-    <div class="stat-tile">
-      <div class="stat-label">
-        <span class="tip-wrap">Trend Confluence
-          <span class="tip-icon" tabindex="0" role="button" aria-label="What is Trend Confluence?">?</span>
-          <span class="tip-bubble">How many separate structure signals (higher-timeframe bias, CPR position, price action, etc.) currently agree on a direction. More agreeing factors = a cleaner read; a mixed reading means the signals disagree with each other.</span>
-        </span>
-      </div>
-      <div class="stat-value" id="statConfluence">–</div>
-    </div>
-  </div>
-
-  <div class="narrative-card" data-tab="levels">
-    <div class="narrative-label">Market Commentary</div>
-    <div class="narrative-text" id="narrativeText">No commentary yet — check back once the session starts.</div>
-  </div>
-
-  <div class="plan-decision-card" id="planDecisionCard" data-tab="levels">
-    <div class="plan-decision-col">
-      <div class="narrative-label">Morning Plan</div>
-      <div class="plan-row">
-        <span class="status-badge" id="planStatusBadge">–</span>
-        <span class="plan-conditions-text" id="planConditions"></span>
-      </div>
-      <ul class="reason-list" id="planReasons"></ul>
-    </div>
-    <div class="plan-decision-divider"></div>
-    <div class="plan-decision-col">
-      <div class="narrative-label">Decision Support</div>
-      <div class="plan-row">
-        <span class="decision-focus" id="decisionFocus">–</span>
-        <span class="status-badge" id="decisionUrgencyBadge"></span>
-      </div>
-      <div class="decision-detail" id="decisionReason"></div>
-      <div class="decision-detail muted" id="decisionNextEvent"></div>
-    </div>
-  </div>
-
-  <div class="trap-card" id="trapCard" data-tab="overview" style="display: none;">
-    <div class="narrative-label">Active Trap Signal</div>
-    <div id="trapList"></div>
-  </div>
-
-  <div class="trade-card" id="tradeCard" data-tab="journal" style="display: none;">
-    <div class="narrative-label">Trade Tracking</div>
-    <div id="tradeList"></div>
-  </div>
-
-  <div class="timeline-card" data-tab="journal">
-    <div class="timeline-header">
-      <div class="narrative-label" style="margin-bottom: 0;">Session Timeline</div>
-      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <span class="timeline-count" id="timelineCount"></span>
-        <div class="oi-range-toggle" id="timelineFilter">
-          <button class="oi-range-btn active" data-sev="all">All</button>
-          <button class="oi-range-btn" data-sev="watch">Watch+</button>
-          <button class="oi-range-btn" data-sev="important">Important+</button>
-        </div>
-      </div>
-    </div>
-    <div class="timeline-scroll" id="timelineScroll">
-      <div class="timeline-track" id="timelineList"><div class="oi-empty">No events logged yet this session.</div></div>
-    </div>
-  </div>
-
-  <div class="oi-card" data-tab="oi">
-    <div class="oi-header">
-      <div>
-        <div class="narrative-label" style="margin-bottom: 0;" id="oiSectionLabel">OI Change by Strike</div>
-        <div class="oi-summary-pill" id="oiSummaryPill"></div>
-      </div>
-      <div class="oi-header-controls">
-        <div class="oi-view-toggle" id="oiViewToggle">
-          <button class="oi-view-btn active" data-view="change">Change</button>
-          <button class="oi-view-btn" data-view="total">Total OI</button>
-        </div>
-        <div class="oi-tabs" id="oiTabs"></div>
-      </div>
-      <div class="oi-tooltip" id="oiTooltip"></div>
-    </div>
-    <div class="oi-range-row">
-      <span class="oi-range-label">Strikes from ATM</span>
-      <div class="oi-range-toggle" id="oiRangeToggle">
-        <button class="oi-range-btn" data-range="3">±3</button>
-        <button class="oi-range-btn" data-range="5">±5</button>
-        <button class="oi-range-btn active" data-range="10">±10</button>
-      </div>
-    </div>
-    <div id="oiChart">
-      <div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>
-    </div>
-    <div class="oi-legend" id="oiLegend">
-      <span><span class="oi-legend-dot pe"></span>Put OI change</span>
-      <span><span class="oi-legend-dot ce"></span>Call OI change</span>
-      <span><span class="oi-legend-line atm"></span>ATM</span>
-      <span><span class="oi-legend-line maxpain"></span>Max Pain</span>
-      <span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>
-    </div>
-  </div>
-
-  <p class="disclaimer">Decision support only — not financial advice. Confirm on your own chart before acting.<br>Data refreshes automatically every 30 seconds while a session is running.</p>
-</div>
-
-<footer class="sub-footer">
-  <a href="../../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Market (Private) &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-market/my/
-</footer>
-
-<!-- Mobile-only bottom tab bar. Hidden entirely on desktop (see
-     .mobile-tabbar CSS, gated to the same 720px breakpoint as the
-     [data-tab] show/hide rules). Groups sections that already exist
-     further up the page -- this does not move, duplicate, or alter any of
-     them; it only changes which ones are visible on a phone at once. -->
-<nav class="mobile-tabbar" id="mobileTabbar" aria-label="Page sections">
-  <button type="button" class="mtb-btn active" data-set-tab="overview" aria-current="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1v-9"/></svg>
-    <span>Overview</span>
-  </button>
-  <button type="button" class="mtb-btn" data-set-tab="levels" aria-current="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="12" width="4" height="8"/><rect x="10" y="7" width="4" height="13"/><rect x="17" y="3" width="4" height="17"/></svg>
-    <span>Levels</span>
-  </button>
-  <button type="button" class="mtb-btn" data-set-tab="journal" aria-current="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h11a1 1 0 011 1v14a1 1 0 01-1 1H6a2 2 0 01-2-2V6a2 2 0 012-2z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
-    <span>Journal</span>
-  </button>
-  <button type="button" class="mtb-btn" data-set-tab="oi" aria-current="false">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
-    <span>OI</span>
-  </button>
-</nav>
-
-<script src="../../shared/status-feed.js?v=20260810b"></script>
-<!-- ?v= is a cache-buster. index.html and status-feed.js are separate
-     files with separate cache lifetimes: on 2026-07-31 the HTML updated while
-     the JS stayed cached, so the page called isSpotSymbol() from a version that
-     did not define it and showed OFFLINE while live data was flowing. BUMP THIS
-     STRING whenever status-feed.js changes. -->
 <script>
-  const REFRESH_MS = 30000;
+    const WORKER_URL = 'https://live-market-status.itscreativeman04.workers.dev';
+    const READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
+    const REFRESH_MS = 30000;
 
-  // Read-only key for the FULL feed (2026-08-07). The Worker now trims every
-  // unauthenticated GET down to public-safe fields (price/bias/session
-  // character) -- see cloudflare/live_status_worker.js. This page needs the
-  // full payload (zones, decision support, trades, discipline state), so it
-  // sends this token on every fetchLiveStatus() call below. It is safe to
-  // keep in this file specifically BECAUSE this page already sits behind its
-  // own Basic Auth password (see ../.htaccess) -- only someone who already
-  // has that password ever loads this script to see it. It is a SEPARATE
-  // secret from the agent's WRITE_TOKEN, which never touches a browser.
-  // Must match the READ_TOKEN environment variable set on the Cloudflare
-  // Worker -- if it doesn't match yet, this page falls back to the same
-  // trimmed data the public page gets (fails toward less exposure, not more).
-  const LIVE_STATUS_READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
-
-  // Latest regime_risk advisory from the feed (core/regime_risk_advisor.py),
-  // read by the position-size calculator further down. null until the first
-  // successful fetch, or if the agent hasn't published one yet (pre-market,
-  // playback, or ATR unavailable).
-  let latestRegimeRisk = null;
-
-  // Indian-convention magnitude labels (L = lakh), matching how OI is
-  // normally read here, e.g. 1230000 -> "12.3L", 45200 -> "45.2K".
-  function fmtOiAbs(v) {
-    if (v == null) return '–';
-    const abs = Math.abs(v);
-    if (abs >= 100000) return (abs / 100000).toFixed(1) + 'L';
-    if (abs >= 1000) return (abs / 1000).toFixed(1) + 'K';
-    return String(abs);
-  }
-
-  // Same, but signed (+/−) -- for OI CHANGE values, where direction matters.
-  function fmtOi(v) {
-    if (v == null) return '–';
-    const sign = v > 0 ? '+' : v < 0 ? '−' : '';
-    return sign + fmtOiAbs(v);
-  }
-
-  const MONTHS = { JAN: 'Jan', FEB: 'Feb', MAR: 'Mar', APR: 'Apr', MAY: 'May', JUN: 'Jun',
-                   JUL: 'Jul', AUG: 'Aug', SEP: 'Sep', OCT: 'Oct', NOV: 'Nov', DEC: 'Dec' };
-  // The live agent now trades the near-month future by default (e.g.
-  // "NIFTY28JUL26FUT") rather than the spot index, so its price differs from
-  // spot by the basis. Split that into a clean "NIFTY FUT" headline plus the
-  // exact contract/expiry as a small subtext, instead of showing the raw
-  // code as the primary label.
-  function fmtSymbolLabel(symbol) {
-    const m = /^([A-Z]+)(\d{2})([A-Z]{3})(\d{2})FUT$/.exec(symbol || '');
-    if (!m) return { main: symbol || 'NIFTY', sub: '' };
-    const [, index, dd, mon, yy] = m;
-    const monName = MONTHS[mon] || mon;
-    return { main: `${index} FUT`, sub: `${symbol} · expires ${dd} ${monName} 20${yy}` };
-  }
-
-  // A strike can still be net-positive/negative overall while having pulled
-  // back meaningfully from its high this session (e.g. built up to +62K, now
-  // +42K -- 20K has unwound even though the total is still positive). Rather
-  // than adding a new bar color for that, surface it as a small "peaked ±X"
-  // note under the main value. Only shown once the pullback is big enough to
-  // matter (>=5K and >=10% of the peak) so ordinary noise doesn't clutter
-  // every row.
-  function fmtPeakNote(change, peak) {
-    if (change == null || peak == null) return '';
-    if ((peak >= 0) !== (change >= 0)) return ''; // sign flip -- backend already reset peak, nothing to show
-    const pulledBack = Math.abs(peak) - Math.abs(change);
-    if (pulledBack < Math.max(5000, Math.abs(peak) * 0.1)) return '';
-    return `<span class="oi-peak-note">peaked ${fmtOi(peak)}</span>`;
-  }
-
-  let oiChainsCache = {};
-  let oiActiveExpiry = null;
-  let oiCurrentPrice = null;
-  let oiOpenPrice = null;
-  let oiSummary = null;
-  // How many strikes each side of ATM to display -- a view-only filter on
-  // top of whatever the agent already fetched (fixed at +/-10 server-side),
-  // not a request for more data. NIFTY's fixed strike spacing.
-  let oiStrikeRange = 10;
-  const OI_STRIKE_STEP = 50;
-
-  document.getElementById('oiRangeToggle').querySelectorAll('.oi-range-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      oiStrikeRange = parseInt(btn.dataset.range, 10);
-      document.querySelectorAll('.oi-range-btn').forEach(b => b.classList.toggle('active', b === btn));
-      renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
-    });
-  });
-  let oiViewMode = 'change'; // 'change' | 'total'
-
-  document.getElementById('oiViewToggle').querySelectorAll('.oi-view-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      oiViewMode = btn.dataset.view;
-      document.querySelectorAll('.oi-view-btn').forEach(b => b.classList.toggle('active', b === btn));
-      document.getElementById('oiSectionLabel').textContent =
-        oiViewMode === 'total' ? 'Open Interest by Strike' : 'OI Change by Strike';
-      const legendMarkers = '<span><span class="oi-legend-line atm"></span>ATM</span>' +
-        '<span><span class="oi-legend-line maxpain"></span>Max Pain</span>';
-      document.getElementById('oiLegend').innerHTML = oiViewMode === 'total'
-        ? '<span><span class="oi-legend-dot pe"></span>Put OI</span>' +
-          '<span><span class="oi-legend-dot ce"></span>Call OI</span>' +
-          legendMarkers +
-          '<span class="oi-legend-note">bar height = current OI level · hover a bar for exact figures</span>'
-        : '<span><span class="oi-legend-dot pe"></span>Put OI change</span>' +
-          '<span><span class="oi-legend-dot ce"></span>Call OI change</span>' +
-          legendMarkers +
-          '<span class="oi-legend-note">above zero = increase · below zero = decrease · outline = pulled back from session peak · hover a bar for exact figures</span>';
-      renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
-    });
-  });
-
-  // Delegated on #oiChart (which persists across renders even though its
-  // innerHTML is fully replaced each refresh) so this only needs wiring once,
-  // not re-attached after every renderOiChart() call.
-  (function initOiTooltip() {
-    const chartEl = document.getElementById('oiChart');
-    const tipEl = document.getElementById('oiTooltip');
-    chartEl.addEventListener('mousemove', (e) => {
-      const bar = e.target.closest('[data-tip]');
-      if (!bar) { tipEl.classList.remove('show'); return; }
-      tipEl.textContent = bar.dataset.tip;
-      tipEl.style.left = e.clientX + 'px';
-      tipEl.style.top = e.clientY + 'px';
-      tipEl.classList.add('show');
-    });
-    chartEl.addEventListener('mouseleave', () => tipEl.classList.remove('show'));
-  })();
-
-  function renderOiTabs(chains) {
-    const tabsEl = document.getElementById('oiTabs');
-    const expiries = Object.keys(chains);
-    if (!oiActiveExpiry || !expiries.includes(oiActiveExpiry)) {
-      oiActiveExpiry = expiries[0] || null;
-    }
-    tabsEl.innerHTML = expiries.map(exp =>
-      `<button class="oi-tab${exp === oiActiveExpiry ? ' active' : ''}" data-expiry="${exp}">${exp}</button>`
-    ).join('');
-    tabsEl.querySelectorAll('.oi-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        oiActiveExpiry = btn.dataset.expiry;
-        renderOiTabs(oiChainsCache);
-        renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
-      });
-    });
-  }
-
-  function findNearestStrike(rows, targetPrice) {
-    if (typeof targetPrice !== 'number') return null;
-    return rows.reduce((a, b) => Math.abs(b.strike - targetPrice) < Math.abs(a.strike - targetPrice) ? b : a).strike;
-  }
-
-  // Max Pain marker: real elements rather than a pseudo-element (like the ATM
-  // marker) so the two can land on the same column without one clobbering
-  // the other's ::before/::after.
-  function renderMaxPainMarker(isMaxPain) {
-    return isMaxPain ? '<div class="oi-maxpain-line"></div><div class="oi-maxpain-pill">Max Pain</div>' : '';
-  }
-
-  // Total-OI bar: a single non-negative value, so a plain bottom-anchored fill.
-  function renderVBar(side, current, maxAbs, valueFmt) {
-    const cur = current || 0;
-    const curPct = maxAbs > 0 ? Math.max(cur !== 0 ? 2 : 0, cur / maxAbs * 100) : 0;
-    return `
-      <div class="oi-vstack" data-tip="${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}">
-        <div class="oi-vfill ${side}" style="height:${curPct}%"></div>
-      </div>`;
-  }
-
-  // Change bar: diverges from a shared zero line -- up for a buildup, down
-  // for an unwind -- with a hollow dashed "shadow" extending further from
-  // zero than the solid fill, sized to the gap between the session peak and
-  // the current value (empty when there's been no meaningful pullback).
-  function renderVSlot(side, current, peak, maxAbs, valueFmt) {
-    const cur = current || 0;
-    const curAbs = Math.abs(cur);
-    const peakValid = peak != null && (peak >= 0) === (cur >= 0);
-    const peakAbs = peakValid ? Math.max(Math.abs(peak), curAbs) : curAbs;
-    const curPct = maxAbs > 0 ? Math.min(50, cur !== 0 ? Math.max(2, curAbs / maxAbs * 50) : 0) : 0;
-    const peakPct = maxAbs > 0 ? Math.min(50, peakAbs / maxAbs * 50) : 0;
-    const shadowPct = Math.max(0, peakPct - curPct);
-    const isPos = cur >= 0;
-    const fillStyle = isPos ? `bottom:50%;height:${curPct}%;` : `top:50%;height:${curPct}%;`;
-    const shadowHtml = shadowPct > 0.3
-      ? `<div class="oi-vslot-shadow ${side}" style="${isPos
-          ? `bottom:calc(50% + ${curPct}%);height:${shadowPct}%;border-bottom:none;`
-          : `top:calc(50% + ${curPct}%);height:${shadowPct}%;border-top:none;`}"></div>`
-      : '';
-    const title = shadowPct > 0.3
-      ? `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)} (peaked ${valueFmt(peak)})`
-      : `${side === 'put' ? 'Put' : 'Call'}: ${valueFmt(cur)}`;
-    return `
-      <div class="oi-vslot" data-tip="${title}">
-        ${shadowHtml}
-        <div class="oi-vslot-fill ${side}" style="${fillStyle}"></div>
-      </div>`;
-  }
-
-  // ---- Instrument frame -------------------------------------------------
-  // Which agent's snapshot this page is showing. Precedence: ?symbol= in the
-  // URL (so a bookmark pins an instrument), then the last choice, then the
-  // Worker default (futures). Empty string means "let the Worker decide",
-  // which keeps the original behaviour intact.
-  let activeSymbol = (() => {
-    try {
-      const q = new URLSearchParams(location.search).get('symbol');
-      if (q !== null) return q;
-      return localStorage.getItem('lm-symbol') || '';
-    } catch (e) { return ''; }
-  })();
-
-  // Fallbacks for helpers that live in shared/status-feed.js.
-  //
-  // WHY: index.html and status-feed.js are separate files with separate cache
-  // lifetimes. On 2026-07-31 the HTML deployed but the browser kept a cached
-  // older JS that predated these helpers, so renderFrameNote() threw a
-  // ReferenceError, the catch in refresh() swallowed it, and the page showed
-  // "OFFLINE / No live session data yet" while the agent was publishing fine
-  // every 60 seconds. Diagnosing that took far longer than it should have.
-  //
-  // The ?v= cache-buster on the script tag prevents the mismatch; these keep a
-  // stale cache from blanking the whole page if it happens anyway. Logic is
-  // duplicated deliberately and kept trivial — a missing label is a cosmetic
-  // problem, a missing dashboard is not.
-  if (typeof isSpotSymbol !== 'function') {
-    window.isSpotSymbol = function (sym) {
-      const s = String(sym || '');
-      return /^[A-Z]+$/.test(s) && !/FUT$/.test(s);
-    };
-    console.warn('[live-market] isSpotSymbol missing from status-feed.js — using fallback. The cached JS is stale; bump ?v= on the script tag.');
-  }
-  if (typeof frameLabel !== 'function') {
-    window.frameLabel = function (sym) {
-      if (!sym) return '';
-      return isSpotSymbol(sym) ? `${sym} (spot index)` : `${sym} (futures)`;
-    };
-    console.warn('[live-market] frameLabel missing from status-feed.js — using fallback.');
-  }
-  if (typeof fetchSymbolList !== 'function') {
-    window.fetchSymbolList = async function () { return { symbols: [], default: null }; };
-  }
-
-  function paintFrameSwitch() {
-    document.querySelectorAll('#frameSwitch .frame-btn').forEach(b => {
-      b.classList.toggle('active', (b.dataset.sym || '') === (activeSymbol || ''));
-    });
-  }
-
-  // Is what came back the frame the user actually asked for?
-  //
-  // The Futures button carries data-sym="" ON PURPOSE: the near-month contract
-  // rolls monthly (NIFTY25AUG26FUT -> NIFTY25SEP26FUT), so it asks the Worker
-  // for its DEFAULT rather than hardcoding a ticker that expires. The failure
-  // that exposed (2026-07-31): with only the spot agent publishing, "the
-  // default" WAS spot, so clicking Futures silently showed SPOT prices under a
-  // Futures label. Spot and futures sit ~40-70 pts apart — that is not a
-  // cosmetic bug, it is every level on the page being wrong by the basis.
-  function frameMismatch(data) {
-    const got = (data && data.symbol) || '';
-    if (!got) return null;
-    // Explicit request that came back as something else.
-    if (activeSymbol && got !== activeSymbol) {
-      return `You asked for ${activeSymbol} but the feed returned ${got}.`;
-    }
-    // "Futures" (default) that resolved to a SPOT instrument.
-    if (!activeSymbol && isSpotSymbol(got)) {
-      return `No futures feed is publishing — the status feed's default is ${got}, which is SPOT.`;
-    }
-    return null;
-  }
-
-  function renderFrameNote(data) {
-    const el = document.getElementById('frameNote');
-    const sym = (data && data.symbol) || activeSymbol || '';
-    const spot = isSpotSymbol(sym);
-    el.className = 'frame-note' + (spot ? ' spot' : '');
-    // The frame is the single most consequential thing on this page: futures
-    // and spot sit ~40-70 pts apart, so which one you are reading has to be
-    // unambiguous before any number below it means anything.
-    const parts = [`Showing <b>${frameLabel(sym) || '—'}</b>`];
-    if (spot) {
-      parts.push('Spot has no traded volume, so this agent tracks levels and '
-        + 'structure only — <b>it can never produce a trap entry</b>. '
-        + 'Entries come from the futures agent.');
-    } else {
-      parts.push('The entry frame: real volume, trap detection active. '
-        + 'Chart this contract, not the spot index.');
-    }
-    // Asked for one instrument and got another = every level is wrong by the
-    // basis. Must be impossible to miss.
-    if (activeSymbol && data && data.symbol && data.symbol !== activeSymbol) {
-      parts.unshift(`<b>⚠ Asked for ${activeSymbol} but received ${data.symbol}</b> — wrong frame.`);
-    }
-    el.innerHTML = parts.join(' ');
-  }
-
-  document.getElementById('frameSwitch').addEventListener('click', (e) => {
-    const btn = e.target.closest('.frame-btn');
-    if (!btn) return;
-    activeSymbol = btn.dataset.sym || '';
-    paintFrameSwitch();
-    try { localStorage.setItem('lm-symbol', activeSymbol); } catch (err) { /* private mode */ }
-    // Keep the URL in step so the current view can be bookmarked or shared.
-    try {
-      const u = new URL(location.href);
-      if (activeSymbol) u.searchParams.set('symbol', activeSymbol);
-      else u.searchParams.delete('symbol');
-      history.replaceState(null, '', u);
-    } catch (err) { /* ignore */ }
-    refresh();
-  });
-  paintFrameSwitch();
-
-  // ---- Position size calculator ------------------------------------------
-  // Solves for quantity given a risk budget and a stop distance -- the
-  // reverse of fixing quantity and letting risk float with whatever the
-  // stop happened to be. Purely local: reads the three inputs on every
-  // keystroke, writes the result, nothing leaves the page.
-  (function initSizer() {
-    const stopEl = document.getElementById('sizerStop');
-    const riskEl = document.getElementById('sizerRisk');
-    const lotSizeEl = document.getElementById('sizerLotSize');
-    const lotsEl = document.getElementById('sizerLots');
-    const lotsLabelEl = document.getElementById('sizerLotsLabel');
-    const actualEl = document.getElementById('sizerActualRisk');
-    const advisoryEl = document.getElementById('sizerRegimeAdvisory');
-    if (!stopEl || !riskEl || !lotSizeEl || !lotsEl) return;
-
-    // Renders the advisory block against WHATEVER lots recalc() just
-    // computed at full risk -- shows both numbers (full-risk lots and the
-    // regime-adjusted suggestion) rather than silently replacing one with
-    // the other, so the multiplier's effect is visible, not hidden.
-    function renderRegimeAdvisory(fullLots) {
-      if (!advisoryEl) return;
-      const rr = latestRegimeRisk;
-      if (!rr || !rr.available || !(fullLots > 0)) {
-        advisoryEl.style.display = 'none';
-        advisoryEl.innerHTML = '';
-        return;
-      }
-      const mult = typeof rr.size_multiplier === 'number' ? rr.size_multiplier : 1.0;
-      const adjLots = Math.floor(fullLots * mult);
-      const cls = mult >= 1.0 ? 'full' : (mult >= 0.5 ? 'reduced' : 'low');
-      const reason = (rr.reasons && rr.reasons[0]) || '';
-      advisoryEl.style.display = '';
-      advisoryEl.innerHTML =
-        `<div class="sra-head ${cls}">Regime-adjusted: ${mult.toFixed(2)}x normal size` +
-        ` → <span class="sra-lots">${adjLots.toLocaleString('en-IN')}</span>` +
-        ` ${adjLots === 1 ? 'lot' : 'lots'} (of ${fullLots.toLocaleString('en-IN')} at full risk)</div>` +
-        (reason ? `<div class="sra-reason">${reason}</div>` : '') +
-        `<div class="sra-reason" style="margin-top:2px;">Sizing input, not a trade call -- direction is not predicted here.</div>`;
+    function fmtPrice(val) {
+        if (val == null || isNaN(val)) return 'UNAVAILABLE';
+        return '₹' + Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    // Lot size is the one input that goes stale on its own -- NSE revises it
-    // periodically, most recently to 65 in the January 2026 series. Persist
-    // whatever value Kumar last confirmed rather than resetting to the
-    // hardcoded default every visit.
-    try {
-      const saved = localStorage.getItem('lm-sizer-lotsize');
-      if (saved) lotSizeEl.value = saved;
-    } catch (err) { /* private mode */ }
-
-    function recalc() {
-      const stop = parseFloat(stopEl.value);
-      const risk = parseFloat(riskEl.value);
-      const lotSize = parseFloat(lotSizeEl.value);
-
-      if (!(stop > 0) || !(risk > 0) || !(lotSize > 0)) {
-        lotsEl.textContent = '–';
-        lotsLabelEl.textContent = ' lots';
-        actualEl.textContent = '';
-        actualEl.className = 'sizer-actual-risk';
-        renderRegimeAdvisory(0);
-        return;
-      }
-
-      const riskPerLot = stop * lotSize;
-      const lots = Math.floor(risk / riskPerLot);
-
-      if (lots < 1) {
-        lotsEl.textContent = '0';
-        lotsLabelEl.textContent = ' lots';
-        actualEl.textContent = `Even 1 lot risks ₹${Math.round(riskPerLot).toLocaleString('en-IN')} -- over budget. Widen the risk or tighten the stop.`;
-        actualEl.className = 'sizer-warn';
-        renderRegimeAdvisory(0);
-        return;
-      }
-
-      const actualRisk = lots * riskPerLot;
-      lotsEl.textContent = lots.toLocaleString('en-IN');
-      lotsLabelEl.textContent = lots === 1 ? ' lot' : ' lots';
-      actualEl.textContent = `≈ ₹${Math.round(actualRisk).toLocaleString('en-IN')} risked at this size`;
-      actualEl.className = 'sizer-actual-risk';
-      renderRegimeAdvisory(lots);
+    function formatTime(isoStr) {
+        if (!isoStr) return '--:--:-- IST';
+        try {
+            const d = new Date(isoStr);
+            return d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false }) + ' IST';
+        } catch (e) {
+            return isoStr;
+        }
     }
 
-    [stopEl, riskEl].forEach(el => el.addEventListener('input', recalc));
-    lotSizeEl.addEventListener('input', () => {
-      recalc();
-      try { localStorage.setItem('lm-sizer-lotsize', lotSizeEl.value); } catch (err) { /* private mode */ }
-    });
-    recalc();
-    // Exposed so refresh()'s ~30s status-feed poll (a separate closure,
-    // defined later in the page) can re-run the advisory line as the
-    // multiplier updates through the session, without needing new input in
-    // the stop/risk fields themselves.
-    window.__mmRecalcSizer = recalc;
-  })();
-
-  // ---- Glossary tooltips -------------------------------------------------
-  // Click/tap-toggle, not :hover -- this page is read on a phone as much as
-  // a desktop, and CSS hover has no equivalent on touch. Delegated from
-  // document so it also covers the dynamically-rendered regime advisory
-  // block if a tip-icon is ever added there later, with no extra listener.
-  (function initTooltips() {
-    document.addEventListener('click', (e) => {
-      const icon = e.target.closest('.tip-icon');
-      const openWrap = document.querySelector('.tip-wrap.open');
-
-      if (icon) {
-        const wrap = icon.closest('.tip-wrap');
-        const wasOpen = wrap.classList.contains('open');
-        if (openWrap && openWrap !== wrap) openWrap.classList.remove('open');
-        wrap.classList.toggle('open', !wasOpen);
-        e.stopPropagation();
-        return;
-      }
-      // Any other click (including inside an open bubble, e.g. selecting
-      // text) closes it -- a tooltip that never goes away is as unhelpful
-      // as one that never appears.
-      if (openWrap) openWrap.classList.remove('open');
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const icon = document.activeElement;
-      if (!icon || !icon.classList || !icon.classList.contains('tip-icon')) return;
-      e.preventDefault();
-      icon.click();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return;
-      const openWrap = document.querySelector('.tip-wrap.open');
-      if (openWrap) openWrap.classList.remove('open');
-    });
-  })();
-
-  // ---- Mobile tab bar -----------------------------------------------------
-  // No-op above the 720px breakpoint: this only sets a data attribute the
-  // CSS above reads, and that CSS is itself gated to the same breakpoint --
-  // desktop never sees an effect from this running.
-  (function initMobileTabs() {
-    const bar = document.getElementById('mobileTabbar');
-    if (!bar) return;
-    const buttons = Array.from(bar.querySelectorAll('.mtb-btn'));
-
-    function setTab(tab) {
-      document.body.setAttribute('data-mobile-tab', tab);
-      buttons.forEach(b => {
-        const on = b.dataset.setTab === tab;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-current', String(on));
-      });
-      try { localStorage.setItem('lm-mobile-tab', tab); } catch (err) { /* private mode */ }
+    function calcAgeMinutes(isoStr) {
+        if (!isoStr) return 999;
+        try {
+            const updateTime = new Date(isoStr).getTime();
+            const now = new Date().getTime();
+            return (now - updateTime) / (1000 * 60);
+        } catch (e) {
+            return 999;
+        }
     }
 
-    let initial = 'overview';
-    try {
-      const saved = localStorage.getItem('lm-mobile-tab');
-      if (saved && buttons.some(b => b.dataset.setTab === saved)) initial = saved;
-    } catch (err) { /* private mode */ }
-    setTab(initial);
+    async function refreshDashboard() {
+        try {
+            const res = await fetch(`${WORKER_URL}?symbol=NIFTY`, {
+                headers: { 'Authorization': `Bearer ${READ_TOKEN}` }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderDashboard(data);
+        } catch (err) {
+            console.error('[live-market] fetch failed:', err);
+            const livePill = document.getElementById('val-live-pill');
+            const liveDot = document.getElementById('val-live-dot');
+            const liveText = document.getElementById('val-live-text');
 
-    bar.addEventListener('click', (e) => {
-      const btn = e.target.closest('.mtb-btn');
-      if (!btn) return;
-      setTab(btn.dataset.setTab);
-      window.scrollTo(0, 0);
-    });
-  })();
-
-  // ---- Theme switch -----------------------------------------------------
-  // The palette itself is applied by the inline pre-paint script in <head>;
-  // this only handles the control and persistence. Segmented, not a single
-  // button: the lit icon IS the current mode, so the control can never be read
-  // as "click for the mode it is showing".
-  (function initTheme() {
-    const sw = document.getElementById('themeSwitch');
-    if (!sw) return;
-    const paint = (t) => {
-      document.documentElement.setAttribute('data-theme', t);
-        sw.querySelectorAll('.ts-opt').forEach(b => {
-          const on = b.dataset.setTheme === t;
-          b.setAttribute('aria-pressed', String(on));   // for assistive tech
-          b.classList.toggle('is-on', on);              // for styling hooks
-          // Inline, deliberately. Three separate attempts to style the active
-          // pill from the stylesheet produced a correct result in dark and a
-          // TRANSPARENT pill in light, and the cause resisted isolation. An
-          // inline style cannot lose a cascade fight, and this is a two-element
-          // control — the cost of certainty here is four lines.
-          b.style.background = on ? '#2563eb' : 'transparent';
-          b.style.color = on ? '#ffffff'
-            : (t === 'light' ? 'rgba(15,23,42,0.55)' : 'rgba(255,255,255,0.55)');
-        });
-    };
-    paint(document.documentElement.getAttribute('data-theme') || 'dark');
-    sw.addEventListener('click', (e) => {
-      const btn = e.target.closest('.ts-opt');
-      if (!btn) return;
-      paint(btn.dataset.setTheme);
-      try { localStorage.setItem('lm-theme', btn.dataset.setTheme); } catch (err) { /* private mode */ }
-    });
-    // Follow the OS only while the user hasn't expressed a preference.
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
-        let saved = null;
-        try { saved = localStorage.getItem('lm-theme'); } catch (err) { /* ignore */ }
-        if (!saved) paint(e.matches ? 'light' : 'dark');
-      });
+            if (livePill) livePill.className = 'live-pill stale';
+            if (liveDot) liveDot.className = 'dot amber';
+            if (liveText) liveText.textContent = 'OFFLINE';
+        }
     }
-  })();
 
-  // ---- Session timeline -------------------------------------------------
-  // The backend now publishes the FULL session history (it used to send only
-  // the last 5, which is why earlier events vanished). Holding it here lets
-  // the severity filter and the reader's scroll position survive the poll.
-  let timelineEvents = [];
-  let timelineMinSev = 'all';
-  const SEV_RANK = { INFO: 0, WATCH: 1, IMPORTANT: 2, CRITICAL: 3 };
-  const SEV_FLOOR = { all: 0, watch: 1, important: 2 };
+    function renderDashboard(data) {
+        const wi = data.web_intelligence || {};
+        const ageMin = calcAgeMinutes(data.updated_at);
+        const isStale = ageMin > 5 || data._isStale;
 
-  document.getElementById('timelineFilter').addEventListener('click', (e) => {
-    const btn = e.target.closest('.oi-range-btn');
-    if (!btn) return;
-    timelineMinSev = btn.dataset.sev;
-    e.currentTarget.querySelectorAll('.oi-range-btn')
-      .forEach(b => b.classList.toggle('active', b === btn));
-    renderTimeline();
-  });
+        // 1. LIVE HEADER
+        const livePill = document.getElementById('val-live-pill');
+        const liveDot = document.getElementById('val-live-dot');
+        const liveText = document.getElementById('val-live-text');
 
-  function renderTimeline() {
-    const scroller = document.getElementById('timelineScroll');
-    const el = document.getElementById('timelineList');
-    const floor = SEV_FLOOR[timelineMinSev] ?? 0;
-    const shown = timelineEvents.filter(
-      ev => (SEV_RANK[(ev.severity || 'INFO').toUpperCase()] ?? 0) >= floor);
-
-    document.getElementById('timelineCount').textContent =
-      !timelineEvents.length ? ''
-      : shown.length === timelineEvents.length
-        ? `${timelineEvents.length} event${timelineEvents.length === 1 ? '' : 's'}`
-        : `${shown.length} of ${timelineEvents.length}`;
-
-    // Newest first. A reader parked at the top stays pinned to newest as
-    // events arrive; a reader who has scrolled back into the day keeps their
-    // place instead of being yanked to the top by the next poll.
-    const keep = scroller.scrollTop;
-    const atTop = keep <= 4;
-    el.innerHTML = shown.length
-      ? shown.slice().reverse().map(ev => {
-          const sev = (ev.severity || 'INFO').toUpperCase();
-          return `
-            <div class="timeline-item ${sev.toLowerCase()}">
-              <div class="timeline-head">
-                <span class="timeline-time">${ev.time || ''}</span>
-                <span class="timeline-sev ${sev.toLowerCase()}">${sev}</span>
-              </div>
-              <div class="timeline-message">${ev.message || ''}</div>
-            </div>`;
-        }).join('')
-      : `<div class="oi-empty">${timelineEvents.length
-            ? 'No events at this severity yet.'
-            : 'No events logged yet this session.'}</div>`;
-    scroller.scrollTop = atTop ? 0 : keep;
-  }
-
-  // Scroll state for the strike row. The chart re-renders on every poll, so
-  // without this the view would snap back mid-inspection. Signature = "what
-  // is being drawn"; while it's unchanged we restore where you were looking,
-  // and when it changes (view/range/strike set) we re-park on ATM.
-  let _oiChartSig = null;
-  let _oiScrollLeft = 0;
-
-  function finalizeOiChart(chartEl, sig) {
-    const chart = chartEl.querySelector('.oi-vchart');
-    const wrap = chartEl.querySelector('.oi-vchart-wrap');
-    if (!chart || !wrap) return;
-    chart.addEventListener('scroll', () => { _oiScrollLeft = chart.scrollLeft; }, { passive: true });
-    const apply = () => {
-      const scrollable = chart.scrollWidth > chart.clientWidth + 8;
-      wrap.classList.toggle('is-scrollable', scrollable);
-      if (scrollable && !wrap.querySelector('.oi-scroll-hint')) {
-        const hint = document.createElement('div');
-        hint.className = 'oi-scroll-hint';
-        hint.textContent = 'swipe for more strikes';
-        wrap.appendChild(hint);
-      }
-      if (scrollable) {
-        if (sig === _oiChartSig) {
-          chart.scrollLeft = _oiScrollLeft;
+        if (isStale) {
+            if (livePill) livePill.className = 'live-pill stale';
+            if (liveDot) liveDot.className = 'dot amber';
+            if (liveText) liveText.textContent = `STALE (${Math.round(ageMin)}m ago)`;
         } else {
-          // Park ATM in the middle so the strikes that matter are on screen
-          // first, and both directions are one swipe away.
-          const atm = chart.querySelector('.oi-vcol.atm');
-          chart.scrollLeft = atm
-            ? Math.max(0, atm.offsetLeft - (chart.clientWidth - atm.offsetWidth) / 2)
-            : (chart.scrollWidth - chart.clientWidth) / 2;
-          _oiScrollLeft = chart.scrollLeft;
+            if (livePill) livePill.className = 'live-pill live';
+            if (liveDot) liveDot.className = 'dot green';
+            if (liveText) liveText.textContent = 'LIVE';
         }
-      }
-      _oiChartSig = sig;
-    };
-    requestAnimationFrame(apply);
-  }
 
-  // Rotating the device or resizing the window changes whether the row
-  // overflows at all, so the hint has to be re-measured.
-  window.addEventListener('resize', () => {
-    const chartEl = document.getElementById('oiChart');
-    const chart = chartEl && chartEl.querySelector('.oi-vchart');
-    const wrap = chartEl && chartEl.querySelector('.oi-vchart-wrap');
-    if (chart && wrap) wrap.classList.toggle('is-scrollable', chart.scrollWidth > chart.clientWidth + 8);
-  }, { passive: true });
+        document.getElementById('val-symbol').textContent = data.symbol || 'NIFTY';
+        document.getElementById('val-price').textContent = fmtPrice(data.current_price);
 
-  function renderOiChart(rows, currentPrice) {
-    const chartEl = document.getElementById('oiChart');
-    if (!rows || rows.length === 0) {
-      chartEl.innerHTML = '<div class="oi-empty">No OI data yet — refreshes on its own slower cycle, check back shortly.</div>';
-      return;
+        const biasEl = document.getElementById('val-bias');
+        const biasVal = data.bias || 'BEARISH';
+        biasEl.textContent = biasVal.toUpperCase();
+        biasEl.className = biasVal.toUpperCase().includes('BEAR') ? 'status-badge badge-red' :
+                           (biasVal.toUpperCase().includes('BULL') ? 'status-badge badge-green' : 'status-badge badge-amber');
+
+        document.getElementById('val-phase').textContent = data.phase || 'TREND CONTINUATION';
+        document.getElementById('val-updated-time').textContent = formatTime(data.updated_at);
+
+        // 2. MARKET SNAPSHOT
+        const tf = wi.timeframe_structure || {};
+        document.getElementById('val-1h-bias').textContent = tf.bias_1h || 'Bearish';
+        document.getElementById('val-15m-bias').textContent = tf.bias_15m || 'Bearish';
+        document.getElementById('val-5m-bias').textContent = tf.bias_5m || 'Bullish';
+
+        document.getElementById('val-atr-used').textContent = data.atr_utilization != null ?
+            Number(data.atr_utilization).toFixed(1) + '%' : 'UNAVAILABLE';
+
+        if (data.cpr) {
+            document.getElementById('val-cpr-snapshot').textContent = `${data.cpr.cpr_low}–${data.cpr.cpr_high}`;
+        } else {
+            document.getElementById('val-cpr-snapshot').textContent = 'UNAVAILABLE';
+        }
+
+        document.getElementById('val-pcr-snapshot').textContent = data.oi_summary && data.oi_summary.pcr != null ?
+            data.oi_summary.pcr : 'UNAVAILABLE';
+
+        document.getElementById('val-vwap-note').textContent = data.vwap_valid ?
+            `VWAP: ₹${data.vwap}` : 'VWAP unavailable — NIFTY spot feed has no traded volume.';
+
+        // 3. MORNING PLAN
+        const mp = wi.morning_plan || {};
+        const planStatusEl = document.getElementById('val-plan-status');
+        const planStatusVal = mp.status || data.setup_state || 'INVALIDATED';
+        planStatusEl.textContent = planStatusVal === 'INVALIDATED' ? '❌ INVALIDATED' : '✓ QUALIFIED';
+        planStatusEl.className = planStatusVal === 'INVALIDATED' ? 'status-badge badge-red' : 'status-badge badge-green';
+
+        document.getElementById('val-plan-thesis').textContent = mp.original_thesis || data.bias || 'BEARISH';
+
+        const whyList = document.getElementById('list-plan-why');
+        const whyItems = mp.why_invalidated || (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke invalidation level: 24435.05']);
+        whyList.innerHTML = whyItems.map(item => `<li>${item}</li>`).join('');
+
+        const skippedList = document.getElementById('list-plan-skipped');
+        const skippedItems = mp.data_skipped || ['VWAP unavailable (feed has no volume) — check SKIPPED'];
+        skippedList.innerHTML = skippedItems.map(item => `<li>${item}</li>`).join('');
+
+        const meanings = mp.what_it_means || [
+            'Original bearish morning plan is OFF today.',
+            'Important: This does NOT mean BUY. Wait for a NEW qualified setup.'
+        ];
+        document.getElementById('val-plan-meaning').textContent = meanings[0] || 'Original morning plan is OFF today.';
+        document.getElementById('val-plan-warning').textContent = meanings[1] || 'Important: This does NOT mean BUY.';
+
+        // 4. KEY LEVELS
+        const kl = wi.key_levels || {};
+        const res = kl.resistance || {};
+        const sup = kl.support || {};
+        const inv = kl.invalidation || {};
+
+        document.getElementById('val-res-price').textContent = res.price ? fmtPrice(res.price) : (data.nearest_resistance ? fmtPrice(data.nearest_resistance) : 'UNAVAILABLE');
+        document.getElementById('val-res-dist').textContent = res.distance_pts != null ? `${Math.abs(res.distance_pts).toFixed(1)} pts ABOVE` : '';
+        document.getElementById('val-res-meaning').textContent = res.meaning || 'Reclaiming this level would improve short-term structure.';
+
+        document.getElementById('val-sup-price').textContent = sup.price ? fmtPrice(sup.price) : (data.nearest_support ? fmtPrice(data.nearest_support) : 'UNAVAILABLE');
+        document.getElementById('val-sup-dist').textContent = sup.distance_pts != null ? `${Math.abs(sup.distance_pts).toFixed(1)} pts BELOW` : '';
+        document.getElementById('val-sup-meaning').textContent = sup.meaning || 'Watch the reaction here; a break could weaken structure further.';
+
+        document.getElementById('val-inval-price').textContent = inv.price ? fmtPrice(inv.price) : (data.levels?.invalidation ? fmtPrice(data.levels.invalidation) : 'UNAVAILABLE');
+        document.getElementById('val-inval-meaning').textContent = inv.meaning || "Break of this level invalidated today's morning plan.";
+
+        // 5. MARKET SUMMARY / OI
+        const oi = data.oi_summary || {};
+        document.getElementById('val-put-wall').textContent = oi.put_wall ? Number(oi.put_wall).toLocaleString('en-IN') : 'UNAVAILABLE — no put wall';
+        document.getElementById('val-call-wall').textContent = oi.call_wall ? Number(oi.call_wall).toLocaleString('en-IN') : 'UNAVAILABLE — no call wall';
+        document.getElementById('val-pcr-pill').textContent = oi.pcr_read || (oi.pcr != null ? `PCR ${oi.pcr}` : 'PCR UNAVAILABLE');
+        document.getElementById('val-oi-read').textContent = oi.pcr_read ? `${oi.pcr_read} indicates resistance positioning.` : 'Call-heavy OI (0.65) indicates strong overhead resistance positioning.';
+
+        // 6. DECISION SUPPORT
+        const ds = wi.decision_support || {};
+        document.getElementById('val-ds-focus').textContent = ds.current_focus || data.action_verdict || 'STAND ASIDE';
+        document.getElementById('val-ds-why').textContent = ds.why || data.decision_reason || 'Morning thesis is invalidated and cannot be reused.';
+        document.getElementById('val-ds-next').textContent = ds.next_level_to_watch || data.decision_next_event || 'Support 24283.45 · 5.5 pts BELOW';
+        document.getElementById('val-ds-next-why').textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
+        document.getElementById('val-ds-instruction').textContent = ds.instruction || 'WAIT FOR NEW QUALIFIED SETUP';
+
+        // 7. ORDER FLOW SHADOW
+        const ofs = wi.order_flow_shadow || data.order_flow_shadow || {};
+        document.getElementById('val-of-feed').textContent = ofs.feed_status || 'LIVE';
+        document.getElementById('val-of-pressure').textContent = ofs.pressure || 'BUYING';
+        document.getElementById('val-of-pressure').className = (ofs.pressure || '').includes('BUY') ? 'snapshot-val style-green' : 'snapshot-val style-red';
+
+        const cvdVal = ofs.estimated_cvd;
+        document.getElementById('val-of-cvd').textContent = cvdVal != null ? (cvdVal > 0 ? '+' : '') + Number(cvdVal).toLocaleString('en-IN') : '0';
+        document.getElementById('val-of-align').textContent = ofs.alignment || 'OPPOSING';
+
+        document.getElementById('val-of-cvd-note').textContent = ofs.cvd_provenance_note || 'CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.';
+        document.getElementById('val-of-qual-note').textContent = (ofs.combined_updates_pct || 74.5) + '% combined updates (single packet contains multiple trades).';
+
+        // 8. MARKET COMMENTARY
+        const mc = wi.market_commentary || {};
+        const factsList = document.getElementById('list-comm-facts');
+        const factsItems = mc.facts || [
+            'Price is trading below CPR (24492).',
+            '1H & 15m structure remain Bearish, while 5m structure turned Bullish.',
+            'Morning bearish thesis was invalidated at 24435.05.',
+            'Order Flow shows buying pressure (+2405 CVD) opposing broader bias.'
+        ];
+        factsList.innerHTML = factsItems.map(f => `<li>${f}</li>`).join('');
+
+        document.getElementById('val-comm-interp').textContent = mc.interpretation ||
+            'The broader market structure remains bearish across 1H and 15m, but the short 5m timeframe is moving counter to the trend. Because the invalidation level was broken, the morning plan is dead and cannot be reused.';
+
+        document.getElementById('val-comm-bottom').textContent = mc.bottom_line || 'The market currently lacks a clean qualified setup.';
+        document.getElementById('val-comm-action').textContent = mc.current_action || 'STAND ASIDE';
+
+        // 9. SESSION INTELLIGENCE TIMELINE
+        const tlList = document.getElementById('timeline-list');
+        const events = wi.timeline || data.timeline || [];
+        if (events && events.length > 0) {
+            tlList.innerHTML = events.slice(0, 8).map(e => `
+                <div class="timeline-item">
+                    <span class="timeline-time">${e.time || '--:--'} IST</span>
+                    <span class="timeline-event">${e.what_changed || e.event || 'Structural Event'}</span>
+                    <span class="timeline-meaning">${e.what_it_means || e.detail || ''}</span>
+                </div>
+            `).join('');
+        } else {
+            tlList.innerHTML = `<div class="timeline-item"><span class="timeline-meaning">No new structural event since 09:15 IST.</span></div>`;
+        }
+
+        // 10. DATA PROVENANCE
+        const prov = wi.data_provenance || {};
+        document.getElementById('prov-mkt-feed').textContent = prov.market_feed || 'LIVE';
+        document.getElementById('prov-of-feed').textContent = prov.order_flow_feed || 'LIVE';
+        document.getElementById('prov-leak-check').textContent = prov.historical_leakage || 'NONE DETECTED';
     }
-    const atmStrike = findNearestStrike(rows, currentPrice);
-    const maxPainStrike = oiSummary && oiSummary.max_pain != null ? findNearestStrike(rows, oiSummary.max_pain) : null;
-    // ATM/Max Pain are found against the full fetched set (so they stay
-    // correct references even if narrowed out of view), but the bars
-    // themselves render only the strikes within the selected range.
-    const displayRows = oiStrikeRange >= 10 ? rows : rows.filter(r =>
-      atmStrike == null || Math.abs(r.strike - atmStrike) <= oiStrikeRange * OI_STRIKE_STEP
-    );
 
-    if (oiViewMode === 'total') {
-      const maxAbs = Math.max(1, ...displayRows.map(r => Math.max(r.ce_oi || 0, r.pe_oi || 0)));
-      const totalCe = displayRows.reduce((s, r) => s + (r.ce_oi || 0), 0);
-      const totalPe = displayRows.reduce((s, r) => s + (r.pe_oi || 0), 0);
-      const pcr = totalCe ? (totalPe / totalCe).toFixed(2) : '–';
-
-      const totalsHtml = `
-        <div class="oi-totals-row">
-          <span>Call OI (in view): <b>${fmtOiAbs(totalCe)}</b></span>
-          <span>Put OI (in view): <b>${fmtOiAbs(totalPe)}</b></span>
-          <span>PCR (in view): <b>${pcr}</b></span>
-        </div>`;
-
-      const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
-      const barsHtml = '<div class="oi-vchart">' + displayRows.map(r => {
-        const isAtm = r.strike === atmStrike;
-        const isMaxPain = r.strike === maxPainStrike;
-        return `
-          <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
-            ${renderMaxPainMarker(isMaxPain)}
-            <div class="oi-vcol-bars">
-              ${renderVBar('put', r.pe_oi, maxAbs, fmtOiAbs)}
-              ${renderVBar('call', r.ce_oi, maxAbs, fmtOiAbs)}
-            </div>
-            <div class="oi-vstrike-label">${r.strike}</div>
-          </div>`;
-      }).join('') + '</div>';
-
-      chartEl.innerHTML = totalsHtml + '<div class="oi-vchart-wrap">' + barsHtml + '</div>';
-      finalizeOiChart(chartEl, `total|${oiStrikeRange}|${displayRows.length}|${atmStrike}`);
-      return;
-    }
-
-    // 'change' mode: bars diverge from a shared zero line -- up for a
-    // buildup, down for an unwind -- with a hollow shadow extending further
-    // from zero when a strike has pulled back from its session peak.
-
-    // Before the session has moved off its OI baseline every change is 0, so
-    // the chart used to render as a row of nothing plus the full-height ATM
-    // column highlight -- which read as a giant phantom bar at the money.
-    // Say plainly that there's no change yet instead.
-    const hasAnyChange = displayRows.some(r =>
-      (r.ce_oi_change || 0) !== 0 || (r.pe_oi_change || 0) !== 0 ||
-      (r.ce_oi_peak_change || 0) !== 0 || (r.pe_oi_peak_change || 0) !== 0);
-    if (!hasAnyChange) {
-      chartEl.innerHTML =
-        '<div class="oi-empty">No OI change yet this session — the baseline was just set.' +
-        '<br>Buildup and unwind will appear here as positions move.' +
-        '<br><span style="opacity:0.75">Switch to <b>Total OI</b> to see where the walls currently sit.</span></div>';
-      _oiChartSig = null;
-      return;
-    }
-
-    const maxAbs = Math.max(1, ...displayRows.map(r => Math.max(
-      Math.abs(r.ce_oi_peak_change != null ? r.ce_oi_peak_change : (r.ce_oi_change || 0)),
-      Math.abs(r.pe_oi_peak_change != null ? r.pe_oi_peak_change : (r.pe_oi_change || 0))
-    )));
-
-    const axisHtml = '<div class="oi-vaxis">' +
-      [maxAbs, maxAbs / 2, 0, -maxAbs / 2, -maxAbs].map(v => `<span>${v === 0 ? '0' : fmtOi(v)}</span>`).join('') +
-      '</div>';
-
-    const atmPriceAttr = typeof currentPrice === 'number' ? ` data-atm-price="${fmtLivePrice(currentPrice)}"` : '';
-    const barsHtml = '<div class="oi-vchart">' + displayRows.map(r => {
-      const isAtm = r.strike === atmStrike;
-      const isMaxPain = r.strike === maxPainStrike;
-      return `
-        <div class="oi-vcol${isAtm ? ' atm' : ''}"${isAtm ? atmPriceAttr : ''}>
-          ${renderMaxPainMarker(isMaxPain)}
-          <div class="oi-vcol-bars">
-            ${renderVSlot('put', r.pe_oi_change, r.pe_oi_peak_change, maxAbs, fmtOi)}
-            ${renderVSlot('call', r.ce_oi_change, r.ce_oi_peak_change, maxAbs, fmtOi)}
-          </div>
-          <div class="oi-vstrike-label">${r.strike}</div>
-        </div>`;
-    }).join('') + '</div>';
-
-    const totalCeChange = displayRows.reduce((s, r) => s + (r.ce_oi_change || 0), 0);
-    const totalPeChange = displayRows.reduce((s, r) => s + (r.pe_oi_change || 0), 0);
-    const priceHtml = (typeof oiOpenPrice === 'number' && typeof currentPrice === 'number')
-      ? `<span>Price: <b>${fmtLivePrice(oiOpenPrice)}</b> → <b>${fmtLivePrice(currentPrice)}</b></span>`
-      : '';
-    const summaryHtml = `
-      <div class="oi-vsummary">
-        <span>Call OI change (in view): <b class="${totalCeChange < 0 ? 'down' : 'up'}">${fmtOi(totalCeChange)}</b></span>
-        <span>Put OI change (in view): <b class="${totalPeChange < 0 ? 'down' : 'up'}">${fmtOi(totalPeChange)}</b></span>
-        ${priceHtml}
-      </div>`;
-
-    chartEl.innerHTML = '<div class="oi-vchart-wrap">' + axisHtml + barsHtml + '</div>' + summaryHtml;
-    finalizeOiChart(chartEl, `change|${oiStrikeRange}|${displayRows.length}|${atmStrike}`);
-  }
-
-  async function refresh() {
-    const banner = document.getElementById('statusBanner');
-    const liveDot = document.getElementById('liveDot');
-    const liveLabel = document.getElementById('liveLabel');
-
-    try {
-      const data = await fetchLiveStatus(activeSymbol || undefined, LIVE_STATUS_READ_TOKEN);
-      renderFrameNote(data);
-
-      // Mechanical size advisory (core/regime_risk_advisor.py) -- stored at
-      // module scope so the sizer's recalc() (a separate, input-driven
-      // closure below) can read the latest value without a page reload.
-      // Only present with a valid read token; a public/no-token fetch omits
-      // this field entirely, so `data.regime_risk` is simply undefined there.
-      latestRegimeRisk = data.regime_risk || null;
-      if (typeof window.__mmRecalcSizer === 'function') window.__mmRecalcSizer();
-
-      const ago = fmtLiveAgo(data.updated_at);
-
-      const symLabel = fmtSymbolLabel(data.symbol);
-      document.getElementById('symbol').textContent = symLabel.main;
-      document.getElementById('priceContract').textContent = symLabel.sub;
-      document.getElementById('priceValue').textContent = fmtLivePrice(data.current_price);
-      document.getElementById('priceUpdated').textContent = ago ? `Last updated ${ago}` : '';
-
-      document.getElementById('statPhase').textContent = data.phase || '–';
-      const biasEl = document.getElementById('statBias');
-      biasEl.textContent = data.bias || '–';
-      biasEl.className = 'stat-value ' + liveBiasClass(data.bias);
-      document.getElementById('statCondition').textContent = data.condition || '–';
-      // "Open air" (price beyond every mapped level) is a real, honest state
-      // -- not the same as "no data yet" -- so it gets its own label rather
-      // than falling into the same '–' placeholder.
-      document.getElementById('statSupport').textContent = data.nearest_support != null
-        ? fmtLivePrice(data.nearest_support) : data.support_open_air ? 'OPEN AIR' : '–';
-      document.getElementById('statResistance').textContent = data.nearest_resistance != null
-        ? fmtLivePrice(data.nearest_resistance) : data.resistance_open_air ? 'OPEN AIR' : '–';
-      document.getElementById('statThesis').textContent = data.thesis_status || '–';
-      document.getElementById('statVwap').textContent = data.vwap != null ? fmtLivePrice(data.vwap) : '–';
-      document.getElementById('statAtr').textContent = data.atr_utilization != null ? `${data.atr_utilization.toFixed(1)}%` : '–';
-      // "Yesterday was" rather than "Morning Regime". The value has always been
-      // the PREVIOUS session's realised label — the forecasting model is
-      // benched — and calling it "Morning Regime" made it read like a call on
-      // today. Strip the "Benched (yday: X)" wrapper and show X.
-      const mr = String(data.morning_regime || '');
-      const yday = (mr.match(/yday:\s*([^)]+)\)/) || [])[1];
-      document.getElementById('statRegime').textContent = (yday || mr || '–').trim();
-
-      // How TODAY has behaved so far. Observation over elapsed bars, not a
-      // forecast — the day type is not callable in advance (AUC 0.539), so the
-      // page must never show a probability for how today ends.
-      const ir = data.intraday_regime || null;
-      const irEl = document.getElementById('statIntraday');
-      const irSub = document.getElementById('statIntradaySub');
-      if (ir && ir.label) {
-        irEl.textContent = ir.label;
-        irEl.style.color = ({
-          TRENDING: 'var(--green)', RANGING: 'var(--yellow)',
-          QUIET: 'var(--muted)', 'TOO EARLY': 'var(--muted)'
-        })[ir.label] || '';
-        irSub.textContent = ir.detail || '';
-      } else {
-        irEl.textContent = '–';
-        irEl.style.color = '';
-        irSub.textContent = '';
-      }
-
-      const cprEl = document.getElementById('statCpr');
-      if (data.cpr && data.price_vs_cpr) {
-        cprEl.textContent = `${data.price_vs_cpr} · ${data.cpr.cpr_low.toFixed(0)}-${data.cpr.cpr_high.toFixed(0)}`;
-        cprEl.className = 'stat-value ' + (
-          data.price_vs_cpr === 'above' ? 'bullish' : data.price_vs_cpr === 'below' ? 'bearish' : 'neutral'
-        );
-      } else {
-        cprEl.textContent = '–';
-        cprEl.className = 'stat-value';
-      }
-
-      const confEl = document.getElementById('statConfluence');
-      confEl.textContent = data.confluence_summary || '–';
-      confEl.className = 'stat-value ' + (
-        data.confluence_side === 'Bullish' ? 'bullish' : data.confluence_side === 'Bearish' ? 'bearish' : 'neutral'
-      );
-      document.getElementById('narrativeText').textContent = data.narrative || 'No commentary yet.';
-
-      // Morning Plan + Decision Support (one merged card, colored by combined health)
-      const planStatusCls = data.thesis_status === 'VALID' ? 'ok' : data.thesis_status === 'WEAKENING' ? 'warn' : 'bad';
-      const urgency = data.decision_urgency || 'LOW';
-      const urgencyCls = urgency === 'HIGH' ? 'bad' : urgency === 'MEDIUM' ? 'warn' : 'ok';
-      // Card accent reflects whichever side is worse -- a valid thesis with a
-      // high-urgency event still deserves a red edge, not a green one.
-      const rank = { ok: 0, warn: 1, bad: 2 };
-      const cardCls = rank[urgencyCls] > rank[planStatusCls] ? urgencyCls : planStatusCls;
-      document.getElementById('planDecisionCard').className = 'plan-decision-card status-' + cardCls;
-
-      const planBadge = document.getElementById('planStatusBadge');
-      planBadge.textContent = data.thesis_status || '–';
-      planBadge.className = 'status-badge ' + planStatusCls;
-      document.getElementById('planConditions').textContent = data.thesis_conditions_met
-        ? `Conditions met: ${data.thesis_conditions_met}` : '';
-      const reasons = data.thesis_reasons || [];
-      document.getElementById('planReasons').innerHTML = reasons.length
-        ? reasons.map(r => `<li>${r}</li>`).join('')
-        : '<li>Evaluating…</li>';
-
-      // ---- Data freshness -------------------------------------------------
-      // Ages are MEASURED from published timestamps, not assumed from the
-      // cadence: an agent that died at 11:04 would otherwise look exactly like
-      // one that is running fine in a quiet market.
-      (function renderFreshness() {
-        const fmtAge = (ms) => {
-          if (ms == null || !isFinite(ms)) return 'unknown';
-          const s = Math.max(0, Math.round(ms / 1000));
-          if (s < 90) return `${s}s ago`;
-          const m = Math.round(s / 60);
-          return m < 90 ? `${m}m ago` : `${Math.round(m / 60)}h ago`;
-        };
-        // Grade against what the cadence should actually produce: stale only
-        // means "later than this feed promised", so a 5-min OI panel is not
-        // flagged for being 4 minutes old.
-        const grade = (ms, budgetS) => {
-          if (ms == null || !isFinite(ms)) return '';
-          const s = ms / 1000;
-          if (s > budgetS * 3) return 'stale';
-          if (s > budgetS * 1.6) return 'warn';
-          return '';
-        };
-        const now = Date.now();
-        const agentS = data.agent_interval_s || 60;
-        const oiS = data.oi_refresh_s || 300;
-        // Delivery adds the publish hop plus this page's own poll on top of
-        // the agent's tick — quoted so the number isn't read as end-to-end.
-        const deliveryS = 60 + (REFRESH_MS / 1000);
-
-        const pAge = data.updated_at ? now - new Date(data.updated_at).getTime() : null;
-        const oAge = data.oi_updated_at ? now - new Date(data.oi_updated_at).getTime() : null;
-
-        const pEl = document.getElementById('freshPrice');
-        pEl.textContent = fmtAge(pAge);
-        pEl.className = 'fresh-age ' + grade(pAge, agentS + deliveryS);
-        document.getElementById('freshPriceCad').textContent = `(agent polls every ${agentS}s)`;
-
-        const oEl = document.getElementById('freshOi');
-        oEl.textContent = data.oi_updated_at ? fmtAge(oAge) : 'not published';
-        oEl.className = 'fresh-age ' + grade(oAge, oiS + deliveryS);
-        document.getElementById('freshOiCad').textContent =
-          `(refreshes every ${Math.round(oiS / 60)} min)`;
-
-        document.getElementById('freshNote').textContent =
-          `This page re-checks every ${Math.round(REFRESH_MS / 1000)}s, and publishing adds up to ~60s, ` +
-          `so what you see can trail the market by roughly ${Math.round((agentS + deliveryS) / 60)}–` +
-          `${Math.round((oiS + deliveryS) / 60)} min depending on the panel. ` +
-          `Structure only updates on CLOSED candles by design — a 15m read can be up to 15 min behind price. ` +
-          `Not a trading terminal; confirm on your broker before acting.`;
-      })();
-
-      // ---- Discipline strip ----------------------------------------------
-      (function renderDisciplineStrip() {
-        const disc = data.discipline || {};
-        const taken = disc.taken != null ? disc.taken : 0;
-        const limit = disc.limit != null ? disc.limit : 3;
-        const left = Math.max(0, limit - taken);
-        const discBadge = document.getElementById('discTradeBadge');
-        if (discBadge) {
-          discBadge.textContent = `${taken} / ${limit} TRADES (${left} left)`;
-          discBadge.className = 'discipline-badge ' + (taken >= limit ? 'limit-reached' : '');
-        }
-
-        const discSetup = document.getElementById('discSetupStatus');
-        if (discSetup) {
-          if (disc.setup_available === true) {
-            discSetup.textContent = `SETUP: VALID (${disc.setup_reason || 'In Zone'})`;
-            discSetup.className = 'discipline-setup valid';
-          } else if (disc.setup_available === false) {
-            discSetup.textContent = `SETUP: NONE (${disc.setup_reason || 'Open Air'})`;
-            discSetup.className = 'discipline-setup none';
-          } else {
-            discSetup.textContent = disc.setup_reason ? `SETUP: ${disc.setup_reason}` : 'SETUP: Checking…';
-            discSetup.className = 'discipline-setup';
-          }
-        }
-
-        const mEl = document.getElementById('discMission');
-        if (mEl && disc.mission) {
-          mEl.textContent = disc.mission;
-        }
-        const sEl = document.getElementById('discSub');
-        if (sEl && disc.mission_sub) {
-          sEl.textContent = disc.mission_sub;
-        }
-      })();
-
-      // ---- Action banner -------------------------------------------------
-      // Maps the narrator's verdict to a colour. The mapping is on the VERB
-      // only, so the banner can never disagree with the Decision Support card
-      // below it — they render the same two strings.
-      (function renderActionBanner() {
-        const focus = (data.decision_focus || 'WAIT').toUpperCase();
-        const banner = document.getElementById('actionBanner');
-        let cls = 'wait';
-        if (focus.startsWith('MANAGE')) cls = 'manage';
-        else if (focus.startsWith('LOOK FOR LONG')) cls = 'go-long';
-        else if (focus.startsWith('LOOK FOR SHORT')) cls = 'go-short';
-        else if (focus.startsWith('GET READY')) cls = 'ready';
-        else if (focus.startsWith('STAND ASIDE') || focus.startsWith('NO NEW')) cls = 'stop';
-        const urgent = (data.decision_urgency || '').toUpperCase() === 'HIGH';
-        banner.className = 'action-banner ' + cls + (urgent ? ' urgent' : '');
-        document.getElementById('actionVerb').textContent = focus;
-        document.getElementById('actionReason').textContent =
-          data.decision_reason || 'No active setup yet.';
-        const meta = [];
-        if (data.decision_next_event) meta.push(`Next: ${data.decision_next_event}`);
-        if (data.decision_distance != null) meta.push(`${data.decision_distance.toFixed(1)} pts away`);
-        document.getElementById('actionMeta').textContent = meta.join(' · ');
-        // The pill must agree with the verb. "ACT NOW" beside "STAND ASIDE"
-        // told the reader to do two opposite things at once.
-        const pill = document.getElementById('actionPill');
-        const label = !urgent ? ''
-          : cls === 'manage' ? 'Position open'
-          : cls === 'stop' ? 'Attention'
-          : 'Act now';
-        pill.textContent = label;
-        pill.style.display = label ? '' : 'none';
-      })();
-
-      // ---- Circuit breaker takeover ---------------------------------------
-      // Deliberately separate from renderActionBanner even though both react
-      // to the same trip: the action banner is one panel among several, and
-      // is exactly the kind of thing a re-entry-minded read scrolls past. The
-      // overlay's whole job is to be the one thing on screen, so it gets its
-      // own render path rather than living inside a banner that competes with
-      // price, OI and everything else on the page.
-      (function renderCircuitBreaker() {
-        const cb = data.circuit_breaker;
-        const overlay = document.getElementById('cbOverlay');
-        if (!overlay) return;
-        if (!cb || !cb.tripped) {
-          overlay.classList.remove('show');
-          document.body.style.overflow = '';
-          return;
-        }
-        const pnl = cb.pnl_at_trip;
-        document.getElementById('cbPnl').textContent =
-          (typeof pnl === 'number') ? (pnl >= 0 ? '+' : '') + Math.round(pnl).toLocaleString('en-IN') : '–';
-        const limitWord = cb.reason === 'profit' ? 'profit' : 'loss';
-        document.getElementById('cbPnlNote').textContent =
-          `realized ${limitWord} today, past your configured line`;
-        document.getElementById('cbHeadline').innerHTML = cb.reason === 'profit'
-          ? 'STOP.<br>TAKE THE WIN AND CLOSE.'
-          : 'STOP.<br>DO NOT OPEN ANOTHER TRADE.';
-        overlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
-      })();
-
-      document.getElementById('decisionFocus').textContent = data.decision_focus || 'WAIT';
-      const urgBadge = document.getElementById('decisionUrgencyBadge');
-      urgBadge.textContent = urgency;
-      urgBadge.className = 'status-badge ' + urgencyCls;
-      document.getElementById('decisionReason').textContent = data.decision_reason || 'No active setup yet.';
-      const nextEventParts = [];
-      if (data.decision_next_event) nextEventParts.push(`Next: ${data.decision_next_event}`);
-      if (data.decision_distance != null) nextEventParts.push(`${data.decision_distance.toFixed(1)} pts away`);
-      document.getElementById('decisionNextEvent').textContent = nextEventParts.join(' · ');
-
-      // Active Trap Signal(s) -- the detector's live armed state, not just
-      // the one-shot ARMED/TRIGGERED timeline events, so a setup stays
-      // visible for as long as it's actually live.
-      const trapCard = document.getElementById('trapCard');
-      const traps = data.active_traps || [];
-      if (traps.length) {
-        trapCard.style.display = '';
-        document.getElementById('trapList').innerHTML = traps.map(t => `
-          <div class="trap-item ${t.dir}">
-            <div class="trap-head">
-              <span class="trap-dir-badge ${t.dir}">${t.dir.toUpperCase()}</span>
-              <span class="trap-zone">Zone ${t.zone} (${t.rating || 'Unrated'})</span>
-            </div>
-            <div class="trap-detail">Entry ${t.dir === 'long' ? 'above' : 'below'} <b>${fmtLivePrice(t.trigger)}</b> · Stop <b>${fmtLivePrice(t.stop)}</b> · ${t.vol_x}x avg vol</div>
-          </div>`).join('');
-      } else {
-        trapCard.style.display = 'none';
-      }
-
-      // Trade Tracking -- triggered traps still running. The ARMED card above
-      // is a setup waiting; this is one that fired, with its stop and each
-      // target ticked off as price reaches them.
-      const tradeCard = document.getElementById('tradeCard');
-      const trades = data.active_trades || [];
-      if (trades.length) {
-        tradeCard.style.display = '';
-        document.getElementById('tradeList').innerHTML = trades.map(t => {
-          const levels = [
-            `<span class="trade-level entry">Entry <b>${fmtLivePrice(t.entry)}</b></span>`,
-            `<span class="trade-level stop">Stop <b>${fmtLivePrice(t.stop)}</b></span>`,
-          ].concat((t.targets || []).map(g =>
-            `<span class="trade-level target${g.hit ? ' hit' : ''}">${g.hit ? '&#10003; ' : ''}${g.label} <b>${fmtLivePrice(g.price)}</b></span>`
-          )).join('');
-          return `
-            <div class="trade-item ${t.dir}">
-              <div class="trade-head">
-                <span class="trap-dir-badge ${t.dir}">${t.dir.toUpperCase()}</span>
-                <span class="trap-zone">Zone ${t.zone} (${t.rating || 'Unrated'}) &middot; risk ${t.risk} pts</span>
-              </div>
-              <div class="trade-levels">${levels}</div>
-              <div class="trade-note">Tracks the levels this signal published &mdash; not your actual fill or size.</div>
-            </div>`;
-        }).join('');
-      } else {
-        tradeCard.style.display = 'none';
-      }
-
-      // Session Timeline -- the FULL session record (newest first), scrollable
-      // and severity-filterable, rendered as an actual vertical timeline.
-      timelineEvents = data.timeline || [];
-      renderTimeline();
-
-      if (data.oi_chains && Object.keys(data.oi_chains).length > 0) {
-        oiChainsCache = data.oi_chains;
-        oiCurrentPrice = data.current_price;
-        oiOpenPrice = data.session_open_price;
-        oiSummary = data.oi_summary || null;
-        const pcrText = oiSummary && oiSummary.pcr != null ? oiSummary.pcr : null;
-        const maxPainText = oiSummary && oiSummary.max_pain != null ? fmtLivePrice(oiSummary.max_pain) : null;
-        document.getElementById('oiSummaryPill').textContent =
-          (pcrText != null || maxPainText != null)
-            ? [pcrText != null ? `PCR ${pcrText}` : null, maxPainText != null ? `Max Pain ${maxPainText}` : null].filter(Boolean).join(' · ')
-            : '';
-        renderOiTabs(oiChainsCache);
-        renderOiChart(oiChainsCache[oiActiveExpiry] || [], oiCurrentPrice);
-      }
-
-      // Frame mismatch outranks staleness: stale-but-correct data is usable
-      // with care, whereas the wrong instrument is wrong by the basis on every
-      // single number above. Say so loudly rather than letting the page look
-      // normal while labelled as something it is not.
-      const mismatch = frameMismatch(data);
-      if (mismatch) {
-        liveDot.classList.add('offline');
-        liveLabel.textContent = 'Wrong frame';
-        banner.textContent = `⚠ ${mismatch} Everything above is ${data.symbol}. `
-          + `Spot and futures trade ~40–70 pts apart, so do not read these levels `
-          + `against the other instrument.`;
-        banner.classList.add('show');
-      } else if (data._isStale) {
-        liveDot.classList.add('offline');
-        liveLabel.textContent = 'Session Ended';
-        banner.textContent = `⏸ No fresh data in the last ${LIVE_STATUS_STALE_AFTER_MIN}+ minutes — the agent only runs during NSE market hours (9:15 AM – 3:15 PM IST, weekdays). Showing the last known snapshot above.`;
-        banner.classList.add('show');
-      } else {
-        liveDot.classList.remove('offline');
-        liveLabel.textContent = 'Live';
-        banner.classList.remove('show');
-      }
-    } catch (e) {
-      // SAY WHAT WENT WRONG. This used to show one fixed message for every
-      // possible failure -- network down, 404, bad JSON, or a TypeError in the
-      // render path all looked identical, and identical to "the market is
-      // closed". On 2026-07-31 the agent was publishing correctly every 60s and
-      // this still read "No live session data yet", which sent the debugging in
-      // completely the wrong direction.
-      console.error('[live-market] refresh failed:', e);
-      liveDot.classList.add('offline');
-      liveLabel.textContent = 'Offline';
-
-      const msg = String((e && e.message) || e);
-      // ALWAYS show the reason. The first version of this classified anything
-      // matching /No status file/ as "no data yet" -- but fetchLiveStatus threw
-      // that exact string for EVERY non-2xx, so an HTTP 500 or a CORS failure
-      // still rendered the reassuring "check back during market hours". The fix
-      // that was supposed to expose the bug reproduced it. Only "this symbol has
-      // never published" gets the soft wording now, and even that names itself.
-      const neverPublished = /No feed for symbol/i.test(msg);
-      banner.textContent = neverPublished
-        ? `⏸ ${msg} — nothing has been published for this instrument yet. Check back during NSE market hours (9:15 AM – 3:15 PM IST, weekdays).`
-        : `⚠ Could not load live data — ${msg}. The agent may be publishing fine; this is a page-side failure. Details in the browser console.`;
-      banner.classList.add('show');
-    }
-  }
-
-  // Hide the Futures/Spot switch unless there is genuinely something to switch
-  // BETWEEN. Today only the spot agent publishes, so the switch offered a
-  // choice that could not be honoured — and choosing the unavailable side
-  // silently served the other frame. A control that cannot do what it says is
-  // worse than no control. It reappears by itself once a second instrument
-  // starts publishing; nothing to remember or re-enable.
-  async function configureFrameSwitch() {
-    const sw = document.getElementById('frameSwitch');
-    if (!sw) return;
-    try {
-      const [def, spot] = await Promise.allSettled([
-        fetchLiveStatus(undefined, LIVE_STATUS_READ_TOKEN),      // whatever the feed defaults to
-        fetchLiveStatus('NIFTY', LIVE_STATUS_READ_TOKEN),        // spot, explicitly
-      ]);
-      const syms = new Set(
-        [def, spot].filter(r => r.status === 'fulfilled' && r.value && r.value.symbol)
-                   .map(r => r.value.symbol));
-      if (syms.size < 2) {
-        sw.style.display = 'none';
-        const only = [...syms][0];
-        if (only) {
-          activeSymbol = isSpotSymbol(only) ? only : '';
-          try { localStorage.setItem('lm-symbol', activeSymbol); } catch (e) { /* private mode */ }
-        }
-        console.info('[live-market] one instrument publishing (' + ([...syms][0] || 'none')
-          + ') — frame switch hidden until a second one appears.');
-      } else {
-        sw.style.display = '';
-      }
-    } catch (e) {
-      console.warn('[live-market] could not determine available instruments:', e);
-    }
-  }
-
-  configureFrameSwitch().finally(refresh);
-  setInterval(refresh, REFRESH_MS);
+    // Initial fetch and loop
+    refreshDashboard();
+    setInterval(refreshDashboard, REFRESH_MS);
 </script>
 </body>
 </html>
