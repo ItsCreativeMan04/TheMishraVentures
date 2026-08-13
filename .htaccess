@@ -5,13 +5,9 @@
 # (mishra-ventures/live-market/, etc.) is left untouched.
 RedirectMatch 301 ^/$ /mishra-ventures/
 
-# ── Live Strategy Monitor public route ──
-# Exposes /mishra-ventures/live-strategy/ publicly while serving the internal page at
-# mishra-ventures/sell-ce-paper-agent/index.html without a visible browser redirect.
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteRule ^mishra-ventures/live-strategy/?$ mishra-ventures/sell-ce-paper-agent/index.html [L]
-</IfModule>
+# ── Live Strategy Monitor route ──
+# Apache serves mishra-ventures/live-strategy/index.html (public)
+# and mishra-ventures/live-strategy/my/index.html (private) directly.
 
 # ── Don't let browsers cache the HTML ──
 #
