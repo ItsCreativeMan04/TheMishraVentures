@@ -964,10 +964,28 @@
         return `<span class="status-badge badge-neutral">${val}</span>`;
     }
 
+    function parseISODate(isoStr) {
+        if (!isoStr) return null;
+        try {
+            let str = String(isoStr).trim();
+            str = str.replace(/(\.\d{3})\d+/, '$1');
+            if (!/[Zz]|[+-]\d{2}:?\d{2}$/.test(str)) {
+                str += '+05:30';
+            }
+            const d = new Date(str);
+            const time = d.getTime();
+            return Number.isFinite(time) ? time : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function formatTime(isoStr) {
         if (!isoStr) return '--:--:-- IST';
         try {
-            const d = new Date(isoStr);
+            const timeMs = parseISODate(isoStr);
+            if (timeMs === null) return String(isoStr);
+            const d = new Date(timeMs);
             return d.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false }) + ' IST';
         } catch (e) {
             return String(isoStr);
@@ -976,18 +994,17 @@
 
     function calcAgeMinutes(isoStr) {
         if (!isoStr) return 999;
-        try {
-            const updateTime = new Date(isoStr).getTime();
-            const now = new Date().getTime();
-            return (now - updateTime) / (1000 * 60);
-        } catch (e) {
-            return 999;
-        }
+        const updateTime = parseISODate(isoStr);
+        if (updateTime === null) return 999;
+        const now = Date.now();
+        const ageMin = (now - updateTime) / (1000 * 60);
+        return Number.isFinite(ageMin) ? Math.max(0, ageMin) : 999;
     }
 
     async function refreshDashboard() {
         try {
-            const res = await fetch(`${WORKER_URL}?symbol=NIFTY`, {
+            const res = await fetch(`${WORKER_URL}?symbol=NIFTY&t=${Date.now()}`, {
+                cache: 'no-store',
                 headers: { 'Authorization': `Bearer ${READ_TOKEN}` }
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1008,10 +1025,11 @@
     function renderDashboard(data) {
         const wi = data.web_intelligence || {};
 
-        // CANONICAL FRESHNESS CALCULATION (Defect 4 Fix)
+        // CANONICAL FRESHNESS CALCULATION (Defect 4 Fix & NaN Protection)
         const ageMin = calcAgeMinutes(data.updated_at);
         const isStale = ageMin > 5 || data._isStale;
-        const roundedAge = Math.round(ageMin);
+        const roundedAge = isFiniteNum(ageMin) && ageMin < 900 ? Math.round(ageMin) : null;
+        const ageStr = roundedAge !== null ? `${roundedAge}m ago` : 'timestamp unavailable';
 
         // 1. LIVE HEADER
         const livePill = document.getElementById('val-live-pill');
@@ -1021,7 +1039,7 @@
         if (isStale) {
             if (livePill) livePill.className = 'live-pill stale';
             if (liveDot) liveDot.className = 'dot amber';
-            if (liveText) liveText.textContent = `STALE (${roundedAge}m ago)`;
+            if (liveText) liveText.textContent = `STALE (${ageStr})`;
         } else {
             if (livePill) livePill.className = 'live-pill live';
             if (liveDot) liveDot.className = 'dot green';
@@ -1145,7 +1163,7 @@
         const rawOfFeed = ofs.feed_status || 'LIVE';
 
         if (isStale) {
-            ofFeedEl.innerHTML = `<span class="status-badge badge-amber">STALE (${roundedAge}m ago)</span>`;
+            ofFeedEl.innerHTML = `<span class="status-badge badge-amber">STALE (${ageStr})</span>`;
         } else {
             ofFeedEl.innerHTML = `<span class="status-badge badge-green">${rawOfFeed}</span>`;
         }
@@ -1164,7 +1182,7 @@
 
         document.getElementById('val-of-cvd-note').textContent = ofs.cvd_provenance_note || 'CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.';
         document.getElementById('val-of-qual-note').textContent = isStale ?
-            `Snapshot age: ${roundedAge}m ago (Last observed backend feed state: ${rawOfFeed}).` :
+            `Snapshot age: ${ageStr} (Last observed backend feed state: ${rawOfFeed}).` :
             `${ofs.combined_updates_pct || 74.55}% combined updates (single packet contains multiple trades).`;
 
         // 8. MARKET COMMENTARY
@@ -1208,11 +1226,11 @@
 
         if (isStale) {
             mktFeedEl.className = 'status-badge badge-amber';
-            mktFeedEl.textContent = `STALE (${roundedAge}m ago)`;
+            mktFeedEl.textContent = `STALE (${ageStr})`;
             ofFeedProvEl.className = 'status-badge badge-amber';
-            ofFeedProvEl.textContent = `STALE (${roundedAge}m ago)`;
-            document.getElementById('prov-mkt-note').textContent = `Snapshot age ${roundedAge}m ago (Last backend state: ${rawMktFeed})`;
-            document.getElementById('prov-of-note').textContent = `Snapshot age ${roundedAge}m ago (Last backend state: ${rawOfFeedProv})`;
+            ofFeedProvEl.textContent = `STALE (${ageStr})`;
+            document.getElementById('prov-mkt-note').textContent = `Snapshot age ${ageStr} (Last backend state: ${rawMktFeed})`;
+            document.getElementById('prov-of-note').textContent = `Snapshot age ${ageStr} (Last backend state: ${rawOfFeedProv})`;
         } else {
             mktFeedEl.className = 'status-badge badge-green';
             mktFeedEl.textContent = 'LIVE';
