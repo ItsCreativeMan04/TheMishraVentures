@@ -726,21 +726,21 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">MARKET SUMMARY / OI</h2>
-                    <span class="card-subtitle">Options positioning, walls & sentiment</span>
+                    <span class="card-subtitle" id="val-oi-subtitle">Current positioning & walls · Expiry: --</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="status-badge badge-neutral" id="val-pcr-pill">PCR --</span>
+                    <span class="status-badge badge-neutral" id="val-pcr-pill">CURRENT PCR --</span>
                     <a href="oi/" class="oi-btn-link" title="Open dedicated Options Chain & Open Interest Analytics">View Full OI →</a>
                 </div>
             </div>
 
             <div class="snapshot-grid" style="grid-template-columns: repeat(2, 1fr);">
                 <div class="snapshot-item">
-                    <span class="metric-label">Total Put OI</span>
+                    <span class="metric-label">Current Put OI</span>
                     <span class="snapshot-val" style="color: var(--accent-green);" id="val-pe-total">-- Cr</span>
                 </div>
                 <div class="snapshot-item">
-                    <span class="metric-label">Total Call OI</span>
+                    <span class="metric-label">Current Call OI</span>
                     <span class="snapshot-val" style="color: var(--accent-red);" id="val-ce-total">-- Cr</span>
                 </div>
             </div>
@@ -764,7 +764,7 @@
             </div>
 
             <div class="callout-box callout-amber" style="margin-top: 4px;">
-                <span class="metric-label" style="color: var(--accent-amber);">OI Flow & Sentiment</span>
+                <span class="metric-label" style="color: var(--accent-amber);">SESSION OI FLOW · 09:15 → NOW</span>
                 <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
                     OI distribution analysis loading...
                 </div>
@@ -1507,9 +1507,11 @@
             planWarning.textContent = '• Verify data connectivity.';
         }
 
-        // 5. COMPACT MARKET SUMMARY / OI (Safe Chain Aggregation)
+        // 5. COMPACT MARKET SUMMARY / OI (Safe Chain Aggregation & Semantic Alignment)
         const oi = data.oi_summary || {};
-        const activeExpiry = oi.expiry;
+        const activeExpiry = oi.expiry || '--';
+        document.getElementById('val-oi-subtitle').textContent = `Current positioning & walls · Expiry: ${activeExpiry}`;
+
         const chain = (data.oi_chains && activeExpiry && Array.isArray(data.oi_chains[activeExpiry])) 
             ? data.oi_chains[activeExpiry] 
             : (data.oi_chains && typeof data.oi_chains === 'object' && Object.keys(data.oi_chains).length > 0 ? Object.values(data.oi_chains)[0] : null);
@@ -1551,8 +1553,19 @@
             `Call Wall at ${callWallStr} acting as primary overhead resistance.` :
             'Call Wall unavailable in latest snapshot.';
 
-        document.getElementById('val-pcr-pill').textContent = isFiniteNum(oi.pcr) ? `PCR ${oi.pcr}` : 'PCR N/A';
-        document.getElementById('val-oi-read').textContent = oi.flow_read || (oi.pcr_read ? `${oi.pcr_read}.` : 'Options Open Interest distribution analysis active.');
+        const pcrVal = isFiniteNum(oi.pcr) ? Number(oi.pcr) : ((totalCeOi && totalCeOi > 0) ? (totalPeOi / totalCeOi) : null);
+        const pcrPill = document.getElementById('val-pcr-pill');
+        if (isFiniteNum(pcrVal)) {
+            pcrPill.textContent = `CURRENT PCR ${pcrVal.toFixed(2)}`;
+            if (pcrVal >= 1.25) pcrPill.className = 'status-badge badge-green';
+            else if (pcrVal <= 0.75) pcrPill.className = 'status-badge badge-red';
+            else pcrPill.className = 'status-badge badge-blue';
+        } else {
+            pcrPill.textContent = 'CURRENT PCR N/A';
+            pcrPill.className = 'status-badge badge-neutral';
+        }
+
+        document.getElementById('val-oi-read').textContent = oi.flow_read || (oi.pcr_read ? `${oi.pcr_read}.` : 'Session cumulative open interest change analysis active.');
 
         // 6. KEY LEVELS
         const kl = wi.key_levels || {};
