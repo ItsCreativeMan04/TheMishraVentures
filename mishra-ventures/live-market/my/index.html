@@ -49,37 +49,63 @@
     <style>
         :root {
             --bg-dark: #090d16;
+            --bg: #090d16;
             --surface-1: #111726;
+            --surface: #111726;
             --surface-2: #182238;
+            --surface2: #182238;
             --card-bg: rgba(18, 26, 43, 0.85);
             --card-border: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
             --border-highlight: rgba(56, 189, 248, 0.2);
             --text-primary: #f8fafc;
+            --text: #f8fafc;
+            --text-strong: #ffffff;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
+            --muted: #94a3b8;
             --accent-blue: #38bdf8;
+            --accent: #38bdf8;
             --accent-green: #22c55e;
+            --green: #22c55e;
+            --accent2: #22c55e;
             --accent-red: #ef4444;
+            --red: #ef4444;
             --accent-amber: #f59e0b;
+            --yellow: #f59e0b;
             --accent-purple: #a855f7;
+            --nav-bg: rgba(6, 10, 20, 0.88);
             --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
         }
 
         html[data-theme="light"] {
             --bg-dark: #f4f7fc;
+            --bg: #f4f7fc;
             --surface-1: #ffffff;
+            --surface: #ffffff;
             --surface-2: #eef2f9;
+            --surface2: #eef2f9;
             --card-bg: #ffffff;
             --card-border: rgba(15, 23, 42, 0.12);
+            --border: rgba(15, 23, 42, 0.12);
             --border-highlight: rgba(29, 78, 216, 0.2);
             --text-primary: #0f172a;
+            --text: #0f172a;
+            --text-strong: #060a14;
             --text-secondary: #475569;
             --text-muted: #64748b;
+            --muted: #475569;
             --accent-blue: #1d4ed8;
+            --accent: #1d4ed8;
             --accent-green: #15803d;
+            --green: #15803d;
+            --accent2: #15803d;
             --accent-red: #b91c1c;
+            --red: #b91c1c;
             --accent-amber: #b45309;
+            --yellow: #b45309;
             --accent-purple: #6d28d9;
+            --nav-bg: rgba(255, 255, 255, 0.92);
             --shadow-glow: 0 4px 20px 0 rgba(0, 0, 0, 0.06);
         }
 
@@ -1338,88 +1364,143 @@
         const planMeaning = document.getElementById('val-plan-meaning');
         const planWarning = document.getElementById('val-plan-warning');
 
-        planThesisEl.textContent = mp.original_thesis || data.bias || 'NEUTRAL';
+        const thesisStr = String(mp.original_thesis || data.bias || 'NEUTRAL').toUpperCase();
+        const thesisLower = thesisStr.toLowerCase();
+        planThesisEl.textContent = thesisStr;
 
         const activeCriteria = Array.isArray(mp.active_criteria) ? mp.active_criteria : [];
         const whyInvalidated = Array.isArray(mp.why_invalidated) ? mp.why_invalidated : [];
         const pendingStructural = Array.isArray(mp.pending_structural_checks) ? mp.pending_structural_checks : (Array.isArray(mp.pending_checks) ? mp.pending_checks.filter(c => !c.toLowerCase().includes('vwap') && !c.toLowerCase().includes('feed has no volume')) : []);
         const infoNotes = Array.isArray(mp.informational_notes) ? mp.informational_notes : (Array.isArray(mp.pending_checks) ? mp.pending_checks.filter(c => c.toLowerCase().includes('vwap') || c.toLowerCase().includes('feed has no volume')) : []);
 
+        // Helper function for criteria color & icon semantics
+        function renderCriterionLi(itemText, defaultCategory) {
+            let str = String(itemText || '').trim();
+            if (!str) return '';
+
+            let category = defaultCategory || 'info'; // 'pass' | 'fail' | 'pending' | 'info'
+
+            if (str.startsWith('✓') || str.startsWith('PASS')) {
+                category = 'pass';
+                str = str.replace(/^[✓\s]+/, '').replace(/^PASS:\s*/i, '').trim();
+            } else if (str.startsWith('✗') || str.startsWith('FAIL') || /^Need\s+/i.test(str)) {
+                category = 'fail';
+                str = str.replace(/^[✗\s]+/, '').replace(/^FAIL:\s*/i, '').replace(/^Need\s*/i, '').trim();
+            } else if (str.startsWith('⏳') || str.startsWith('·') || str.startsWith('ℹ️') || str.startsWith('ℹ')) {
+                if (str.toLowerCase().includes('vwap') || str.toLowerCase().includes('feed has no volume') || str.toLowerCase().includes('optional') || str.toLowerCase().includes('skipped')) {
+                    category = 'info';
+                } else if (str.toLowerCase().includes('forming') || str.toLowerCase().includes('structure') || str.toLowerCase().includes('transition') || str.toLowerCase().includes('candle') || str.toLowerCase().includes('timeframe')) {
+                    category = 'pending';
+                } else {
+                    category = 'info';
+                }
+                str = str.replace(/^[⏳·ℹ️ℹ\s]+/, '').replace(/^Informational:\s*/i, '').replace(/^Pending:\s*/i, '').trim();
+            }
+
+            if (category === 'pass') {
+                return `<li style="color: var(--accent-green); display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-weight: 800; font-size: 0.95rem; line-height: 1.2;">✓</span>
+                    <span>${str}</span>
+                </li>`;
+            } else if (category === 'fail') {
+                return `<li style="color: var(--accent-red); display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-weight: 800; font-size: 0.95rem; line-height: 1.2;">✗</span>
+                    <span>Need ${str}</span>
+                </li>`;
+            } else if (category === 'pending') {
+                return `<li style="color: var(--accent-amber); display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-size: 0.95rem; line-height: 1.2;">⏳</span>
+                    <span><strong>Pending:</strong> ${str}</span>
+                </li>`;
+            } else {
+                // Info / Skipped
+                return `<li style="color: var(--text-secondary); font-size: 0.82rem; display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-size: 0.85rem; line-height: 1.2;">ℹ️</span>
+                    <span><em>Informational:</em> ${str}</span>
+                </li>`;
+            }
+        }
+
         if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
             planStatusEl.textContent = '✓ QUALIFIED';
             planStatusEl.className = 'status-badge badge-green';
             planListLabel.textContent = 'Active Setup Criteria';
             
-            let html = activeCriteria.length > 0 ? activeCriteria.map(item => `<li>✓ ${item}</li>`).join('') : '<li>All morning thesis conditions are satisfied.</li>';
-            if (infoNotes.length > 0) {
-                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+            let listHtml = '';
+            if (activeCriteria.length > 0) {
+                listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
+            } else {
+                listHtml += renderCriterionLi('All morning thesis conditions are satisfied.', 'pass');
             }
-            planList.innerHTML = html;
+            if (infoNotes.length > 0) {
+                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+            }
+            planList.innerHTML = listHtml;
 
             planCallout.className = 'callout-box callout-green';
-            planMeaning.textContent = mp.meaning || '• Morning thesis is QUALIFIED and active.';
-            planWarning.textContent = mp.direction_warning || '• Follow playbook execution criteria for armed setups.';
+            planMeaning.textContent = `• ${thesisStr} morning thesis is qualified and active.`;
+            planWarning.textContent = '• Follow playbook execution criteria for qualified setups.';
         } else if (canonicalStatus === 'INVALIDATED') {
             planStatusEl.textContent = '❌ INVALIDATED';
             planStatusEl.className = 'status-badge badge-red';
             planListLabel.textContent = 'Why Was It Invalidated?';
 
             const whyItems = whyInvalidated.length > 0 ? whyInvalidated : (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke morning invalidation level']);
-            let html = whyItems.map(item => `<li>✗ ${item}</li>`).join('');
+            let listHtml = whyItems.map(c => renderCriterionLi(c, 'fail')).join('');
             if (infoNotes.length > 0) {
-                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
             }
-            planList.innerHTML = html;
+            planList.innerHTML = listHtml;
 
             planCallout.className = 'callout-box callout-red';
-            planMeaning.textContent = mp.meaning || '• Original morning thesis is OFF for today.';
-            planWarning.textContent = mp.direction_warning || '• Important: This does NOT mean BUY/SELL. Wait for a NEW qualified setup.';
-        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
+            planMeaning.textContent = `• The original ${thesisLower} morning thesis is OFF for today.`;
+            planWarning.textContent = `• Important: This does NOT mean ${thesisStr === 'BULLISH' ? 'SELL' : 'BUY'}. Wait for a NEW qualified setup.`;
+        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
             planStatusEl.textContent = '⏳ PENDING';
             planStatusEl.className = 'status-badge badge-amber';
-            planListLabel.textContent = pendingStructural.length > 0 ? 'Pending Formation Checks & Criteria' : 'Active / Pending Criteria';
+            planListLabel.textContent = 'Thesis Formation Checks & Criteria';
 
-            let items = [];
+            let listHtml = '';
             if (pendingStructural.length > 0) {
-                items.push(...pendingStructural.map(c => `<li>⏳ <strong>Pending:</strong> ${c}</li>`));
+                listHtml += pendingStructural.map(c => renderCriterionLi(c, 'pending')).join('');
             }
             if (whyInvalidated.length > 0) {
-                items.push(...whyInvalidated.map(c => `<li style="color: var(--accent-amber);">⚠️ <strong>Condition:</strong> ${c}</li>`));
+                listHtml += whyInvalidated.map(c => renderCriterionLi(c, 'fail')).join('');
             }
             if (activeCriteria.length > 0) {
-                items.push(...activeCriteria.map(c => `<li>✓ ${c}</li>`));
+                listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
             }
-            if (items.length === 0) {
-                items.push('<li>Awaiting completed timeframe candle confirmation.</li>');
+            if (!listHtml) {
+                listHtml = renderCriterionLi('Awaiting timeframe / structure confirmation.', 'pending');
             }
             if (infoNotes.length > 0) {
-                items.push(...infoNotes.map(c => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· <em>Informational:</em> ${c}</li>`));
+                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
             }
-            planList.innerHTML = items.join('');
+            planList.innerHTML = listHtml;
 
             planCallout.className = 'callout-box callout-amber';
-            planMeaning.textContent = mp.meaning || '• Morning thesis is evaluating conditions.';
-            planWarning.textContent = mp.direction_warning || '• Await setup confirmation before taking positions.';
+            planMeaning.textContent = `• ${thesisStr} morning thesis is still forming / evaluating conditions.`;
+            planWarning.textContent = '• Await completion of remaining qualification criteria before taking positions.';
         } else if (canonicalStatus === 'NOT_QUALIFIED') {
             planStatusEl.textContent = '⚠️ NO SETUP';
             planStatusEl.className = 'status-badge badge-neutral';
             planListLabel.textContent = 'Context Filter Reasons';
 
             const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias armed pre-market.'];
-            let html = ctxItems.map(item => `<li>${item}</li>`).join('');
+            let listHtml = ctxItems.map(c => renderCriterionLi(c, 'info')).join('');
             if (infoNotes.length > 0) {
-                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
             }
-            planList.innerHTML = html;
+            planList.innerHTML = listHtml;
 
             planCallout.className = 'callout-box callout-blue';
-            planMeaning.textContent = mp.meaning || '• No qualified morning thesis armed for today.';
-            planWarning.textContent = mp.direction_warning || '• Stand aside; wait for fresh intraday structure.';
+            planMeaning.textContent = '• No qualified morning thesis armed for today.';
+            planWarning.textContent = '• Stand aside; wait for fresh intraday structure.';
         } else {
             planStatusEl.textContent = '⚪ UNKNOWN';
             planStatusEl.className = 'status-badge badge-neutral';
             planListLabel.textContent = 'Feed Status';
-            planList.innerHTML = '<li>Awaiting morning plan session data...</li>';
+            planList.innerHTML = renderCriterionLi('Awaiting morning plan session data...', 'info');
 
             planCallout.className = 'callout-box callout-blue';
             planMeaning.textContent = '• Awaiting session feed.';
@@ -1506,16 +1587,18 @@
         let instrText = 'STAND ASIDE';
 
         if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
-            focusText = ds.current_focus || 'WAIT';
-            whyText = ds.why || 'Morning thesis is QUALIFIED and active. Setup criteria are satisfied.';
-            instrText = ds.instruction || 'FOLLOW QUALIFIED SETUP RULES';
+            focusText = ds.current_focus || 'FOLLOW SETUP RULES';
+            whyText = ds.why || `${thesisStr} morning thesis is QUALIFIED and active. Setup criteria are satisfied.`;
+            instrText = ds.instruction || 'FOLLOW PLAYBOOK EXECUTION CRITERIA';
         } else if (canonicalStatus === 'INVALIDATED') {
             focusText = 'STAND ASIDE';
-            whyText = ds.why || 'Morning thesis is INVALIDATED for today. Do not force entries on the original thesis.';
+            whyText = ds.why || `The original ${thesisLower} morning thesis is INVALIDATED for today. Do not force entries on the original thesis.`;
             instrText = 'WAIT FOR A NEW QUALIFIED SETUP';
-        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
-            focusText = 'STAND ASIDE';
-            whyText = ds.why || 'Morning thesis is PENDING confirmation. Await completion of structural checks.';
+        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
+            focusText = 'WAIT';
+            whyText = (ds.why && !ds.why.toLowerCase().includes('invalidated') && !ds.why.toLowerCase().includes('off for today')) 
+                ? ds.why 
+                : `${thesisStr} morning thesis is PENDING confirmation. Await completion of structural checks.`;
             instrText = 'WAIT FOR COMPLETION OF PENDING CHECKS';
         } else if (canonicalStatus === 'NOT_QUALIFIED') {
             focusText = 'STAND ASIDE';
