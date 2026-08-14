@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automated Nifty Options Strategy | Live Performance Telemetry | The Mishra Ventures</title>
-    <meta name="description" content="Live telemetry and execution monitoring for an automated, rule-based Nifty options research strategy operating in paper-trading simulation.">
+    <title>Automated Nifty Options Strategy | Research Telemetry | The Mishra Ventures</title>
+    <meta name="description" content="Live telemetry, execution monitoring, and systematic research for an automated, rule-based Nifty options strategy.">
 
     <!-- Inline blocking theme switcher script -->
     <script>
@@ -18,8 +18,8 @@
       })();
     </script>
 
-    <link rel="stylesheet" href="../shared/global.css?v=20260814" />
-    <link rel="stylesheet" href="../shared/components.css?v=20260814" />
+    <link rel="stylesheet" href="../shared/global.css?v=20260814b" />
+    <link rel="stylesheet" href="../shared/components.css?v=20260814b" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -160,17 +160,17 @@
         }
 
         .hero-subtitle {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--accent-blue);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             letter-spacing: 0.02em;
         }
 
         .hero-sub {
             color: var(--text-secondary);
             font-size: 0.95rem;
-            max-width: 640px;
+            max-width: 660px;
             margin: 0 auto;
             line-height: 1.6;
         }
@@ -330,7 +330,7 @@
         .val-negative { color: var(--accent-red) !important; }
         .val-neutral { color: var(--accent-amber) !important; }
 
-        /* ── Execution Milestones Card ── */
+        /* ── Panel Cards ── */
         .panel-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -427,11 +427,25 @@
             line-height: 1.6;
             background: rgba(56, 189, 248, 0.05);
             border-left: 3px solid var(--accent-blue);
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 0 8px 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        /* ── 4-Step Workflow Pipeline ── */
+        .rationale-link {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .rationale-link:hover { text-decoration: underline; }
+
+        /* ── How The System Works (4-Step Workflow Pipeline) ── */
         .pipeline-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -464,7 +478,7 @@
         }
 
         .step-desc {
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
             line-height: 1.5;
         }
@@ -532,7 +546,19 @@
             border-color: var(--accent-blue);
         }
 
-        /* ── Transparency Section ── */
+        /* ── Performance History Section ── */
+        .history-placeholder-box {
+            background: var(--surface-2);
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        /* ── Trust / Transparency ("Why Follow This Project?") ── */
         .trust-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -634,16 +660,40 @@
             border-color: var(--accent-blue);
         }
 
-        /* ── Research & Compliance Disclosure ── */
+        /* ── Execution Environment Note & Disclosure ── */
         .disclosure-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 18px 20px;
+            padding: 20px;
             margin-bottom: 28px;
             font-size: 0.78rem;
             line-height: 1.6;
             color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .env-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        .env-chip {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--text-strong);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
         }
 
         .disclosure-title {
@@ -652,7 +702,6 @@
             text-transform: uppercase;
             letter-spacing: 0.06em;
             color: var(--text-secondary);
-            margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -708,20 +757,20 @@
     <div class="main-container">
         <!-- Pre-Market Freshness Banner (Dynamic) -->
         <div class="premarket-box" id="premarketBanner">
-            <strong>Session Initializing:</strong> Today's trading session is preparing. Automated entry window opens at 09:30 IST.
+            <strong>Session Initializing:</strong> Today's trading session is preparing. Automated evaluation window opens at 09:30 IST.
         </div>
 
         <!-- 1. Hero Section -->
         <section class="hero-section">
             <div class="badge-strip">
-                <span class="tag-badge live-tag"><span class="live-dot-pulse"></span> LIVE DATA</span>
-                <span class="tag-badge">PAPER TRADING</span>
+                <span class="tag-badge live-tag"><span class="live-dot-pulse"></span> LIVE MARKET DATA</span>
+                <span class="tag-badge">AUTOMATED STRATEGY</span>
                 <span class="tag-badge">NIFTY OPTIONS</span>
             </div>
             <h1 class="hero-title">AUTOMATED NIFTY OPTIONS STRATEGY</h1>
-            <div class="hero-subtitle">Rule-Based • Paper Trading • Live Market Data</div>
+            <div class="hero-subtitle">Rule-Based Execution · Live Market Data · Every Session Recorded</div>
             <p class="hero-sub">
-                An automated research strategy executing predefined rules against live NIFTY market data.
+                An automated research strategy evaluating NIFTY market conditions, executing predefined rules, and recording every session.
             </p>
         </section>
 
@@ -738,7 +787,7 @@
             </div>
             <div class="status-strip-right">
                 <span class="meta-pill" id="posSub">Connecting...</span>
-                <span class="meta-pill" id="livePillText">Live Telemetry Active</span>
+                <span class="meta-pill" id="livePillText">LIVE TELEMETRY</span>
             </div>
         </div>
 
@@ -806,18 +855,18 @@
             </div>
         </div>
 
-        <!-- 5. Why This Trade? (Rule-Based Rationale) -->
+        <!-- 5. Why This Trade? (Curiosity-Oriented Rationale) -->
         <div class="panel-card" id="whySection">
             <div class="panel-header">
-                <span class="panel-title">🎯 Why This Trade? (Verified Decision Inputs)</span>
+                <span class="panel-title">🎯 Why This Trade? (Decision Inputs)</span>
             </div>
             <div class="facts-grid">
                 <div class="fact-card">
-                    <div class="fact-title">NIFTY Spot at Calc</div>
+                    <div class="fact-title">NIFTY Spot at Decision</div>
                     <div class="fact-val" id="valNiftySpot">--</div>
                 </div>
                 <div class="fact-card">
-                    <div class="fact-title">Baseline Volatility ATR(10)</div>
+                    <div class="fact-title">Baseline Volatility (ATR)</div>
                     <div class="fact-val" id="valAtr10">--</div>
                 </div>
                 <div class="fact-card">
@@ -830,35 +879,36 @@
                 </div>
             </div>
             <div class="rationale-note">
-                <strong>Systematic Execution Logic:</strong> Strike selection and execution are rule-based and determined by the strategy's predefined market and volatility framework. Decisions are computed autonomously before the morning entry window.
+                <div>The system evaluated predefined market and volatility conditions and selected the contract mechanically.</div>
+                <a href="#workflowSection" class="rationale-link">Explore the research methodology →</a>
             </div>
         </div>
 
-        <!-- 6. Strategy Workflow Pipeline -->
+        <!-- 6. How The System Works (4-Step Workflow Pipeline) -->
         <div class="panel-card" id="workflowSection">
             <div class="panel-header">
-                <span class="panel-title">🔄 Strategy Execution Workflow</span>
+                <span class="panel-title">🔄 How The System Works</span>
             </div>
             <div class="pipeline-grid">
                 <div class="pipeline-step">
                     <div class="step-num">01</div>
                     <div class="step-title">Market Scan</div>
-                    <div class="step-desc">Ingests morning market feeds and computes baseline index volatility.</div>
+                    <div class="step-desc">Predefined market inputs are evaluated.</div>
                 </div>
                 <div class="pipeline-step">
                     <div class="step-num">02</div>
-                    <div class="step-title">Strike Selection</div>
-                    <div class="step-desc">Systematically selects an out-of-the-money Call option strike based on predefined rules.</div>
+                    <div class="step-title">Setup Qualification</div>
+                    <div class="step-desc">The system checks whether the required conditions are satisfied.</div>
                 </div>
                 <div class="pipeline-step">
                     <div class="step-num">03</div>
                     <div class="step-title">Automated Execution</div>
-                    <div class="step-desc">Enters a simulated paper short Call position during the designated morning window.</div>
+                    <div class="step-desc">A qualified setup is executed according to predefined rules.</div>
                 </div>
                 <div class="pipeline-step">
                     <div class="step-num">04</div>
-                    <div class="step-title">Risk Management / Exit</div>
-                    <div class="step-desc">Continuously tracks live quotes against disciplined stop-loss rules and intraday cutoffs.</div>
+                    <div class="step-title">Risk Management</div>
+                    <div class="step-desc">Predefined exit and risk rules manage the position.</div>
                 </div>
             </div>
         </div>
@@ -873,44 +923,54 @@
                 <div class="log-entry">Awaiting activity telemetry...</div>
             </div>
             <button type="button" class="log-toggle-btn" id="btnToggleActivity" style="display:none;">
-                <span>View full activity stream ↓</span>
+                <span>View all events ↓</span>
             </button>
         </div>
 
-        <!-- 8. Trust & Transparency ("What You're Seeing") -->
+        <!-- 8. Performance History -->
         <div class="panel-card">
             <div class="panel-header">
-                <span class="panel-title">🛡️ What You're Seeing (Transparency & Integrity)</span>
+                <span class="panel-title">📈 Performance History</span>
+            </div>
+            <div class="history-placeholder-box">
+                Historical performance reporting is being built from verified session records.
+            </div>
+        </div>
+
+        <!-- 9. Trust & Transparency ("Why Follow This Project?") -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span class="panel-title">🛡️ Why Follow This Project?</span>
             </div>
             <div class="trust-grid">
                 <div class="trust-item">
                     <span class="trust-icon">✓</span>
-                    <span>Live exchange market data</span>
+                    <span>Live market data</span>
                 </div>
                 <div class="trust-item">
                     <span class="trust-icon">✓</span>
-                    <span>Automated rule execution</span>
+                    <span>Automated rule evaluation</span>
                 </div>
                 <div class="trust-item">
                     <span class="trust-icon">✓</span>
-                    <span>Paper-trading simulation</span>
+                    <span>Timestamped session records</span>
                 </div>
                 <div class="trust-item">
                     <span class="trust-icon">✓</span>
-                    <span>Timestamped session telemetry</span>
+                    <span>Transparent wins and losses</span>
                 </div>
                 <div class="trust-item">
                     <span class="trust-icon">✓</span>
-                    <span>Results shown without hiding losses</span>
+                    <span>No manual trade overrides in the execution workflow</span>
                 </div>
             </div>
         </div>
 
-        <!-- 9. Primary Call to Action -->
+        <!-- 10. Primary Call to Action -->
         <div class="cta-card">
             <div class="cta-title">Quantitative Research & Live Engineering</div>
             <p class="cta-sub">
-                Explore our ongoing quantitative research, market models, and open systems engineering.
+                Explore our ongoing quantitative research, systematic market models, and open systems engineering.
             </p>
             <div class="cta-btn-row">
                 <a href="../" class="primary-cta-btn">
@@ -922,11 +982,15 @@
             </div>
         </div>
 
-        <!-- 10. Research / Paper Trading Disclosure -->
-        <section class="disclosure-card" aria-label="Research and Simulation Disclosure">
-            <div class="disclosure-title">⚖️ RESEARCH / PAPER TRADING DISCLOSURE</div>
+        <!-- 11. Execution Environment & Disclosure -->
+        <section class="disclosure-card" aria-label="Research and Execution Disclosure">
+            <div class="env-badge-row">
+                <span>EXECUTION ENVIRONMENT:</span>
+                <span class="env-chip">Research / simulated execution</span>
+            </div>
+            <div class="disclosure-title">⚖️ RESEARCH / EXECUTION DISCLOSURE</div>
             <p>
-                This page displays telemetry from an automated quantitative research strategy operating in a paper-trading simulation environment. Trade executions, fills, and P&L metrics are calculated against live market data for algorithmic validation and research purposes. This does not represent a live brokerage account and does not constitute financial, legal, or investment advice.
+                This page presents telemetry from an automated quantitative research strategy using live market data and a research/simulated execution environment. Session results are shown for algorithmic validation and research purposes and do not represent a live brokerage account or investment advice.
             </p>
         </section>
     </div>
@@ -972,11 +1036,11 @@
                 const banner = document.getElementById('premarketBanner');
                 if (payloadDate && payloadDate !== istDateStr && isPreMarket) {
                     if (banner) banner.style.display = 'block';
-                    safeSetText('livePillText', 'Session Initializing');
+                    safeSetText('livePillText', 'SESSION INITIALIZING');
                     return true;
                 }
                 if (banner) banner.style.display = 'none';
-                safeSetText('livePillText', 'Live Telemetry Active');
+                safeSetText('livePillText', 'LIVE TELEMETRY');
             } catch (err) {
                 console.warn('evaluateFreshness non-blocking warning:', err);
             }
@@ -1005,7 +1069,6 @@
 
             let itemsToDisplay = activity;
             if (!isExpanded && activity.length > 8) {
-                // Show key milestone events: initialization, signal, entry, and the last 5 updates
                 const keyEvents = [];
                 if (activity.length > 0) keyEvents.push(activity[0]);
                 if (activity.length > 1 && !keyEvents.includes(activity[1])) keyEvents.push(activity[1]);
@@ -1081,7 +1144,7 @@
                     safeSetText('posSub', data.state || 'Live');
                 }
 
-                // 3. P&L Points (Prefer final_net_points, fallback to unrealized_pnl_points)
+                // 3. P&L Points
                 let pnlPts = null;
                 if (data.final_net_points !== undefined && data.final_net_points !== null) {
                     pnlPts = Number(data.final_net_points);
@@ -1103,7 +1166,7 @@
                     safeSetText('pnlPointsSub', isOpen ? 'Live Mark-to-Market P&L' : 'Index Points Captured');
                 }
 
-                // 4. P&L Rupees (Prefer final_net_rupees, fallback to net_pnl_rupees or pnlPts * LOT_SIZE)
+                // 4. P&L Rupees
                 let pnlRs = null;
                 if (data.final_net_rupees !== undefined && data.final_net_rupees !== null) {
                     pnlRs = Number(data.final_net_rupees);
@@ -1138,7 +1201,7 @@
                     safeSetText('valOptionSymbol', data.option_symbol);
                 }
 
-                // 6. Timestamps & Execution Milestones (Derive deterministically from activity)
+                // 6. Timestamps & Execution Milestones
                 let entryTime = data.entry_time || extractTimestamp(data.activity, /opened|short/i);
                 if (!entryTime && isOpen) entryTime = '09:30:00 IST';
                 safeSetText('timeEntry', entryTime || (isNoTrade ? '--' : '--'));
