@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automated Nifty Strategy | Live Session Performance | The Mishra Ventures</title>
 
-    <link rel="stylesheet" href="../shared/global.css?v=20260812" />
-    <link rel="stylesheet" href="../shared/components.css?v=20260812" />
+    <link rel="stylesheet" href="../shared/global.css?v=20260814" />
+    <link rel="stylesheet" href="../shared/components.css?v=20260814" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -219,7 +219,7 @@
         </div>
         <div class="live-status-pill" id="livePill">
             <div class="status-dot"></div>
-            <span id="livePillText">Live Data Active</span>
+            <span id="livePillText">Connecting...</span>
         </div>
     </div>
 
@@ -231,26 +231,26 @@
 
         <div class="hero-banner">
             <h1 class="hero-title">Automated Nifty Trading Session</h1>
-            <p class="hero-sub" id="sessionLabel">Trading Session — Active Session</p>
+            <p class="hero-sub" id="sessionLabel">Trading Session — Live Monitoring</p>
         </div>
 
         <div class="grid">
             <div class="card">
                 <div class="card-label">Position Status</div>
-                <div class="card-value" id="posStatus">CLOSED</div>
-                <div class="card-sub" id="posSub">Session Complete</div>
+                <div class="card-value" id="posStatus">--</div>
+                <div class="card-sub" id="posSub">Connecting...</div>
             </div>
 
             <div class="card">
                 <div class="card-label">Session P&L (Points)</div>
-                <div class="card-value val-positive" id="pnlPoints">+38.75 pts</div>
+                <div class="card-value" id="pnlPoints">-- pts</div>
                 <div class="card-sub" id="pnlPointsSub">Index Points Captured</div>
             </div>
 
             <div class="card">
                 <div class="card-label">Session P&L (Rupees)</div>
-                <div class="card-value val-positive" id="pnlRupees">+₹2,518.75</div>
-                <div class="card-sub" id="pnlRupeesSub">Net Realized Result</div>
+                <div class="card-value" id="pnlRupees">--</div>
+                <div class="card-sub" id="pnlRupeesSub">Result (1 Lot / 65 Qty)</div>
             </div>
         </div>
 
@@ -258,19 +258,19 @@
             <div class="timeline-title">Session Milestones & Execution Timing</div>
             <div class="timeline-row">
                 <span class="t-label">Entry Timestamp</span>
-                <span class="t-val" id="timeEntry">09:30:24 IST</span>
+                <span class="t-val" id="timeEntry">--</span>
             </div>
             <div class="timeline-row">
                 <span class="t-label">Exit Timestamp</span>
-                <span class="t-val" id="timeExit">15:10:16 IST</span>
+                <span class="t-val" id="timeExit">--</span>
             </div>
             <div class="timeline-row">
                 <span class="t-label">Session Exit Reason</span>
-                <span class="t-val" id="exitReason">TIME_EXIT</span>
+                <span class="t-val" id="exitReason">--</span>
             </div>
             <div class="timeline-row">
                 <span class="t-label">Data Feed Freshness</span>
-                <span class="t-val" id="timeUpdated">Just now</span>
+                <span class="t-val" id="timeUpdated">--</span>
             </div>
         </div>
     </div>
@@ -281,6 +281,17 @@
 
     <script>
         const PUBLIC_API_URL = 'https://sell-ce-paper-status.itscreativeman04.workers.dev/public';
+
+        function parseISODate(dateStr) {
+            if (!dateStr) return null;
+            try {
+                let s = String(dateStr).trim();
+                s = s.replace(/(\.\d{3})\d+/, '$1');
+                const d = new Date(s);
+                if (!isNaN(d.getTime())) return d;
+            } catch (e) {}
+            return null;
+        }
 
         function evaluateFreshness(payload) {
             const now = new Date();
@@ -303,35 +314,105 @@
 
         async function fetchPublicData() {
             try {
-                const response = await fetch(PUBLIC_API_URL, { cache: 'no-store' });
+                const url = `${PUBLIC_API_URL}?t=${Date.now()}`;
+                const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) return;
                 const data = await response.json();
 
                 if (evaluateFreshness(data)) return;
 
+                const isOpen = data.position_status === 'OPEN' || data.state === 'PAPER_POSITION_OPEN';
+                const isClosed = data.position_status === 'CLOSED' || data.state === 'SESSION_COMPLETE';
+                const isNoTrade = data.state === 'NO_TRADE';
+
+                // Session Date Label
                 if (data.date) {
                     document.getElementById('sessionLabel').innerText = `Trading Session — ${data.date}`;
                 }
-                if (data.position_status) {
-                    document.getElementById('posStatus').innerText = data.position_status;
+
+                // Position Status
+                const posStatusEl = document.getElementById('posStatus');
+                const posSubEl = document.getElementById('posSub');
+                if (isOpen) {
+                    posStatusEl.innerText = 'OPEN';
+                    posStatusEl.className = 'card-value val-positive';
+                    posSubEl.innerText = 'Active Short CE Position';
+                } else if (isClosed) {
+                    posStatusEl.innerText = 'CLOSED';
+                    posStatusEl.className = 'card-value val-neutral';
+                    posSubEl.innerText = 'Session Complete';
+                } else if (isNoTrade) {
+                    posStatusEl.innerText = 'NO TRADE';
+                    posStatusEl.className = 'card-value val-neutral';
+                    posSubEl.innerText = 'Neutral Market Condition';
+                } else if (data.position_status) {
+                    posStatusEl.innerText = data.position_status;
                 }
-                if (data.net_pnl_points !== undefined) {
-                    const pts = parseFloat(data.net_pnl_points);
+
+                // P&L Points
+                const pnlPts = data.unrealized_pnl_points !== undefined && data.unrealized_pnl_points !== null
+                    ? data.unrealized_pnl_points
+                    : (data.net_pnl_points !== undefined && data.net_pnl_points !== null
+                        ? data.net_pnl_points
+                        : (data.net_points !== undefined && data.net_points !== null ? data.net_points : (isNoTrade ? 0.0 : null)));
+
+                if (pnlPts !== null) {
+                    const pts = parseFloat(pnlPts);
                     const el = document.getElementById('pnlPoints');
                     el.innerText = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts`;
-                    el.className = `card-value ${pts >= 0 ? 'val-positive' : 'val-negative'}`;
+                    el.className = `card-value ${pts > 0 ? 'val-positive' : (pts < 0 ? 'val-negative' : 'val-neutral')}`;
+                    document.getElementById('pnlPointsSub').innerText = isOpen ? 'Live Mark-to-Market P&L' : 'Index Points Captured';
                 }
-                if (data.net_pnl_rupees !== undefined) {
-                    const rs = parseFloat(data.net_pnl_rupees);
+
+                // P&L Rupees (1 Lot = 65 Qty)
+                const pnlRs = data.net_pnl_rupees !== undefined && data.net_pnl_rupees !== null
+                    ? data.net_pnl_rupees
+                    : (data.net_rupees !== undefined && data.net_rupees !== null
+                        ? data.net_rupees
+                        : (pnlPts !== null ? pnlPts * 65 : (isNoTrade ? 0.0 : null)));
+
+                if (pnlRs !== null) {
+                    const rs = parseFloat(pnlRs);
                     const el = document.getElementById('pnlRupees');
-                    el.innerText = `${rs >= 0 ? '+₹' : '-₹'}${Math.abs(rs).toLocaleString('en-IN')}`;
-                    el.className = `card-value ${rs >= 0 ? 'val-positive' : 'val-negative'}`;
+                    el.innerText = `${rs >= 0 ? '+₹' : '-₹'}${Math.abs(Math.round(rs)).toLocaleString('en-IN')}`;
+                    el.className = `card-value ${rs > 0 ? 'val-positive' : (rs < 0 ? 'val-negative' : 'val-neutral')}`;
+                    document.getElementById('pnlRupeesSub').innerText = isOpen ? 'Unrealized P&L (1 Lot / 65 Qty)' : 'Net Realized Result';
                 }
-                if (data.entry_time) document.getElementById('timeEntry').innerText = data.entry_time;
-                if (data.exit_time) document.getElementById('timeExit').innerText = data.exit_time;
-                if (data.exit_reason) document.getElementById('exitReason').innerText = data.exit_reason;
-                if (data.updated_at) {
-                    document.getElementById('timeUpdated').innerText = new Date(data.updated_at).toLocaleTimeString('en-IN');
+
+                // Milestones: Entry Time
+                if (data.entry_time) {
+                    document.getElementById('timeEntry').innerText = `${data.entry_time} IST`;
+                } else if (isOpen) {
+                    document.getElementById('timeEntry').innerText = '09:30:00 IST';
+                } else if (isNoTrade) {
+                    document.getElementById('timeEntry').innerText = '--';
+                }
+
+                // Milestones: Exit Time
+                if (data.exit_time) {
+                    document.getElementById('timeExit').innerText = `${data.exit_time} IST`;
+                } else if (isOpen) {
+                    document.getElementById('timeExit').innerText = 'Pending (Active Session)';
+                } else if (isNoTrade) {
+                    document.getElementById('timeExit').innerText = '--';
+                }
+
+                // Milestones: Exit Reason
+                if (data.exit_reason) {
+                    document.getElementById('exitReason').innerText = data.exit_reason;
+                } else if (isOpen) {
+                    document.getElementById('exitReason').innerText = 'Position Open';
+                } else if (data.no_trade_reason) {
+                    document.getElementById('exitReason').innerText = data.no_trade_reason;
+                } else if (isNoTrade) {
+                    document.getElementById('exitReason').innerText = 'NO_TRADE';
+                }
+
+                // Data Feed Freshness
+                const updateDt = parseISODate(data.last_update || data.updated_at);
+                if (updateDt) {
+                    const secAgo = Math.max(0, Math.floor((Date.now() - updateDt.getTime()) / 1000));
+                    document.getElementById('timeUpdated').innerText = secAgo < 15 ? 'Just now' : `${secAgo}s ago (${updateDt.toLocaleTimeString('en-IN', { hour12: true, timeZone: 'Asia/Kolkata' })} IST)`;
                 }
             } catch (err) {
                 console.warn('Public dashboard update error:', err);
@@ -339,7 +420,7 @@
         }
 
         fetchPublicData();
-        setInterval(fetchPublicData, 10000);
+        setInterval(fetchPublicData, 5000);
     </script>
 </body>
 </html>
