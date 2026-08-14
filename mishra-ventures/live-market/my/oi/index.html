@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NIFTY Current Open Interest & Cumulative Intraday OI Change (09:15 → NOW) — The Mishra Ventures Desk">
+    <meta name="description" content="NIFTY Current Open Interest & Cumulative Intraday OI Change (09:15 → NOW) with Strike-on-X Grouped Bars — The Mishra Ventures Desk">
     <title>NIFTY Options Open Interest Analytics | The Mishra Ventures</title>
 
     <link rel="stylesheet" href="../../../shared/global.css?v=20260814" />
@@ -391,105 +391,223 @@
             border-radius: 2px;
         }
 
-        /* Horizontal Side-by-Side Bar Chart */
-        .chart-container {
+        /* ==========================================================================
+           SENSIBULL-STYLE GROUPED VERTICAL BAR CHARTS (X-AXIS = STRIKE)
+           ========================================================================== */
+        .sensibull-chart-outer {
+            overflow-x: auto;
+            padding-bottom: 12px;
+        }
+        .sensibull-chart-wrap {
+            min-width: 920px;
+            height: 280px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin-top: 6px;
+            justify-content: flex-end;
+            position: relative;
+            padding: 20px 10px 0 10px;
+            border-bottom: 2px solid var(--card-border);
         }
-        .chart-row {
-            display: grid;
-            grid-template-columns: 1fr 110px 1fr;
-            align-items: center;
-            gap: 12px;
+        .chart-grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .grid-line {
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.04);
+            position: relative;
+        }
+        .grid-line-label {
+            position: absolute;
+            right: 4px;
+            top: -10px;
+            font-size: 0.65rem;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            padding: 3px 6px;
-            border-radius: 6px;
+            color: var(--text-muted);
+        }
+
+        .sensibull-bars-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 220px;
+            z-index: 2;
+            gap: 4px;
+        }
+        .sensibull-strike-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+            position: relative;
+            cursor: pointer;
+            padding: 0 2px;
+            border-radius: 4px;
             transition: background 0.15s ease;
         }
-        .chart-row:hover {
-            background: var(--surface-2);
+        .sensibull-strike-col:hover {
+            background: rgba(255, 255, 255, 0.04);
         }
-        .chart-row.is-atm {
-            background: rgba(56, 189, 248, 0.14);
-            border: 1px solid var(--accent-blue);
-            font-weight: 700;
+        .sensibull-strike-col.is-atm {
+            background: rgba(56, 189, 248, 0.08);
+            border-bottom: 3px solid var(--accent-blue);
         }
-        .chart-row.is-put-wall {
-            background: rgba(34, 197, 94, 0.12);
+        .sensibull-strike-col.is-pw {
+            border-bottom: 3px solid var(--accent-green);
         }
-        .chart-row.is-call-wall {
-            background: rgba(239, 68, 68, 0.12);
+        .sensibull-strike-col.is-cw {
+            border-bottom: 3px solid var(--accent-red);
         }
-        .chart-row.is-max-pain {
-            background: rgba(168, 85, 247, 0.12);
+        .sensibull-strike-col.is-mp {
+            border-bottom: 3px solid var(--accent-purple);
         }
 
-        .chart-bar-left-wrap {
+        .bars-pair {
             display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 8px;
-        }
-        .chart-bar-right-wrap {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Current OI Bars (Solid) */
-        .bar-current-ce {
-            height: 16px;
-            background: linear-gradient(90deg, rgba(239, 68, 68, 0.4), var(--accent-red));
-            border-radius: 4px 0 0 4px;
-            transition: width 0.3s ease;
-        }
-        .bar-current-pe {
-            height: 16px;
-            background: linear-gradient(90deg, var(--accent-green), rgba(34, 197, 94, 0.4));
-            border-radius: 0 4px 4px 0;
-            transition: width 0.3s ease;
-        }
-
-        /* Intraday Change Bars (Distinguishable Addition vs Unwinding) */
-        .bar-chg-ce-pos {
-            height: 16px;
-            background: linear-gradient(90deg, rgba(239, 68, 68, 0.5), var(--accent-red));
-            border-radius: 4px 0 0 4px;
-            transition: width 0.3s ease;
-        }
-        .bar-chg-ce-neg {
-            height: 16px;
-            background: repeating-linear-gradient(45deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.2) 4px, rgba(239, 68, 68, 0.45) 4px, rgba(239, 68, 68, 0.45) 8px);
-            border: 1px dashed var(--accent-red);
-            border-radius: 4px 0 0 4px;
-            transition: width 0.3s ease;
-        }
-        .bar-chg-pe-pos {
-            height: 16px;
-            background: linear-gradient(90deg, var(--accent-green), rgba(34, 197, 94, 0.5));
-            border-radius: 0 4px 4px 0;
-            transition: width 0.3s ease;
-        }
-        .bar-chg-pe-neg {
-            height: 16px;
-            background: repeating-linear-gradient(45deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.2) 4px, rgba(34, 197, 94, 0.45) 4px, rgba(34, 197, 94, 0.45) 8px);
-            border: 1px dashed var(--accent-green);
-            border-radius: 0 4px 4px 0;
-            transition: width 0.3s ease;
-        }
-
-        .chart-strike {
-            text-align: center;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
+            align-items: flex-end;
+            gap: 3px;
+            height: 100%;
+            width: 100%;
             justify-content: center;
+        }
+
+        /* Current OI Vertical Bars */
+        .v-bar-ce {
+            width: 10px;
+            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.6));
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease;
+            min-height: 2px;
+        }
+        .v-bar-pe {
+            width: 10px;
+            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.6));
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease;
+            min-height: 2px;
+        }
+
+        /* Intraday Change Vertical Bars (Bi-Directional Zero-Baseline) */
+        .change-chart-wrap {
+            min-width: 920px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 10px 10px 0 10px;
+        }
+        .change-bars-row {
+            display: flex;
+            height: 220px;
+            z-index: 2;
             gap: 4px;
+        }
+        .change-strike-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+            padding: 0 2px;
+            border-radius: 4px;
+            transition: background 0.15s ease;
+        }
+        .change-strike-col:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .change-top-half {
+            height: 50%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .change-bottom-half {
+            height: 50%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        /* Additions (Top Half) */
+        .v-chg-ce-add {
+            width: 10px;
+            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.6));
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease;
+        }
+        .v-chg-pe-add {
+            width: 10px;
+            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.6));
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        /* Unwinding (Bottom Half) */
+        .v-chg-ce-unw {
+            width: 10px;
+            background: repeating-linear-gradient(45deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.25) 3px, rgba(239, 68, 68, 0.6) 3px, rgba(239, 68, 68, 0.6) 6px);
+            border: 1px dashed var(--accent-red);
+            border-radius: 0 0 3px 3px;
+            transition: height 0.3s ease;
+        }
+        .v-chg-pe-unw {
+            width: 10px;
+            background: repeating-linear-gradient(45deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.25) 3px, rgba(34, 197, 94, 0.6) 3px, rgba(34, 197, 94, 0.6) 6px);
+            border: 1px dashed var(--accent-green);
+            border-radius: 0 0 3px 3px;
+            transition: height 0.3s ease;
+        }
+
+        .x-strike-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 6px;
+            white-space: nowrap;
+        }
+        .x-tag {
+            font-size: 0.6rem;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+        .tag-atm { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); }
+        .tag-pw { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
+        .tag-cw { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .tag-mp { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); }
+
+        /* Floating Tooltip */
+        .chart-tooltip {
+            position: fixed;
+            display: none;
+            background: var(--surface-2);
+            border: 1px solid var(--border-highlight);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-glow);
+            z-index: 1000;
+            pointer-events: none;
+            line-height: 1.5;
         }
 
         /* Strike Table */
@@ -669,12 +787,12 @@
         </div>
     </div>
 
-    <!-- Current OI Visual By Strike -->
+    <!-- Current OI Sensibull-Style Chart (X-Axis = Strike) -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h3 class="card-title">CURRENT OI BY STRIKE</h3>
-                <span class="card-subtitle" id="sub-current-chart">Absolute Call OI (Left) vs Put OI (Right) · Expiry 18 AUG 2026</span>
+                <h3 class="card-title">CURRENT OI BY STRIKE (X-AXIS = STRIKE)</h3>
+                <span class="card-subtitle" id="sub-current-chart">Side-by-side grouped bars for Call OI (Red) and Put OI (Green) at each strike</span>
             </div>
             <div class="chart-legend">
                 <div class="legend-item"><span class="legend-box" style="background: var(--accent-red);"></span> Call OI</div>
@@ -684,9 +802,11 @@
             </div>
         </div>
 
-        <div class="chart-container" id="container-current-oi-chart">
-            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
-                Generating current OI distribution...
+        <div class="sensibull-chart-outer">
+            <div class="sensibull-chart-wrap" id="container-current-oi-chart">
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    Generating strike-by-strike OI columns...
+                </div>
             </div>
         </div>
     </div>
@@ -701,12 +821,12 @@
         </span>
     </div>
 
-    <!-- Intraday OI Change Visual By Strike -->
+    <!-- Intraday OI Change Sensibull-Style Chart (X-Axis = Strike) -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h3 class="card-title">INTRADAY STRIKE CHANGE</h3>
-                <span class="card-subtitle">Cumulative Call OI Change (Left) vs Put OI Change (Right)</span>
+                <h3 class="card-title">INTRADAY STRIKE CHANGE (X-AXIS = STRIKE)</h3>
+                <span class="card-subtitle">Zero-baseline cumulative change: Additions (Upward) vs Unwinding (Downward/Dashed)</span>
             </div>
             <div class="chart-legend">
                 <div class="legend-item"><span class="legend-box" style="background: var(--accent-red);"></span> Call Addition</div>
@@ -717,9 +837,11 @@
             </div>
         </div>
 
-        <div class="chart-container" id="container-intraday-change-chart">
-            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
-                Generating intraday change visual...
+        <div class="sensibull-chart-outer">
+            <div class="change-chart-wrap" id="container-intraday-change-chart">
+                <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    Generating intraday change columns...
+                </div>
             </div>
         </div>
     </div>
@@ -845,6 +967,9 @@
 
 </div>
 
+<!-- Floating Tooltip Container -->
+<div class="chart-tooltip" id="global-chart-tooltip"></div>
+
 <!-- DATA FETCHER & RENDERER SCRIPT -->
 <script>
     const WORKER_URL = 'https://live-market-status.itscreativeman04.workers.dev';
@@ -907,6 +1032,23 @@
         return closest;
     }
 
+    // Tooltip handling
+    const tooltip = document.getElementById('global-chart-tooltip');
+    function showTooltip(e, html) {
+        tooltip.innerHTML = html;
+        tooltip.style.display = 'block';
+        moveTooltip(e);
+    }
+    function moveTooltip(e) {
+        const x = e.clientX + 15;
+        const y = e.clientY + 15;
+        tooltip.style.left = `${Math.min(window.innerWidth - 220, x)}px`;
+        tooltip.style.top = `${Math.min(window.innerHeight - 150, y)}px`;
+    }
+    function hideTooltip() {
+        tooltip.style.display = 'none';
+    }
+
     async function fetchOIData() {
         try {
             const res = await fetch(`${WORKER_URL}?symbol=NIFTY&_t=${Date.now()}`, {
@@ -954,7 +1096,7 @@
         // Update Dynamic Expiry Headings
         document.getElementById('label-top-expiry-sub').textContent = `Options Open Interest · Expiry ${selectedExpiry}`;
         document.getElementById('heading-current-oi').textContent = `CURRENT OPEN INTEREST · EXPIRY ${selectedExpiry}`;
-        document.getElementById('sub-current-chart').textContent = `Absolute Call OI (Left) vs Put OI (Right) · Expiry ${selectedExpiry}`;
+        document.getElementById('sub-current-chart').textContent = `Side-by-side grouped bars for Call OI (Red) and Put OI (Green) at each strike · Expiry ${selectedExpiry}`;
         document.getElementById('sub-intraday-heading').textContent = `Cumulative session change · Expiry ${selectedExpiry} (since first successful session fetch)`;
 
         // 2. Feed Status & Spot
@@ -1057,7 +1199,6 @@
             callWallStrike = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.strike : (isFiniteNum(oi.call_wall) ? oi.call_wall : null);
             callWallOi = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.oi : null;
         } else if (currentChain.length > 0) {
-            // Find max for other expiries safely
             const peBelow = currentChain.filter(r => isFiniteNum(r.pe_oi) && (!isFiniteNum(spot) || r.strike <= spot));
             if (peBelow.length > 0) {
                 const best = peBelow.reduce((max, r) => r.pe_oi > max.pe_oi ? r : max, peBelow[0]);
@@ -1143,74 +1284,107 @@
             zcList.innerHTML = '<li>Options walls positioned within standard session boundaries.</li>';
         }
 
-        // 6. Render Charts & Table
-        renderCurrentOIChart(currentChain, maxCurrentOi, atmStrike, putWallStrike, callWallStrike, maxPain);
-        renderIntradayChangeChart(currentChain, maxChgOi, atmStrike);
+        // 6. Render Sensibull-Style Charts & Table
+        renderSensibullCurrentOIChart(currentChain, maxCurrentOi, atmStrike, putWallStrike, callWallStrike, maxPain);
+        renderSensibullIntradayChangeChart(currentChain, maxChgOi, atmStrike);
         renderOITable(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain);
     }
 
-    // Chart 1: Current Absolute Open Interest (Side-by-Side)
-    function renderCurrentOIChart(chain, maxOi, atmStrike, putWallStrike, callWallStrike, maxPain) {
+    // =========================================================================
+    // CHART 1: SENSIBULL-STYLE CURRENT OI BY STRIKE (X-AXIS = STRIKE)
+    // =========================================================================
+    function renderSensibullCurrentOIChart(chain, maxOi, atmStrike, putWallStrike, callWallStrike, maxPain) {
         const container = document.getElementById('container-current-oi-chart');
         if (!Array.isArray(chain) || chain.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">No current open interest data available for this expiry.</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);">No current open interest data available for this expiry.</div>';
             return;
         }
 
-        let html = '';
+        // Grid lines (Max, 75%, 50%, 25%)
+        const maxLakh = (maxOi / 100000).toFixed(0);
+        let gridHtml = `
+        <div class="chart-grid-lines">
+            <div class="grid-line"><span class="grid-line-label">${maxLakh}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">${(maxLakh * 0.75).toFixed(0)}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">${(maxLakh * 0.50).toFixed(0)}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">${(maxLakh * 0.25).toFixed(0)}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">0</span></div>
+        </div>`;
+
+        let colsHtml = '';
         chain.forEach(row => {
             const str = row.strike;
             const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
             const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
 
-            const cePct = Math.min(100, Math.max(2, (ce / maxOi) * 100));
-            const pePct = Math.min(100, Math.max(2, (pe / maxOi) * 100));
+            const ceHeightPct = Math.min(100, Math.max(2, (ce / maxOi) * 100));
+            const peHeightPct = Math.min(100, Math.max(2, (pe / maxOi) * 100));
 
             const isAtm = str === atmStrike;
             const isPw = str === putWallStrike;
             const isCw = str === callWallStrike;
             const isMp = str === maxPain;
 
-            let rowClass = 'chart-row';
-            if (isAtm) rowClass += ' is-atm';
-            else if (isPw) rowClass += ' is-put-wall';
-            else if (isCw) rowClass += ' is-call-wall';
-            else if (isMp) rowClass += ' is-max-pain';
+            let colClass = 'sensibull-strike-col';
+            if (isAtm) colClass += ' is-atm';
+            if (isPw) colClass += ' is-pw';
+            if (isCw) colClass += ' is-cw';
+            if (isMp) colClass += ' is-mp';
 
-            let strikeTag = '';
-            if (isAtm) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>';
-            else if (isPw) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-green);">PW</span>';
-            else if (isCw) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-red);">CW</span>';
-            else if (isMp) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-purple);">MP</span>';
+            let tagHtml = '';
+            if (isAtm) tagHtml = '<span class="x-tag tag-atm">ATM</span>';
+            else if (isPw) tagHtml = '<span class="x-tag tag-pw">PW</span>';
+            else if (isCw) tagHtml = '<span class="x-tag tag-cw">CW</span>';
+            else if (isMp) tagHtml = '<span class="x-tag tag-mp">MP</span>';
 
-            html += `
-            <div class="${rowClass}">
-                <div class="chart-bar-left-wrap">
-                    <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(ce)}</span>
-                    <div class="bar-current-ce" style="width: ${cePct}%;"></div>
+            const tooltipHtml = `
+                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
+                    Strike ${fmtStrike(str)} ${isAtm ? '· ATM' : ''}
                 </div>
-                <div class="chart-strike">
-                    <span>${fmtStrike(str)}</span> ${strikeTag}
+                <div style="color: var(--accent-red);">Call OI: <strong>${fmtOI(ce)}</strong> (${fmtLakh(ce)})</div>
+                <div style="color: var(--accent-green);">Put OI: <strong>${fmtOI(pe)}</strong> (${fmtLakh(pe)})</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">
+                    ${pe > ce ? `Put Dominant (+${fmtLakh(pe - ce)})` : (ce > pe ? `Call Dominant (+${fmtLakh(ce - pe)})` : 'Balanced')}
                 </div>
-                <div class="chart-bar-right-wrap">
-                    <div class="bar-current-pe" style="width: ${pePct}%;"></div>
-                    <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(pe)}</span>
+            `;
+
+            colsHtml += `
+            <div class="${colClass}" onmouseenter="showTooltip(event, '${tooltipHtml.replace(/'/g, "\\'")}')" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">
+                <div class="bars-pair">
+                    <div class="v-bar-ce" style="height: ${ceHeightPct}%;"></div>
+                    <div class="v-bar-pe" style="height: ${peHeightPct}%;"></div>
+                </div>
+                <div class="x-strike-label">
+                    ${fmtStrike(str)}
+                    <div>${tagHtml}</div>
                 </div>
             </div>`;
         });
 
-        container.innerHTML = html;
+        container.innerHTML = gridHtml + `<div class="sensibull-bars-row">${colsHtml}</div>`;
     }
 
-    // Chart 2: Intraday OI Change (09:15 → Now)
-    function renderIntradayChangeChart(chain, maxChg, atmStrike) {
+    // =========================================================================
+    // CHART 2: SENSIBULL-STYLE INTRADAY OI CHANGE (X-AXIS = STRIKE)
+    // =========================================================================
+    function renderSensibullIntradayChangeChart(chain, maxChg, atmStrike) {
         const container = document.getElementById('container-intraday-change-chart');
         if (!Array.isArray(chain) || chain.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">Intraday change unavailable for this expiry.</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);">Intraday change unavailable for this expiry.</div>';
             return;
         }
 
-        let html = '';
+        const maxLakh = (maxChg / 100000).toFixed(0);
+        let gridHtml = `
+        <div class="chart-grid-lines">
+            <div class="grid-line"><span class="grid-line-label">+${maxLakh}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">+${(maxLakh * 0.5).toFixed(0)}L</span></div>
+            <div class="grid-line" style="background: rgba(255,255,255,0.2);"><span class="grid-line-label" style="color: var(--text-primary);">0 (Base)</span></div>
+            <div class="grid-line"><span class="grid-line-label">-${(maxLakh * 0.5).toFixed(0)}L</span></div>
+            <div class="grid-line"><span class="grid-line-label">-${maxLakh}L</span></div>
+        </div>`;
+
+        let colsHtml = '';
         let hasAnyChange = false;
 
         chain.forEach(row => {
@@ -1223,37 +1397,54 @@
             const ceAbs = Math.abs(ceChg || 0);
             const peAbs = Math.abs(peChg || 0);
 
-            const cePct = Math.min(100, Math.max(ceAbs > 0 ? 3 : 0, (ceAbs / maxChg) * 100));
-            const pePct = Math.min(100, Math.max(peAbs > 0 ? 3 : 0, (peAbs / maxChg) * 100));
+            const ceHeightPct = Math.min(100, Math.max(ceAbs > 0 ? 4 : 0, (ceAbs / maxChg) * 100));
+            const peHeightPct = Math.min(100, Math.max(peAbs > 0 ? 4 : 0, (peAbs / maxChg) * 100));
 
             const isAtm = str === atmStrike;
-            let rowClass = 'chart-row' + (isAtm ? ' is-atm' : '');
+            let colClass = 'change-strike-col' + (isAtm ? ' is-atm' : '');
 
-            const ceBarClass = (ceChg !== null && ceChg < 0) ? 'bar-chg-ce-neg' : 'bar-chg-ce-pos';
-            const peBarClass = (peChg !== null && peChg < 0) ? 'bar-chg-pe-neg' : 'bar-chg-pe-pos';
+            // Top Half (Additions > 0)
+            const topCeBar = (ceChg !== null && ceChg > 0) ? `<div class="v-chg-ce-add" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
+            const topPeBar = (peChg !== null && peChg > 0) ? `<div class="v-chg-pe-add" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
 
-            html += `
-            <div class="${rowClass}">
-                <div class="chart-bar-left-wrap">
-                    <span style="font-size: 0.72rem; ${ceChg > 0 ? 'color: var(--accent-red); font-weight:600;' : (ceChg < 0 ? 'color: var(--text-muted);' : 'color: var(--text-secondary);')}">${fmtChange(ceChg)}</span>
-                    <div class="${ceBarClass}" style="width: ${cePct}%;"></div>
+            // Bottom Half (Unwinding < 0)
+            const botCeBar = (ceChg !== null && ceChg < 0) ? `<div class="v-chg-ce-unw" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
+            const botPeBar = (peChg !== null && peChg < 0) ? `<div class="v-chg-pe-unw" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
+
+            const ceDir = ceChg !== null ? (ceChg > 0 ? 'ADDITION (+)' : (ceChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
+            const peDir = peChg !== null ? (peChg > 0 ? 'ADDITION (+)' : (peChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
+
+            const tooltipHtml = `
+                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
+                    Strike ${fmtStrike(str)} ${isAtm ? '· ATM' : ''} (09:15 → Now)
                 </div>
-                <div class="chart-strike">
-                    <span>${fmtStrike(str)}</span> ${isAtm ? '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>' : ''}
+                <div style="color: var(--accent-red);">Call Change: <strong>${fmtChange(ceChg)}</strong> · ${ceDir}</div>
+                <div style="color: var(--accent-green);">Put Change: <strong>${fmtChange(peChg)}</strong> · ${peDir}</div>
+            `;
+
+            colsHtml += `
+            <div class="${colClass}" onmouseenter="showTooltip(event, '${tooltipHtml.replace(/'/g, "\\'")}')" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">
+                <div class="change-top-half">
+                    ${topCeBar}
+                    ${topPeBar}
                 </div>
-                <div class="chart-bar-right-wrap">
-                    <div class="${peBarClass}" style="width: ${pePct}%;"></div>
-                    <span style="font-size: 0.72rem; ${peChg > 0 ? 'color: var(--accent-green); font-weight:600;' : (peChg < 0 ? 'color: var(--text-muted);' : 'color: var(--text-secondary);')}">${fmtChange(peChg)}</span>
+                <div class="change-bottom-half">
+                    ${botCeBar}
+                    ${botPeBar}
+                </div>
+                <div class="x-strike-label">
+                    ${fmtStrike(str)}
+                    <div>${isAtm ? '<span class="x-tag tag-atm">ATM</span>' : ''}</div>
                 </div>
             </div>`;
         });
 
         if (!hasAnyChange) {
-            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">Intraday change baseline initializing...</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);">Intraday change baseline initializing...</div>';
             return;
         }
 
-        container.innerHTML = html;
+        container.innerHTML = gridHtml + `<div class="change-bars-row">${colsHtml}</div>`;
     }
 
     // Strike Table
