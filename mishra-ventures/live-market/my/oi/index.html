@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="NIFTY Current Open Interest & Cumulative Intraday OI Change (09:15 → NOW) with Strike-on-X Grouped Bars — The Mishra Ventures Desk">
+    <meta name="description" content="NIFTY Current Open Interest & Cumulative Intraday OI Change (09:15 → NOW) with Sensibull-Style Strike Range Selector & Grouped Bars — The Mishra Ventures Desk">
     <title>NIFTY Options Open Interest Analytics | The Mishra Ventures</title>
 
     <link rel="stylesheet" href="../../../shared/global.css?v=20260814" />
@@ -392,20 +392,93 @@
         }
 
         /* ==========================================================================
+           STRIKES AROUND ATM SELECTOR BAR
+           ========================================================================== */
+        .range-selector-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: var(--shadow-glow);
+        }
+        .range-label-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .range-title {
+            font-size: 0.825rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .range-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .range-btn-group {
+            display: inline-flex;
+            background: var(--surface-2);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .range-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .range-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .range-btn.active {
+            background: var(--accent-blue);
+            color: #060a14;
+            font-weight: 800;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        /* ==========================================================================
            SENSIBULL-STYLE GROUPED VERTICAL BAR CHARTS (X-AXIS = STRIKE)
            ========================================================================== */
         .sensibull-chart-outer {
+            width: 100%;
             overflow-x: auto;
-            padding-bottom: 12px;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-highlight) transparent;
         }
         .sensibull-chart-wrap {
-            min-width: 920px;
-            height: 280px;
+            width: 100%;
+            height: 310px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             position: relative;
-            padding: 20px 10px 0 10px;
+            padding: 24px 12px 0 12px;
             border-bottom: 2px solid var(--card-border);
         }
         .chart-grid-lines {
@@ -438,13 +511,15 @@
         .sensibull-bars-row {
             display: flex;
             align-items: flex-end;
-            justify-content: space-between;
-            height: 220px;
+            justify-content: space-around;
+            height: 240px;
             z-index: 2;
-            gap: 4px;
+            gap: 6px;
+            width: 100%;
         }
         .sensibull-strike-col {
-            flex: 1;
+            flex: 1 1 48px;
+            min-width: 44px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -452,15 +527,15 @@
             justify-content: flex-end;
             position: relative;
             cursor: pointer;
-            padding: 0 2px;
-            border-radius: 4px;
+            padding: 0 4px;
+            border-radius: 6px;
             transition: background 0.15s ease;
         }
         .sensibull-strike-col:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.05);
         }
         .sensibull-strike-col.is-atm {
-            background: rgba(56, 189, 248, 0.08);
+            background: rgba(56, 189, 248, 0.09);
             border-bottom: 3px solid var(--accent-blue);
         }
         .sensibull-strike-col.is-pw {
@@ -476,7 +551,7 @@
         .bars-pair {
             display: flex;
             align-items: flex-end;
-            gap: 3px;
+            gap: 4px;
             height: 100%;
             width: 100%;
             justify-content: center;
@@ -484,98 +559,108 @@
 
         /* Current OI Vertical Bars */
         .v-bar-ce {
-            width: 10px;
-            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.6));
-            border-radius: 3px 3px 0 0;
+            width: 15px;
+            max-width: 42%;
+            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.65));
+            border-radius: 4px 4px 0 0;
             transition: height 0.3s ease;
             min-height: 2px;
         }
         .v-bar-pe {
-            width: 10px;
-            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.6));
-            border-radius: 3px 3px 0 0;
+            width: 15px;
+            max-width: 42%;
+            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.65));
+            border-radius: 4px 4px 0 0;
             transition: height 0.3s ease;
             min-height: 2px;
         }
 
         /* Intraday Change Vertical Bars (Bi-Directional Zero-Baseline) */
         .change-chart-wrap {
-            min-width: 920px;
-            height: 280px;
+            width: 100%;
+            height: 310px;
             display: flex;
             flex-direction: column;
             position: relative;
-            padding: 10px 10px 0 10px;
+            padding: 12px 12px 0 12px;
         }
         .change-bars-row {
             display: flex;
-            height: 220px;
+            height: 240px;
             z-index: 2;
-            gap: 4px;
+            gap: 6px;
+            width: 100%;
+            justify-content: space-around;
         }
         .change-strike-col {
-            flex: 1;
+            flex: 1 1 48px;
+            min-width: 44px;
             display: flex;
             flex-direction: column;
             height: 100%;
             position: relative;
             cursor: pointer;
-            padding: 0 2px;
-            border-radius: 4px;
+            padding: 0 4px;
+            border-radius: 6px;
             transition: background 0.15s ease;
         }
         .change-strike-col:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.05);
         }
         .change-top-half {
             height: 50%;
             display: flex;
             align-items: flex-end;
             justify-content: center;
-            gap: 3px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            gap: 4px;
+            border-bottom: 1.5px solid rgba(255, 255, 255, 0.25);
         }
         .change-bottom-half {
             height: 50%;
             display: flex;
             align-items: flex-start;
             justify-content: center;
-            gap: 3px;
+            gap: 4px;
         }
 
         /* Additions (Top Half) */
         .v-chg-ce-add {
-            width: 10px;
-            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.6));
-            border-radius: 3px 3px 0 0;
+            width: 15px;
+            max-width: 42%;
+            background: linear-gradient(180deg, var(--accent-red), rgba(239, 68, 68, 0.65));
+            border-radius: 4px 4px 0 0;
             transition: height 0.3s ease;
         }
         .v-chg-pe-add {
-            width: 10px;
-            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.6));
-            border-radius: 3px 3px 0 0;
+            width: 15px;
+            max-width: 42%;
+            background: linear-gradient(180deg, var(--accent-green), rgba(34, 197, 94, 0.65));
+            border-radius: 4px 4px 0 0;
             transition: height 0.3s ease;
         }
 
         /* Unwinding (Bottom Half) */
         .v-chg-ce-unw {
-            width: 10px;
+            width: 15px;
+            max-width: 42%;
             background: repeating-linear-gradient(45deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.25) 3px, rgba(239, 68, 68, 0.6) 3px, rgba(239, 68, 68, 0.6) 6px);
-            border: 1px dashed var(--accent-red);
-            border-radius: 0 0 3px 3px;
+            border: 1.5px dashed var(--accent-red);
+            border-radius: 0 0 4px 4px;
             transition: height 0.3s ease;
         }
         .v-chg-pe-unw {
-            width: 10px;
+            width: 15px;
+            max-width: 42%;
             background: repeating-linear-gradient(45deg, rgba(34, 197, 94, 0.25), rgba(34, 197, 94, 0.25) 3px, rgba(34, 197, 94, 0.6) 3px, rgba(34, 197, 94, 0.6) 6px);
-            border: 1px dashed var(--accent-green);
-            border-radius: 0 0 3px 3px;
+            border: 1.5px dashed var(--accent-green);
+            border-radius: 0 0 4px 4px;
             transition: height 0.3s ease;
         }
 
         .x-strike-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.72rem;
+            font-weight: 600;
             color: var(--text-secondary);
             text-align: center;
             margin-top: 6px;
@@ -583,10 +668,11 @@
         }
         .x-tag {
             font-size: 0.6rem;
-            padding: 1px 3px;
+            padding: 1px 4px;
             border-radius: 3px;
             font-weight: 700;
             margin-top: 2px;
+            display: inline-block;
         }
         .tag-atm { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); }
         .tag-pw { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
@@ -787,6 +873,21 @@
         </div>
     </div>
 
+    <!-- STRIKES AROUND ATM SELECTOR TOOLBAR -->
+    <div class="range-selector-bar">
+        <div class="range-label-group">
+            <span class="range-title">🎯 STRIKES AROUND ATM</span>
+            <span class="range-sub" id="label-range-strikes-info">Showing 10 below + ATM + 10 above</span>
+        </div>
+        <div class="range-btn-group" id="strike-range-selector" role="group" aria-label="Strikes Around ATM">
+            <button type="button" class="range-btn" data-range="5">5</button>
+            <button type="button" class="range-btn active" data-range="10">10</button>
+            <button type="button" class="range-btn" data-range="15">15</button>
+            <button type="button" class="range-btn" data-range="20">20</button>
+            <button type="button" class="range-btn" data-range="ALL">ALL</button>
+        </div>
+    </div>
+
     <!-- Current OI Sensibull-Style Chart (X-Axis = Strike) -->
     <div class="card">
         <div class="card-header">
@@ -802,7 +903,7 @@
             </div>
         </div>
 
-        <div class="sensibull-chart-outer">
+        <div class="sensibull-chart-outer" id="outer-current-oi-chart">
             <div class="sensibull-chart-wrap" id="container-current-oi-chart">
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     Generating strike-by-strike OI columns...
@@ -837,7 +938,7 @@
             </div>
         </div>
 
-        <div class="sensibull-chart-outer">
+        <div class="sensibull-chart-outer" id="outer-intraday-change-chart">
             <div class="change-chart-wrap" id="container-intraday-change-chart">
                 <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                     Generating intraday change columns...
@@ -933,11 +1034,11 @@
         </div>
     </div>
 
-    <!-- 5. FULL STRIKE TABLE -->
+    <!-- 5. FULL STRIKE TABLE (UNFILTERED) -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h3 class="card-title">STRIKE-WISE OI & INTRADAY CHANGE</h3>
+                <h3 class="card-title">FULL STRIKE-WISE OI & INTRADAY CHANGE</h3>
                 <span class="card-subtitle" id="label-strikes-count">Loading strike data...</span>
             </div>
             <span class="status-badge badge-blue" id="badge-active-expiry">EXPIRY --</span>
@@ -978,6 +1079,7 @@
 
     let selectedExpiry = null;
     let cachedData = null;
+    let selectedStrikeRange = (typeof window !== 'undefined' && window.innerWidth <= 768) ? '5' : '10';
 
     // Formatting Helpers
     function isFiniteNum(val) {
@@ -1030,6 +1132,29 @@
             }
         }
         return closest;
+    }
+
+    // Centered ATM Filtering Helper
+    function getFilteredChain(chain, atmStrike, rangeOption) {
+        if (!Array.isArray(chain) || chain.length === 0) return [];
+        if (rangeOption === 'ALL') return chain;
+
+        const count = parseInt(rangeOption, 10);
+        if (isNaN(count) || count <= 0) return chain;
+
+        let atmIndex = 0;
+        let minDiff = Infinity;
+        chain.forEach((row, idx) => {
+            const diff = Math.abs(row.strike - atmStrike);
+            if (diff < minDiff) {
+                minDiff = diff;
+                atmIndex = idx;
+            }
+        });
+
+        const startIdx = Math.max(0, atmIndex - count);
+        const endIdx = Math.min(chain.length - 1, atmIndex + count);
+        return chain.slice(startIdx, endIdx + 1);
     }
 
     // Tooltip handling with Event Delegation
@@ -1123,6 +1248,26 @@
         document.getElementById('val-feed-status-text').textContent = 'FEED OFFLINE';
     }
 
+    function updateRangeUI() {
+        const btns = document.querySelectorAll('#strike-range-selector .range-btn');
+        btns.forEach(btn => {
+            if (btn.getAttribute('data-range') === selectedStrikeRange) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const infoEl = document.getElementById('label-range-strikes-info');
+        if (infoEl) {
+            if (selectedStrikeRange === 'ALL') {
+                infoEl.textContent = 'Showing all available strikes across options chain';
+            } else {
+                infoEl.textContent = `Showing ${selectedStrikeRange} below + ATM + ${selectedStrikeRange} above`;
+            }
+        }
+    }
+
     function renderOIDashboard(data) {
         const oi = data.oi_summary || {};
         const chains = data.oi_chains || {};
@@ -1148,7 +1293,7 @@
         // Update Dynamic Expiry Headings
         document.getElementById('label-top-expiry-sub').textContent = `Options Open Interest · Expiry ${selectedExpiry}`;
         document.getElementById('heading-current-oi').textContent = `CURRENT OPEN INTEREST · EXPIRY ${selectedExpiry}`;
-        document.getElementById('sub-current-chart').textContent = `Side-by-side grouped bars for Call OI (Red) and Put OI (Green) at each strike · Expiry ${selectedExpiry}`;
+        document.getElementById('sub-current-chart').textContent = `Side-by-side grouped bars for Call OI (Red) and Put OI (Green) · Expiry ${selectedExpiry}`;
         document.getElementById('sub-intraday-heading').textContent = `Cumulative session change · Expiry ${selectedExpiry} (since first successful session fetch)`;
 
         // 2. Feed Status & Spot
@@ -1182,27 +1327,18 @@
         const atmStrike = computeATM(spot, currentChain);
         document.getElementById('val-atm-strike').textContent = fmtStrike(atmStrike);
         document.getElementById('badge-active-expiry').textContent = `EXPIRY ${selectedExpiry}`;
-        document.getElementById('label-strikes-count').textContent = `${currentChain.length} active strikes loaded for ${selectedExpiry}`;
+        document.getElementById('label-strikes-count').textContent = `${currentChain.length} total strikes loaded for ${selectedExpiry}`;
 
-        // 4. Compute Totals & Max Values
+        // 4. Compute Chain Totals
         let chainPeOi = 0;
         let chainCeOi = 0;
-        let maxCurrentOi = 1;
-        let maxChgOi = 1;
 
         if (currentChain.length > 0) {
             currentChain.forEach(row => {
                 const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
                 const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
-                const peChg = isFiniteNum(row.pe_oi_change) ? Math.abs(Number(row.pe_oi_change)) : 0;
-                const ceChg = isFiniteNum(row.ce_oi_change) ? Math.abs(Number(row.ce_oi_change)) : 0;
-
                 chainPeOi += pe;
                 chainCeOi += ce;
-                if (pe > maxCurrentOi) maxCurrentOi = pe;
-                if (ce > maxCurrentOi) maxCurrentOi = ce;
-                if (peChg > maxChgOi) maxChgOi = peChg;
-                if (ceChg > maxChgOi) maxChgOi = ceChg;
             });
         }
 
@@ -1336,10 +1472,35 @@
             zcList.innerHTML = '<li>Options walls positioned within standard session boundaries.</li>';
         }
 
-        // 6. Render Sensibull-Style Charts & Table
-        renderSensibullCurrentOIChart(currentChain, maxCurrentOi, atmStrike, putWallStrike, callWallStrike, maxPain);
-        renderSensibullIntradayChangeChart(currentChain, maxChgOi, atmStrike);
+        // 6. Update Range UI & Render Sensibull-Style Charts
+        updateRangeUI();
+        renderFilteredCharts(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain);
+
+        // 7. Render Complete Unfiltered Strike Table
         renderOITable(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain);
+    }
+
+    function renderFilteredCharts(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain) {
+        const visibleChain = getFilteredChain(currentChain, atmStrike, selectedStrikeRange);
+
+        let maxVisibleOi = 1;
+        let maxVisibleChg = 1;
+
+        if (visibleChain.length > 0) {
+            visibleChain.forEach(row => {
+                const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
+                const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
+                const peChg = isFiniteNum(row.pe_oi_change) ? Math.abs(Number(row.pe_oi_change)) : 0;
+                const ceChg = isFiniteNum(row.ce_oi_change) ? Math.abs(Number(row.ce_oi_change)) : 0;
+                if (pe > maxVisibleOi) maxVisibleOi = pe;
+                if (ce > maxVisibleOi) maxVisibleOi = ce;
+                if (peChg > maxVisibleChg) maxVisibleChg = peChg;
+                if (ceChg > maxVisibleChg) maxVisibleChg = ceChg;
+            });
+        }
+
+        renderSensibullCurrentOIChart(visibleChain, maxVisibleOi, atmStrike, putWallStrike, callWallStrike, maxPain);
+        renderSensibullIntradayChangeChart(visibleChain, maxVisibleChg, atmStrike);
     }
 
     // =========================================================================
@@ -1351,6 +1512,9 @@
             container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);">No current open interest data available for this expiry.</div>';
             return;
         }
+
+        // Adjust min-width based on visible strikes count for internal scroll if wide
+        container.style.minWidth = chain.length > 15 ? `${chain.length * 52}px` : '100%';
 
         const maxLakh = (maxOi / 100000).toFixed(0);
         let gridHtml = `
@@ -1425,6 +1589,9 @@
             return;
         }
 
+        // Adjust min-width based on visible strikes count for internal scroll if wide
+        container.style.minWidth = chain.length > 15 ? `${chain.length * 52}px` : '100%';
+
         const maxLakh = (maxChg / 100000).toFixed(0);
         let gridHtml = `
         <div class="chart-grid-lines">
@@ -1455,12 +1622,12 @@
             let colClass = 'change-strike-col' + (isAtm ? ' is-atm' : '');
 
             // Top Half (Additions > 0)
-            const topCeBar = (ceChg !== null && ceChg > 0) ? `<div class="v-chg-ce-add" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
-            const topPeBar = (peChg !== null && peChg > 0) ? `<div class="v-chg-pe-add" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
+            const topCeBar = (ceChg !== null && ceChg > 0) ? `<div class="v-chg-ce-add" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
+            const topPeBar = (peChg !== null && peChg > 0) ? `<div class="v-chg-pe-add" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
 
             // Bottom Half (Unwinding < 0)
-            const botCeBar = (ceChg !== null && ceChg < 0) ? `<div class="v-chg-ce-unw" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
-            const botPeBar = (peChg !== null && peChg < 0) ? `<div class="v-chg-pe-unw" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 10px;"></div>`;
+            const botCeBar = (ceChg !== null && ceChg < 0) ? `<div class="v-chg-ce-unw" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
+            const botPeBar = (peChg !== null && peChg < 0) ? `<div class="v-chg-pe-unw" style="height: ${peHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
 
             const ceDir = ceChg !== null ? (ceChg > 0 ? 'ADDITION (+)' : (ceChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
             const peDir = peChg !== null ? (peChg > 0 ? 'ADDITION (+)' : (peChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
@@ -1497,7 +1664,7 @@
         container.innerHTML = gridHtml + `<div class="change-bars-row">${colsHtml}</div>`;
     }
 
-    // Strike Table
+    // Strike Table (Unfiltered Full Chain)
     function renderOITable(chain, atmStrike, putWallStrike, callWallStrike, maxPain) {
         const tbody = document.getElementById('tbody-oi-chain');
         if (!Array.isArray(chain) || chain.length === 0) {
@@ -1544,6 +1711,29 @@
 
         tbody.innerHTML = html;
     }
+
+    // Range selector click listeners
+    document.getElementById('strike-range-selector').addEventListener('click', function(e) {
+        const btn = e.target.closest('.range-btn');
+        if (!btn) return;
+        const newRange = btn.getAttribute('data-range');
+        if (newRange && newRange !== selectedStrikeRange) {
+            selectedStrikeRange = newRange;
+            updateRangeUI();
+            if (cachedData) {
+                const oi = cachedData.oi_summary || {};
+                const chains = cachedData.oi_chains || {};
+                const spot = Number(cachedData.current_price);
+                const currentChain = (selectedExpiry && Array.isArray(chains[selectedExpiry])) ? chains[selectedExpiry] : [];
+                const atmStrike = computeATM(spot, currentChain);
+                const putWallStrike = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.strike : (isFiniteNum(oi.put_wall) ? oi.put_wall : null);
+                const callWallStrike = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.strike : (isFiniteNum(oi.call_wall) ? oi.call_wall : null);
+                const maxPain = (selectedExpiry === oi.expiry && isFiniteNum(oi.max_pain)) ? oi.max_pain : null;
+
+                renderFilteredCharts(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain);
+            }
+        }
+    });
 
     // Expiry change listener
     document.getElementById('select-expiry').addEventListener('change', function(e) {
