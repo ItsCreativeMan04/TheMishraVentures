@@ -1138,11 +1138,12 @@
 
     // STRUCTURE COLOR SEMANTICS HELPER
     function getStructureBadgeHTML(val) {
-        if (!val || val === '--') return '<span class="status-badge badge-neutral">N/A</span>';
+        if (!val || val === '--' || val === 'N/A') return '<span class="status-badge badge-neutral">N/A</span>';
         const str = String(val).toUpperCase();
-        if (str.includes('BULL')) return `<span class="status-badge badge-green">${val}</span>`;
-        if (str.includes('BEAR')) return `<span class="status-badge badge-red">${val}</span>`;
-        if (str.includes('NEUTRAL') || str.includes('MIXED')) return `<span class="status-badge badge-amber">${val}</span>`;
+        if (str.includes('BULL') || str === 'BUYING' || str === 'ALIGNED') return `<span class="status-badge badge-green">${val}</span>`;
+        if (str.includes('BEAR') || str === 'SELLING' || str === 'CONFLICTS') return `<span class="status-badge badge-red">${val}</span>`;
+        if (str.includes('NEUTRAL') || str === 'MIXED') return `<span class="status-badge badge-amber">${val}</span>`;
+        if (str === 'TRANSITION' || str === 'INSUFFICIENT_DATA' || str.includes('FORMING') || str === 'UNKNOWN') return `<span class="status-badge badge-neutral">${val}</span>`;
         return `<span class="status-badge badge-neutral">${val}</span>`;
     }
 
@@ -1469,48 +1470,90 @@
         dsNextEl.textContent = ds.next_level_to_watch || data.decision_next_event || '--';
         dsNextWhyEl.textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
 
+        let focusText = 'WAIT';
+        let whyText = 'Evaluating market conditions.';
+        let instrText = 'STAND ASIDE';
+
         if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
-            dsFocusEl.textContent = ds.current_focus || 'WAIT';
-            dsFocusEl.style.color = 'var(--accent-green)';
-            dsWhyEl.textContent = ds.why || 'Morning thesis is QUALIFIED and active. Setup criteria are satisfied.';
-            dsInstructionEl.textContent = ds.instruction || 'FOLLOW QUALIFIED SETUP RULES';
-            dsInstructionEl.style.color = 'var(--accent-green)';
+            focusText = ds.current_focus || 'WAIT';
+            whyText = ds.why || 'Morning thesis is QUALIFIED and active. Setup criteria are satisfied.';
+            instrText = ds.instruction || 'FOLLOW QUALIFIED SETUP RULES';
         } else if (canonicalStatus === 'INVALIDATED') {
-            dsFocusEl.textContent = 'STAND ASIDE';
-            dsFocusEl.style.color = 'var(--accent-red)';
-            dsWhyEl.textContent = ds.why || 'Morning thesis is INVALIDATED for today. Do not force entries on the original thesis.';
-            dsInstructionEl.textContent = 'WAIT FOR A NEW QUALIFIED SETUP';
-            dsInstructionEl.style.color = 'var(--accent-red)';
+            focusText = 'STAND ASIDE';
+            whyText = ds.why || 'Morning thesis is INVALIDATED for today. Do not force entries on the original thesis.';
+            instrText = 'WAIT FOR A NEW QUALIFIED SETUP';
         } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
-            dsFocusEl.textContent = 'STAND ASIDE';
-            dsFocusEl.style.color = 'var(--accent-amber)';
-            dsWhyEl.textContent = ds.why || 'Morning thesis is PENDING confirmation. Await completion of structural checks.';
-            dsInstructionEl.textContent = 'WAIT FOR COMPLETION OF PENDING CHECKS';
-            dsInstructionEl.style.color = 'var(--accent-amber)';
+            focusText = 'STAND ASIDE';
+            whyText = ds.why || 'Morning thesis is PENDING confirmation. Await completion of structural checks.';
+            instrText = 'WAIT FOR COMPLETION OF PENDING CHECKS';
         } else if (canonicalStatus === 'NOT_QUALIFIED') {
-            dsFocusEl.textContent = 'STAND ASIDE';
-            dsFocusEl.style.color = 'var(--text-muted)';
-            dsWhyEl.textContent = ds.why || 'No high-conviction directional setup armed today.';
-            dsInstructionEl.textContent = 'STAND ASIDE';
-            dsInstructionEl.style.color = 'var(--text-muted)';
+            focusText = 'STAND ASIDE';
+            whyText = ds.why || 'No high-conviction directional setup armed today.';
+            instrText = 'STAND ASIDE';
         } else {
-            dsFocusEl.textContent = 'AWAITING FEED';
-            dsFocusEl.style.color = 'var(--text-muted)';
-            dsWhyEl.textContent = 'Awaiting live market decision support data.';
-            dsInstructionEl.textContent = 'STAND ASIDE';
-            dsInstructionEl.style.color = 'var(--text-muted)';
+            focusText = 'AWAITING FEED';
+            whyText = 'Awaiting live market decision support data.';
+            instrText = 'STAND ASIDE';
         }
+
+        // Semantic color mapping for Current Focus
+        const focusUpper = focusText.toUpperCase();
+        let focusColor = 'var(--text-muted)';
+        if (focusUpper.includes('BUY') || focusUpper.includes('LONG') || focusUpper.includes('EXECUTE') || focusUpper.includes('ARMED')) {
+            focusColor = 'var(--accent-green)';
+        } else if (focusUpper.includes('SELL') || focusUpper.includes('SHORT')) {
+            focusColor = 'var(--accent-red)';
+        } else if (focusUpper.includes('WAIT')) {
+            focusColor = 'var(--accent-amber)';
+        } else if (focusUpper.includes('STAND ASIDE')) {
+            focusColor = canonicalStatus === 'INVALIDATED' ? 'var(--accent-red)' : 'var(--accent-amber)';
+        } else {
+            focusColor = 'var(--text-muted)';
+        }
+
+        // Semantic color mapping for Instruction
+        const instrUpper = instrText.toUpperCase();
+        let instrColor = 'var(--text-muted)';
+        if (instrUpper.includes('FOLLOW QUALIFIED') || instrUpper.includes('EXECUTE') || instrUpper.includes('BUY') || instrUpper.includes('LONG')) {
+            instrColor = 'var(--accent-green)';
+        } else if (instrUpper.includes('SELL') || instrUpper.includes('SHORT') || instrUpper.includes('INVALIDATED')) {
+            instrColor = 'var(--accent-red)';
+        } else if (instrUpper.includes('WAIT') || instrUpper.includes('PENDING')) {
+            instrColor = 'var(--accent-amber)';
+        } else {
+            instrColor = 'var(--text-muted)';
+        }
+
+        dsFocusEl.textContent = focusText;
+        dsFocusEl.style.color = focusColor;
+        dsWhyEl.textContent = whyText;
+        dsInstructionEl.textContent = instrText;
+        dsInstructionEl.style.color = instrColor;
 
         // 8. ORDER FLOW SHADOW
         const ofs = wi.order_flow_shadow || data.order_flow_shadow || {};
         const ofFeedEl = document.getElementById('val-of-feed');
         const rawOfFeed = ofs.feed_status || 'LIVE';
+        const rawOfUpper = String(rawOfFeed).toUpperCase();
 
-        if (isStale) {
-            ofFeedEl.innerHTML = `<span class="status-badge badge-amber">STALE (${ageStr})</span>`;
-        } else {
-            ofFeedEl.innerHTML = `<span class="status-badge badge-green">${rawOfFeed}</span>`;
+        let ofBadgeClass = 'badge-neutral';
+        let ofLabel = rawOfFeed;
+
+        if (isStale || rawOfUpper === 'STALE') {
+            ofBadgeClass = 'badge-amber';
+            ofLabel = isStale ? `STALE (${ageStr})` : 'STALE';
+        } else if (rawOfUpper === 'LIVE' || rawOfUpper === 'CONNECTED') {
+            ofBadgeClass = 'badge-green';
+            ofLabel = 'LIVE';
+        } else if (rawOfUpper === 'OFFLINE' || rawOfUpper === 'DISCONNECTED') {
+            ofBadgeClass = 'badge-red';
+            ofLabel = 'OFFLINE';
+        } else if (rawOfUpper === 'CONNECTING') {
+            ofBadgeClass = 'badge-neutral';
+            ofLabel = 'CONNECTING';
         }
+
+        ofFeedEl.innerHTML = `<span class="status-badge ${ofBadgeClass}">${ofLabel}</span>`;
 
         const ofPressEl = document.getElementById('val-of-pressure');
         const pressVal = ofs.pressure || 'N/A';
@@ -1605,10 +1648,17 @@
         
         const actionEl = document.getElementById('val-comm-action');
         const actionVal = mc.current_action || mc.action || ds.current_focus || data.action_verdict || 'STAND ASIDE';
+        const actionUpper = String(actionVal).toUpperCase();
+        let actionClass = 'badge-neutral';
+        if (actionUpper.includes('MANAGE')) actionClass = 'badge-blue';
+        else if (actionUpper.includes('BUY') || actionUpper.includes('LONG') || actionUpper.includes('EXECUTE') || actionUpper.includes('ARMED')) actionClass = 'badge-green';
+        else if (actionUpper.includes('SELL') || actionUpper.includes('SHORT')) actionClass = 'badge-red';
+        else if (actionUpper.includes('WAIT')) actionClass = 'badge-amber';
+        else if (actionUpper.includes('STAND ASIDE')) actionClass = 'badge-neutral';
+        else actionClass = 'badge-amber';
+
         actionEl.textContent = actionVal;
-        actionEl.className = actionVal.includes('MANAGE') ? 'status-badge badge-blue' :
-                            (actionVal.includes('BUY') || actionVal.includes('LONG') ? 'status-badge badge-green' :
-                            (actionVal.includes('SELL') || actionVal.includes('SHORT') ? 'status-badge badge-red' : 'status-badge badge-amber'));
+        actionEl.className = `status-badge ${actionClass}`;
 
         // 11. COMPACT FEED HEALTH BAR
         const healthMktDot = document.getElementById('health-mkt-dot');
@@ -1643,10 +1693,14 @@
             healthOfDot.className = 'dot green';
             healthOfVal.textContent = 'LIVE (Mode 3)';
             healthOfVal.style.color = 'var(--accent-green)';
-        } else {
+        } else if (ofs && (ofs.feed_status === 'STALE' || isStale)) {
             healthOfDot.className = 'dot amber';
-            healthOfVal.textContent = ofs.feed_status || 'OFFLINE';
+            healthOfVal.textContent = 'STALE';
             healthOfVal.style.color = 'var(--accent-amber)';
+        } else {
+            healthOfDot.className = 'dot red';
+            healthOfVal.textContent = ofs.feed_status || 'OFFLINE';
+            healthOfVal.style.color = 'var(--accent-red)';
         }
 
         healthClockVal.textContent = formatTime(data.updated_at);
