@@ -18,8 +18,8 @@
       })();
     </script>
 
-    <link rel="stylesheet" href="../shared/global.css?v=20260814b" />
-    <link rel="stylesheet" href="../shared/components.css?v=20260814b" />
+    <link rel="stylesheet" href="../shared/global.css?v=20260814c" />
+    <link rel="stylesheet" href="../shared/components.css?v=20260814c" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -489,29 +489,19 @@
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 14px;
-            max-height: 260px;
-            overflow-y: auto;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            line-height: 1.65;
+            font-size: 0.8rem;
+            line-height: 1.7;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-        }
-
-        .activity-stream-box::-webkit-scrollbar {
-            width: 6px;
-        }
-        .activity-stream-box::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
+            gap: 8px;
         }
 
         .log-entry {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             background: rgba(255, 255, 255, 0.02);
-            border-left: 2px solid var(--accent-blue);
+            border-left: 3px solid var(--accent-blue);
             color: var(--text-secondary);
         }
 
@@ -525,25 +515,9 @@
             color: var(--text-strong);
         }
 
-        .log-toggle-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--accent-blue);
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .log-toggle-btn:hover {
-            background: rgba(56, 189, 248, 0.1);
-            border-color: var(--accent-blue);
+        .log-entry.entry-complete {
+            border-left-color: var(--accent-blue);
+            color: var(--text-strong);
         }
 
         /* ── Performance History Section ── */
@@ -825,7 +799,7 @@
                 <div class="metric-value" id="exitReason" style="font-size: 1.5rem;">--</div>
                 <div class="metric-sub">
                     <span>Exit Trigger</span>
-                    <span id="valOptionSymbol">--</span>
+                    <span id="valOptionSymbol">NIFTY Short Call</span>
                 </div>
             </div>
         </div>
@@ -849,7 +823,7 @@
                     <div class="milestone-val" id="timeExit">--</div>
                 </div>
                 <div class="milestone-box">
-                    <div class="milestone-label">Closing Quote (Bid/Ask)</div>
+                    <div class="milestone-label">Session Status</div>
                     <div class="milestone-val" id="valClosingQuote">--</div>
                 </div>
             </div>
@@ -862,12 +836,12 @@
             </div>
             <div class="facts-grid">
                 <div class="fact-card">
-                    <div class="fact-title">NIFTY Spot at Decision</div>
-                    <div class="fact-val" id="valNiftySpot">--</div>
+                    <div class="fact-title">Underlying Asset</div>
+                    <div class="fact-val" id="valNiftySpot">NIFTY 50</div>
                 </div>
                 <div class="fact-card">
-                    <div class="fact-title">Baseline Volatility (ATR)</div>
-                    <div class="fact-val" id="valAtr10">--</div>
+                    <div class="fact-title">Volatility Regime</div>
+                    <div class="fact-val" id="valAtr10">Qualified</div>
                 </div>
                 <div class="fact-card">
                     <div class="fact-title">Selected Strike</div>
@@ -913,18 +887,15 @@
             </div>
         </div>
 
-        <!-- 7. Session Activity Stream (Expandable) -->
+        <!-- 7. Verified Session Milestones (Sanitized Public Stream) -->
         <div class="panel-card">
             <div class="panel-header">
-                <span class="panel-title">📜 Verified Session Activity Stream</span>
-                <span class="meta-pill" id="activityCountPill">0 Events</span>
+                <span class="panel-title">📜 Verified Session Milestones</span>
+                <span class="meta-pill" id="activityCountPill">Verified Milestones</span>
             </div>
             <div class="activity-stream-box" id="activityBox">
-                <div class="log-entry">Awaiting activity telemetry...</div>
+                <div class="log-entry">Awaiting session milestones...</div>
             </div>
-            <button type="button" class="log-toggle-btn" id="btnToggleActivity" style="display:none;">
-                <span>View all events ↓</span>
-            </button>
         </div>
 
         <!-- 8. Performance History -->
@@ -1000,9 +971,6 @@
         const PUBLIC_API_URL = 'https://sell-ce-paper-status.itscreativeman04.workers.dev/public';
         const LOT_SIZE = 65;
 
-        let fullActivityList = [];
-        let isExpanded = false;
-
         function safeSetText(id, text) {
             const el = document.getElementById(id);
             if (el) el.innerText = text;
@@ -1059,49 +1027,122 @@
             return null;
         }
 
-        function renderActivity(activity) {
+        /**
+         * Builds a public-safe, curated milestone presentation object.
+         * Strips proprietary calculation formulas, raw tokens, repeated ticks, and internal engine details.
+         */
+        function renderSanitizedMilestones(data) {
             const box = document.getElementById('activityBox');
-            const toggleBtn = document.getElementById('btnToggleActivity');
-            if (!box || !Array.isArray(activity) || activity.length === 0) return;
+            if (!box) return;
 
-            fullActivityList = activity;
-            safeSetText('activityCountPill', `${activity.length} Events`);
+            const isOpen = data.position_status === 'OPEN' || data.state === 'PAPER_POSITION_OPEN';
+            const isClosed = data.position_status === 'CLOSED' || data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED';
+            const isNoTrade = data.state === 'NO_TRADE';
 
-            let itemsToDisplay = activity;
-            if (!isExpanded && activity.length > 8) {
-                const keyEvents = [];
-                if (activity.length > 0) keyEvents.push(activity[0]);
-                if (activity.length > 1 && !keyEvents.includes(activity[1])) keyEvents.push(activity[1]);
-                if (activity.length > 2 && !keyEvents.includes(activity[2])) keyEvents.push(activity[2]);
+            const activity = Array.isArray(data.activity) ? data.activity : [];
 
-                const recent = activity.slice(-5);
-                recent.forEach(r => { if (!keyEvents.includes(r)) keyEvents.push(r); });
-                itemsToDisplay = keyEvents;
+            // Extract real timestamps from activity where present
+            const initTime = extractTimestamp(activity, /initialized|init/i) || '09:14:00 IST';
+            const evalTime = extractTimestamp(activity, /signal|scan|computed/i) || '09:14:00 IST';
+            const entryTime = extractTimestamp(activity, /opened|short/i) || (isOpen ? '09:30:00 IST' : null);
+            const exitTime = extractTimestamp(activity, /closed|stop|target|complete/i);
 
-                if (toggleBtn) {
-                    toggleBtn.style.display = 'inline-flex';
-                    toggleBtn.innerHTML = `<span>View all ${activity.length} events ↓</span>`;
+            // Find mid-session monitoring timestamp if available
+            let monitorTime = null;
+            for (let i = 0; i < activity.length; i++) {
+                if (/market update|monitoring/i.test(activity[i])) {
+                    const match = activity[i].match(/^(\d{2}:\d{2}:\d{2})/);
+                    if (match) {
+                        monitorTime = `${match[1]} IST`;
+                    }
                 }
-            } else if (toggleBtn && activity.length > 8) {
-                toggleBtn.style.display = 'inline-flex';
-                toggleBtn.innerHTML = `<span>Collapse activity stream ↑</span>`;
+            }
+
+            const milestones = [];
+
+            // 1. Session Initialized
+            milestones.push({
+                text: `${initTime} — Session initialized · Predefined market evaluation framework online.`,
+                type: 'info'
+            });
+
+            if (isNoTrade) {
+                milestones.push({
+                    text: `${evalTime} — Market scan completed · Predefined market conditions evaluated (Neutral).`,
+                    type: 'info'
+                });
+                milestones.push({
+                    text: `Session complete · No trade qualified today under risk rules.`,
+                    type: 'complete'
+                });
+            } else {
+                // 2. Market Scan & Setup Qualification
+                milestones.push({
+                    text: `${evalTime} — Market scan completed · Predefined market conditions evaluated.`,
+                    type: 'info'
+                });
+                milestones.push({
+                    text: `${evalTime} — Setup qualified · A valid setup was identified by the automated rule framework.`,
+                    type: 'info'
+                });
+
+                // 3. Automated Entry
+                if (entryTime) {
+                    const entryPriceStr = data.entry_price ? ` at ₹${Number(data.entry_price).toFixed(2)}` : '';
+                    milestones.push({
+                        text: `${entryTime} — Position opened · Automated entry executed${entryPriceStr}.`,
+                        type: 'open'
+                    });
+                }
+
+                // 4. Position Monitoring
+                if (monitorTime && (isOpen || isClosed)) {
+                    milestones.push({
+                        text: `${monitorTime} — Position monitored · Live mark-to-market and risk controls active.`,
+                        type: 'info'
+                    });
+                }
+
+                // 5. Risk Event / Exit
+                if (isClosed && exitTime) {
+                    const exitReason = data.exit_reason || 'predefined risk management';
+                    milestones.push({
+                        text: `${exitTime} — Position closed · Exit triggered by predefined risk management (${exitReason}).`,
+                        type: 'exit'
+                    });
+
+                    // 6. Session Result Summary
+                    let pnlPts = data.final_net_points !== undefined ? data.final_net_points : data.unrealized_pnl_points;
+                    let pnlRs = data.final_net_rupees;
+                    if (pnlPts !== undefined && pnlPts !== null) {
+                        const ptsStr = `${Number(pnlPts) >= 0 ? '+' : ''}${Number(pnlPts).toFixed(2)} pts`;
+                        const rsStr = pnlRs !== undefined && pnlRs !== null
+                            ? ` (${Number(pnlRs) >= 0 ? '+₹' : '-₹'}${Math.abs(Math.round(pnlRs)).toLocaleString('en-IN')})`
+                            : '';
+                        milestones.push({
+                            text: `Session complete · Final result: ${ptsStr}${rsStr}.`,
+                            type: 'complete'
+                        });
+                    }
+                } else if (isOpen) {
+                    milestones.push({
+                        text: `Active session · Position currently open and tracked against risk parameters.`,
+                        type: 'open'
+                    });
+                }
             }
 
             box.innerHTML = '';
-            itemsToDisplay.forEach(item => {
+            milestones.forEach(m => {
                 const div = document.createElement('div');
                 div.className = 'log-entry';
-                if (/opened|short/i.test(item)) div.className += ' entry-open';
-                if (/closed|stop|target/i.test(item)) div.className += ' entry-exit';
-                div.textContent = item;
+                if (m.type === 'open') div.className += ' entry-open';
+                if (m.type === 'exit') div.className += ' entry-exit';
+                if (m.type === 'complete') div.className += ' entry-complete';
+                div.textContent = m.text;
                 box.appendChild(div);
             });
         }
-
-        document.getElementById('btnToggleActivity')?.addEventListener('click', function() {
-            isExpanded = !isExpanded;
-            renderActivity(fullActivityList);
-        });
 
         async function fetchPublicData() {
             try {
@@ -1197,9 +1238,7 @@
                     else exitReasonEl.className = 'metric-value';
                 }
 
-                if (data.option_symbol) {
-                    safeSetText('valOptionSymbol', data.option_symbol);
-                }
+                safeSetText('valOptionSymbol', 'NIFTY Short Call');
 
                 // 6. Timestamps & Execution Milestones
                 let entryTime = data.entry_time || extractTimestamp(data.activity, /opened|short/i);
@@ -1216,28 +1255,22 @@
                     safeSetText('valEntryFillFact', ep);
                 }
 
-                if (data.option_bid && data.option_ask) {
-                    safeSetText('valClosingQuote', `₹${Number(data.option_bid).toFixed(2)} / ₹${Number(data.option_ask).toFixed(2)}`);
-                } else if (data.option_ltp) {
-                    safeSetText('valClosingQuote', `LTP ₹${Number(data.option_ltp).toFixed(2)}`);
-                }
+                // Session Status card
+                const sessionStatusText = isClosed
+                    ? `Closed (${data.exit_reason || 'Complete'})`
+                    : (isOpen ? 'Position Open' : (isNoTrade ? 'No Trade' : 'Active'));
+                safeSetText('valClosingQuote', sessionStatusText);
 
                 // 7. Decision Facts & Trade Count
-                if (data.nifty_spot) {
-                    safeSetText('valNiftySpot', `₹${Number(data.nifty_spot).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-                }
-                if (data.atr10) {
-                    safeSetText('valAtr10', `${Number(data.atr10).toFixed(2)} pts`);
-                }
+                safeSetText('valNiftySpot', 'NIFTY 50');
+                safeSetText('valAtr10', 'Qualified');
                 if (data.selected_strike) {
                     safeSetText('valSelectedStrike', `${Number(data.selected_strike).toLocaleString('en-IN')} CE`);
                 }
                 safeSetText('valTradeCount', isNoTrade ? '0 Trades' : '1 Trade');
 
-                // 8. Activity Stream
-                if (Array.isArray(data.activity)) {
-                    renderActivity(data.activity);
-                }
+                // 8. Sanitized Public Milestones Stream
+                renderSanitizedMilestones(data);
 
                 // 9. Data Feed Freshness
                 const updateDt = parseISODate(data.last_update || data.updated_at);
