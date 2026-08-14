@@ -299,40 +299,54 @@
 
         .bullet-list li {
             position: relative;
-            padding-left: 16px;
+            padding-left: 18px;
             font-size: 0.85rem;
             color: var(--text-secondary);
-            line-height: 1.4;
-            word-break: break-word;
+            line-height: 1.5;
         }
 
         .bullet-list li::before {
             content: "•";
             position: absolute;
-            left: 0;
+            left: 4px;
             color: var(--accent-blue);
             font-weight: bold;
         }
 
         .callout-box {
-            padding: 12px 14px;
             border-radius: 8px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        .callout-green { background: rgba(34, 197, 94, 0.08); border-left: 4px solid var(--accent-green); }
-        .callout-red { background: rgba(239, 68, 68, 0.08); border-left: 4px solid var(--accent-red); }
-        .callout-blue { background: rgba(56, 189, 248, 0.08); border-left: 4px solid var(--accent-blue); }
-        .callout-amber { background: rgba(245, 158, 11, 0.08); border-left: 4px solid var(--accent-amber); }
+        .callout-blue {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
 
-        /* KEY LEVELS STYLING */
+        .callout-green {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.25);
+        }
+
+        .callout-red {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .callout-amber {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        /* KEY LEVELS STYLES */
         .level-row {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 10px;
+            gap: 2px;
+            padding: 8px 12px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--card-border);
             border-radius: 8px;
@@ -341,7 +355,7 @@
         .level-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: baseline;
         }
 
         .level-price {
@@ -425,7 +439,31 @@
             gap: 12px;
         }
 
-        /* SESSION TIMELINE */
+        /* SESSION TIMELINE & SCROLL BOX */
+        .timeline-scroll-box {
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .timeline-scroll-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .timeline-scroll-box::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .timeline-scroll-box::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 4px;
+        }
+
+        .timeline-scroll-box::-webkit-scrollbar-thumb:hover {
+            background: var(--border-highlight);
+        }
+
         .timeline-container {
             display: flex;
             flex-direction: column;
@@ -550,17 +588,16 @@
 </head>
 <body>
 
-  <!-- RESTORED SITE HEADER / NAVIGATION -->
+  <!-- RESTORED SITE HEADER / NAVIGATION (Consistent with Main Mishra Ventures Brand) -->
   <nav>
     <a href="../../" class="nav-brand">
-      <div class="nav-logo">📈</div>
+      <div class="nav-logo">📊</div>
       <div>
-        <div class="nav-brand-text">Live Market Intelligence</div>
-        <div class="nav-brand-sub">The Mishra Ventures</div>
+        <div class="nav-brand-text">Live Market</div>
+        <div class="nav-brand-sub">by The Mishra Ventures</div>
       </div>
     </a>
     <div style="display: flex; align-items: center; gap: 10px;">
-      <a href="../../" class="nav-home">Home</a>
       <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
         <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -573,6 +610,7 @@
           </svg>
         </button>
       </div>
+      <a href="../../" class="nav-home">← All Ventures</a>
     </div>
   </nav>
 
@@ -634,17 +672,21 @@
                     <span class="snapshot-val" id="val-5m-bias">--</span>
                 </div>
                 <div class="snapshot-item">
-                    <span class="metric-label">ATR Utilization</span>
-                    <span class="snapshot-val" id="val-atr-used">--%</span>
-                </div>
-                <div class="snapshot-item">
                     <span class="metric-label">CPR Range</span>
                     <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-snapshot">--</span>
                 </div>
                 <div class="snapshot-item">
-                    <span class="metric-label">PCR Ratio</span>
-                    <span class="snapshot-val" id="val-pcr-snapshot">--</span>
+                    <span class="metric-label">CPR Width</span>
+                    <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-width">--</span>
                 </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">ATR Utilization</span>
+                    <span class="snapshot-val" id="val-atr-used">--%</span>
+                </div>
+            </div>
+
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: -6px; line-height: 1.4;">
+                * CPR Width heuristic: NARROW ≤20% ATR · NORMAL 20–35% ATR · WIDE >35% ATR (platform heuristic, not a universal market standard).
             </div>
 
             <div class="callout-box callout-blue">
@@ -913,13 +955,15 @@
             <div class="card-header">
                 <div>
                     <h2 class="card-title">SESSION INTELLIGENCE TIMELINE</h2>
-                    <span class="card-subtitle">Structural session events (Newest first)</span>
+                    <span class="card-subtitle" id="val-timeline-count">0 events today (Newest first)</span>
                 </div>
             </div>
 
-            <div class="timeline-container" id="timeline-list">
-                <div class="timeline-item">
-                    <span class="timeline-meaning">Loading session timeline...</span>
+            <div class="timeline-scroll-box">
+                <div class="timeline-container" id="timeline-list">
+                    <div class="timeline-item">
+                        <span class="timeline-meaning">Loading session timeline...</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1147,16 +1191,29 @@
         document.getElementById('val-atr-used').textContent = isFiniteNum(data.atr_utilization) ?
             Number(data.atr_utilization).toFixed(1) + '%' : 'N/A';
 
-        if (data.cpr && isFiniteNum(data.cpr.cpr_low) && isFiniteNum(data.cpr.cpr_high)) {
-            document.getElementById('val-cpr-snapshot').textContent = `${data.cpr.cpr_low}–${data.cpr.cpr_high}`;
+        // CPR Range and Width (Direct consumption from backend fields)
+        const cprObj = data.cpr || wi.key_levels?.cpr || {};
+        const cprEl = document.getElementById('val-cpr-snapshot');
+        const cprWidthEl = document.getElementById('val-cpr-width');
+        
+        if (cprObj && isFiniteNum(cprObj.cpr_low) && isFiniteNum(cprObj.cpr_high)) {
+            if (cprEl) cprEl.textContent = `${Number(cprObj.cpr_low).toFixed(2)} – ${Number(cprObj.cpr_high).toFixed(2)}`;
+            
+            if (cprWidthEl) {
+                const widthPts = isFiniteNum(cprObj.width) ? `${Number(cprObj.width).toFixed(2)} pts` : (isFiniteNum(cprObj.width_pts) ? `${Number(cprObj.width_pts).toFixed(2)} pts` : '-- pts');
+                const widthClass = data.cpr_width_class || cprObj.width_class || 'WIDE';
+                cprWidthEl.textContent = `${widthPts} · ${widthClass}`;
+                cprWidthEl.className = 'snapshot-val';
+                if (widthClass === 'WIDE') cprWidthEl.style.color = 'var(--accent-amber)';
+                else if (widthClass === 'NARROW') cprWidthEl.style.color = 'var(--accent-blue)';
+                else cprWidthEl.style.color = 'var(--text-primary)';
+            }
         } else {
-            document.getElementById('val-cpr-snapshot').textContent = 'N/A';
+            if (cprEl) cprEl.textContent = 'N/A';
+            if (cprWidthEl) cprWidthEl.textContent = 'N/A';
         }
 
-        document.getElementById('val-pcr-snapshot').textContent = (data.oi_summary && isFiniteNum(data.oi_summary.pcr)) ?
-            data.oi_summary.pcr : 'N/A';
-
-        // 3. FUTURES VWAP CARD (New E2 Renderer)
+        // 3. FUTURES VWAP CARD (Direct E2 Renderer)
         const fv = data.futures_vwap || wi.futures_vwap || {};
         document.getElementById('val-fut-symbol').textContent = fv.symbol ? `${fv.symbol} (NFO)` : 'NIFTY Front-Month Future (NFO)';
         document.getElementById('val-fut-ltp').textContent = fmtPrice(fv.ltp);
@@ -1187,9 +1244,10 @@
 
         document.getElementById('val-fut-status-text').textContent = fv.status_text || 'Futures trading session VWAP tracking.';
 
-        // 4. MORNING PLAN (Strict Canonical Conditional E2 View)
+        // 4. ONE CANONICAL SOURCE: web_intelligence.morning_plan.status
         const mp = wi.morning_plan || {};
-        const rawStatus = String(mp.status || data.setup_state || 'UNKNOWN').toUpperCase();
+        const canonicalStatus = String(mp.status || data.setup_state || 'UNKNOWN').toUpperCase();
+        
         const planStatusEl = document.getElementById('val-plan-status');
         const planThesisEl = document.getElementById('val-plan-thesis');
         const planListLabel = document.getElementById('label-plan-list');
@@ -1200,7 +1258,7 @@
 
         planThesisEl.textContent = mp.original_thesis || data.bias || 'NEUTRAL';
 
-        if (rawStatus === 'QUALIFIED' || rawStatus === 'VALID') {
+        if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
             planStatusEl.textContent = '✓ QUALIFIED';
             planStatusEl.className = 'status-badge badge-green';
             planListLabel.textContent = 'Active Setup Criteria';
@@ -1211,7 +1269,7 @@
             planCallout.className = 'callout-box callout-green';
             planMeaning.textContent = mp.meaning || '• Morning thesis is QUALIFIED and active.';
             planWarning.textContent = mp.direction_warning || '• Follow playbook execution criteria for armed setups.';
-        } else if (rawStatus === 'INVALIDATED') {
+        } else if (canonicalStatus === 'INVALIDATED') {
             planStatusEl.textContent = '❌ INVALIDATED';
             planStatusEl.className = 'status-badge badge-red';
             planListLabel.textContent = 'Why Was It Invalidated?';
@@ -1222,7 +1280,7 @@
             planCallout.className = 'callout-box callout-red';
             planMeaning.textContent = mp.meaning || '• Original morning thesis is OFF for today.';
             planWarning.textContent = mp.direction_warning || '• Important: This does NOT mean BUY/SELL. Wait for a NEW qualified setup.';
-        } else if (rawStatus === 'PENDING' || rawStatus === 'WEAKENING') {
+        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
             planStatusEl.textContent = '⏳ PENDING';
             planStatusEl.className = 'status-badge badge-amber';
             planListLabel.textContent = 'Pending Formation Checks';
@@ -1233,12 +1291,12 @@
             planCallout.className = 'callout-box callout-amber';
             planMeaning.textContent = mp.meaning || '• Morning thesis is evaluating conditions.';
             planWarning.textContent = mp.direction_warning || '• Await setup confirmation before taking positions.';
-        } else if (rawStatus === 'NOT_QUALIFIED') {
+        } else if (canonicalStatus === 'NOT_QUALIFIED') {
             planStatusEl.textContent = '⚠️ NO SETUP';
             planStatusEl.className = 'status-badge badge-neutral';
             planListLabel.textContent = 'Context Filter Reasons';
 
-            const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias established pre-market.'];
+            const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias armed pre-market.'];
             planList.innerHTML = ctxItems.map(item => `<li>${item}</li>`).join('');
 
             planCallout.className = 'callout-box callout-blue';
@@ -1302,13 +1360,48 @@
         document.getElementById('val-inval-price').textContent = isFiniteNum(inv.price) ? fmtPrice(inv.price) : (isFiniteNum(data.levels?.invalidation) ? fmtPrice(data.levels.invalidation) : 'N/A');
         document.getElementById('val-inval-meaning').textContent = inv.meaning || "Break of this level invalidates today's morning plan.";
 
-        // 7. DECISION SUPPORT
+        // 7. DECISION SUPPORT (Strict Single-Source Consistency with canonicalStatus)
         const ds = wi.decision_support || {};
-        document.getElementById('val-ds-focus').textContent = ds.current_focus || data.action_verdict || 'STAND ASIDE';
-        document.getElementById('val-ds-why').textContent = ds.why || data.decision_reason || 'Evaluating live market structure.';
-        document.getElementById('val-ds-next').textContent = ds.next_level_to_watch || data.decision_next_event || '--';
-        document.getElementById('val-ds-next-why').textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
-        document.getElementById('val-ds-instruction').textContent = ds.instruction || 'WAIT FOR SETUP CONFIRMATION';
+        const dsFocusEl = document.getElementById('val-ds-focus');
+        const dsWhyEl = document.getElementById('val-ds-why');
+        const dsNextEl = document.getElementById('val-ds-next');
+        const dsNextWhyEl = document.getElementById('val-ds-next-why');
+        const dsInstructionEl = document.getElementById('val-ds-instruction');
+
+        dsNextEl.textContent = ds.next_level_to_watch || data.decision_next_event || '--';
+        dsNextWhyEl.textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
+
+        if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
+            dsFocusEl.textContent = ds.current_focus || 'WAIT';
+            dsFocusEl.style.color = 'var(--accent-green)';
+            dsWhyEl.textContent = ds.why || 'Morning thesis is QUALIFIED and active. Setup criteria are satisfied.';
+            dsInstructionEl.textContent = ds.instruction || 'FOLLOW QUALIFIED SETUP RULES';
+            dsInstructionEl.style.color = 'var(--accent-green)';
+        } else if (canonicalStatus === 'INVALIDATED') {
+            dsFocusEl.textContent = 'STAND ASIDE';
+            dsFocusEl.style.color = 'var(--accent-red)';
+            dsWhyEl.textContent = ds.why || 'Morning thesis is INVALIDATED for today. Do not force entries on the original thesis.';
+            dsInstructionEl.textContent = 'WAIT FOR A NEW QUALIFIED SETUP';
+            dsInstructionEl.style.color = 'var(--accent-red)';
+        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
+            dsFocusEl.textContent = 'STAND ASIDE';
+            dsFocusEl.style.color = 'var(--accent-amber)';
+            dsWhyEl.textContent = ds.why || 'Morning thesis is PENDING confirmation. Await completion of structural checks.';
+            dsInstructionEl.textContent = 'WAIT FOR COMPLETION OF PENDING CHECKS';
+            dsInstructionEl.style.color = 'var(--accent-amber)';
+        } else if (canonicalStatus === 'NOT_QUALIFIED') {
+            dsFocusEl.textContent = 'STAND ASIDE';
+            dsFocusEl.style.color = 'var(--text-muted)';
+            dsWhyEl.textContent = ds.why || 'No high-conviction directional setup armed today.';
+            dsInstructionEl.textContent = 'STAND ASIDE';
+            dsInstructionEl.style.color = 'var(--text-muted)';
+        } else {
+            dsFocusEl.textContent = 'AWAITING FEED';
+            dsFocusEl.style.color = 'var(--text-muted)';
+            dsWhyEl.textContent = 'Awaiting live market decision support data.';
+            dsInstructionEl.textContent = 'STAND ASIDE';
+            dsInstructionEl.style.color = 'var(--text-muted)';
+        }
 
         // 8. ORDER FLOW SHADOW
         const ofs = wi.order_flow_shadow || data.order_flow_shadow || {};
@@ -1337,14 +1430,29 @@
             `Snapshot age: ${ageStr} (Last observed backend feed state: ${rawOfFeed}).` :
             `${ofs.combined_updates_pct || 74.55}% combined updates (single packet contains multiple trades).`;
 
-        // 9. SESSION INTELLIGENCE TIMELINE
+        // 9. SESSION INTELLIGENCE TIMELINE (Scrollable container, all events retained, newest first)
         const tlList = document.getElementById('timeline-list');
-        const events = wi.timeline || data.timeline || [];
+        const tlCount = document.getElementById('val-timeline-count');
+        const rawEvents = wi.timeline || data.timeline || [];
+        
+        let events = [];
+        if (Array.isArray(rawEvents) && rawEvents.length > 0) {
+            if (wi.timeline && Array.isArray(wi.timeline)) {
+                events = wi.timeline;
+            } else {
+                events = [...rawEvents].reverse();
+            }
+        }
+
+        if (tlCount) {
+            tlCount.textContent = `${events.length} event${events.length === 1 ? '' : 's'} today (Newest first)`;
+        }
+
         if (events && events.length > 0) {
-            tlList.innerHTML = events.slice(0, 8).map(e => `
+            tlList.innerHTML = events.map(e => `
                 <div class="timeline-item">
                     <span class="timeline-time">${e.time || '--:--'} IST</span>
-                    <span class="timeline-event">${e.what_changed || e.event || 'Structural Event'}</span>
+                    <span class="timeline-event">${e.what_changed || e.event || e.message || 'Structural Event'}</span>
                     <span class="timeline-meaning">${e.what_it_means || e.detail || ''}</span>
                 </div>
             `).join('');
@@ -1352,7 +1460,7 @@
             tlList.innerHTML = `<div class="timeline-item"><span class="timeline-meaning">No new structural event since 09:15 IST.</span></div>`;
         }
 
-        // 10. LIVE MARKET COMMENTARY (Dynamic E2 Binding — Zero Hardcoded Demo Text)
+        // 10. LIVE MARKET COMMENTARY (Dynamic E2 Binding & State Consistency)
         const mc = wi.market_commentary || {};
         const commTimeEl = document.getElementById('val-comm-time');
         const commPill = document.getElementById('val-comm-pill');
@@ -1381,7 +1489,15 @@
             interpEl.textContent = 'Evaluating market context...';
         }
 
-        document.getElementById('val-comm-bottom').textContent = mc.bottom_line || 'Follow disciplined execution rules.';
+        const bottomEl = document.getElementById('val-comm-bottom');
+        if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
+            bottomEl.textContent = (mc.bottom_line && !mc.bottom_line.toLowerCase().includes('invalidated')) ?
+                mc.bottom_line : 'Follow qualified morning execution rules.';
+        } else if (canonicalStatus === 'INVALIDATED') {
+            bottomEl.textContent = mc.bottom_line || 'Morning thesis is invalidated. Wait for a new qualified setup.';
+        } else {
+            bottomEl.textContent = mc.bottom_line || 'Follow disciplined execution rules.';
+        }
         
         const actionEl = document.getElementById('val-comm-action');
         const actionVal = mc.action || mc.current_action || ds.current_focus || 'STAND ASIDE';
