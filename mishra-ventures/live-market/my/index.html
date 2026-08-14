@@ -1340,13 +1340,21 @@
 
         planThesisEl.textContent = mp.original_thesis || data.bias || 'NEUTRAL';
 
+        const activeCriteria = Array.isArray(mp.active_criteria) ? mp.active_criteria : [];
+        const whyInvalidated = Array.isArray(mp.why_invalidated) ? mp.why_invalidated : [];
+        const pendingStructural = Array.isArray(mp.pending_structural_checks) ? mp.pending_structural_checks : (Array.isArray(mp.pending_checks) ? mp.pending_checks.filter(c => !c.toLowerCase().includes('vwap') && !c.toLowerCase().includes('feed has no volume')) : []);
+        const infoNotes = Array.isArray(mp.informational_notes) ? mp.informational_notes : (Array.isArray(mp.pending_checks) ? mp.pending_checks.filter(c => c.toLowerCase().includes('vwap') || c.toLowerCase().includes('feed has no volume')) : []);
+
         if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
             planStatusEl.textContent = '✓ QUALIFIED';
             planStatusEl.className = 'status-badge badge-green';
             planListLabel.textContent = 'Active Setup Criteria';
             
-            const activeItems = mp.active_criteria && mp.active_criteria.length > 0 ? mp.active_criteria : ['All morning thesis conditions are satisfied.'];
-            planList.innerHTML = activeItems.map(item => `<li>${item}</li>`).join('');
+            let html = activeCriteria.length > 0 ? activeCriteria.map(item => `<li>✓ ${item}</li>`).join('') : '<li>All morning thesis conditions are satisfied.</li>';
+            if (infoNotes.length > 0) {
+                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+            }
+            planList.innerHTML = html;
 
             planCallout.className = 'callout-box callout-green';
             planMeaning.textContent = mp.meaning || '• Morning thesis is QUALIFIED and active.';
@@ -1356,8 +1364,12 @@
             planStatusEl.className = 'status-badge badge-red';
             planListLabel.textContent = 'Why Was It Invalidated?';
 
-            const whyItems = mp.why_invalidated && mp.why_invalidated.length > 0 ? mp.why_invalidated : (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke morning invalidation level']);
-            planList.innerHTML = whyItems.map(item => `<li>${item}</li>`).join('');
+            const whyItems = whyInvalidated.length > 0 ? whyInvalidated : (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke morning invalidation level']);
+            let html = whyItems.map(item => `<li>✗ ${item}</li>`).join('');
+            if (infoNotes.length > 0) {
+                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+            }
+            planList.innerHTML = html;
 
             planCallout.className = 'callout-box callout-red';
             planMeaning.textContent = mp.meaning || '• Original morning thesis is OFF for today.';
@@ -1365,10 +1377,25 @@
         } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING') {
             planStatusEl.textContent = '⏳ PENDING';
             planStatusEl.className = 'status-badge badge-amber';
-            planListLabel.textContent = 'Pending Formation Checks';
+            planListLabel.textContent = pendingStructural.length > 0 ? 'Pending Formation Checks & Criteria' : 'Active / Pending Criteria';
 
-            const pendingItems = mp.pending_checks && mp.pending_checks.length > 0 ? mp.pending_checks : ['Awaiting completed timeframe candle confirmation.'];
-            planList.innerHTML = pendingItems.map(item => `<li>${item}</li>`).join('');
+            let items = [];
+            if (pendingStructural.length > 0) {
+                items.push(...pendingStructural.map(c => `<li>⏳ <strong>Pending:</strong> ${c}</li>`));
+            }
+            if (whyInvalidated.length > 0) {
+                items.push(...whyInvalidated.map(c => `<li style="color: var(--accent-amber);">⚠️ <strong>Condition:</strong> ${c}</li>`));
+            }
+            if (activeCriteria.length > 0) {
+                items.push(...activeCriteria.map(c => `<li>✓ ${c}</li>`));
+            }
+            if (items.length === 0) {
+                items.push('<li>Awaiting completed timeframe candle confirmation.</li>');
+            }
+            if (infoNotes.length > 0) {
+                items.push(...infoNotes.map(c => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· <em>Informational:</em> ${c}</li>`));
+            }
+            planList.innerHTML = items.join('');
 
             planCallout.className = 'callout-box callout-amber';
             planMeaning.textContent = mp.meaning || '• Morning thesis is evaluating conditions.';
@@ -1379,7 +1406,11 @@
             planListLabel.textContent = 'Context Filter Reasons';
 
             const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias armed pre-market.'];
-            planList.innerHTML = ctxItems.map(item => `<li>${item}</li>`).join('');
+            let html = ctxItems.map(item => `<li>${item}</li>`).join('');
+            if (infoNotes.length > 0) {
+                html += infoNotes.map(item => `<li style="color: var(--text-secondary); font-size: 0.8rem;">· ${item}</li>`).join('');
+            }
+            planList.innerHTML = html;
 
             planCallout.className = 'callout-box callout-blue';
             planMeaning.textContent = mp.meaning || '• No qualified morning thesis armed for today.';
