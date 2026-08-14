@@ -530,22 +530,56 @@
             padding: 0 4px;
             border-radius: 6px;
             transition: background 0.15s ease;
+            background: transparent;
         }
         .sensibull-strike-col:hover {
             background: rgba(255, 255, 255, 0.05);
         }
-        .sensibull-strike-col.is-atm {
-            background: rgba(56, 189, 248, 0.09);
-            border-bottom: 3px solid var(--accent-blue);
+
+        /* Subtle Vertical Guide Lines (Zero full-width colored background blocks) */
+        .sensibull-strike-col.is-atm::before, .change-strike-col.is-atm::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 30px;
+            left: 50%;
+            width: 1px;
+            border-left: 1px dashed rgba(56, 189, 248, 0.45);
+            pointer-events: none;
+            z-index: 1;
         }
-        .sensibull-strike-col.is-pw {
-            border-bottom: 3px solid var(--accent-green);
+        .sensibull-strike-col.is-pw::before, .change-strike-col.is-pw::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 30px;
+            left: 50%;
+            width: 1px;
+            border-left: 1px dashed rgba(34, 197, 94, 0.4);
+            pointer-events: none;
+            z-index: 1;
         }
-        .sensibull-strike-col.is-cw {
-            border-bottom: 3px solid var(--accent-red);
+        .sensibull-strike-col.is-cw::before, .change-strike-col.is-cw::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 30px;
+            left: 50%;
+            width: 1px;
+            border-left: 1px dashed rgba(239, 68, 68, 0.4);
+            pointer-events: none;
+            z-index: 1;
         }
-        .sensibull-strike-col.is-mp {
-            border-bottom: 3px solid var(--accent-purple);
+        .sensibull-strike-col.is-mp::before, .change-strike-col.is-mp::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 30px;
+            left: 50%;
+            width: 1px;
+            border-left: 1px dashed rgba(168, 85, 247, 0.4);
+            pointer-events: none;
+            z-index: 1;
         }
 
         .bars-pair {
@@ -1500,7 +1534,7 @@
         }
 
         renderSensibullCurrentOIChart(visibleChain, maxVisibleOi, atmStrike, putWallStrike, callWallStrike, maxPain);
-        renderSensibullIntradayChangeChart(visibleChain, maxVisibleChg, atmStrike);
+        renderSensibullIntradayChangeChart(visibleChain, maxVisibleChg, atmStrike, putWallStrike, callWallStrike, maxPain);
     }
 
     // =========================================================================
@@ -1582,7 +1616,7 @@
     // =========================================================================
     // CHART 2: SENSIBULL-STYLE INTRADAY OI CHANGE (X-AXIS = STRIKE)
     // =========================================================================
-    function renderSensibullIntradayChangeChart(chain, maxChg, atmStrike) {
+    function renderSensibullIntradayChangeChart(chain, maxChg, atmStrike, putWallStrike, callWallStrike, maxPain) {
         const container = document.getElementById('container-intraday-change-chart');
         if (!Array.isArray(chain) || chain.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding: 40px; color: var(--text-secondary);">Intraday change unavailable for this expiry.</div>';
@@ -1619,7 +1653,22 @@
             const peHeightPct = Math.min(100, Math.max(peAbs > 0 ? 4 : 0, (peAbs / maxChg) * 100));
 
             const isAtm = str === atmStrike;
-            let colClass = 'change-strike-col' + (isAtm ? ' is-atm' : '');
+            const isPw = str === putWallStrike;
+            const isCw = str === callWallStrike;
+            const isMp = str === maxPain;
+
+            let colClass = 'change-strike-col';
+            if (isAtm) colClass += ' is-atm';
+            if (isPw) colClass += ' is-pw';
+            if (isCw) colClass += ' is-cw';
+            if (isMp) colClass += ' is-mp';
+
+            let tagHtml = '';
+            let tagText = '';
+            if (isAtm) { tagHtml = '<span class="x-tag tag-atm">ATM</span>'; tagText = 'ATM'; }
+            else if (isPw) { tagHtml = '<span class="x-tag tag-pw">PW</span>'; tagText = 'PUT WALL'; }
+            else if (isCw) { tagHtml = '<span class="x-tag tag-cw">CW</span>'; tagText = 'CALL WALL'; }
+            else if (isMp) { tagHtml = '<span class="x-tag tag-mp">MP</span>'; tagText = 'MAX PAIN'; }
 
             // Top Half (Additions > 0)
             const topCeBar = (ceChg !== null && ceChg > 0) ? `<div class="v-chg-ce-add" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
@@ -1636,7 +1685,7 @@
             <div class="${colClass}" 
                  data-chart-type="change"
                  data-strike="${fmtStrike(str)}"
-                 data-tag="${isAtm ? 'ATM' : ''}"
+                 data-tag="${tagText}"
                  data-ce-chg="${fmtChange(ceChg)}"
                  data-pe-chg="${fmtChange(peChg)}"
                  data-ce-dir="${ceDir}"
@@ -1651,7 +1700,7 @@
                 </div>
                 <div class="x-strike-label">
                     <span>${fmtStrike(str)}</span>
-                    <div>${isAtm ? '<span class="x-tag tag-atm">ATM</span>' : ''}</div>
+                    <div>${tagHtml}</div>
                 </div>
             </div>`;
         });
