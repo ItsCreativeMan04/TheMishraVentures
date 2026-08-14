@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automated Nifty Strategy | Live Session Performance | The Mishra Ventures</title>
+    <title>Automated Nifty Options Strategy | Live Performance Telemetry | The Mishra Ventures</title>
+    <meta name="description" content="Live telemetry and execution monitoring for an automated, rule-based Nifty options research strategy operating in paper-trading simulation.">
 
+    <!-- Inline blocking theme switcher script -->
     <script>
       (function () {
         try {
@@ -20,32 +22,38 @@
     <link rel="stylesheet" href="../shared/components.css?v=20260814" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg-dark: #090d16;
-            --bg: #090d16;
-            --surface-1: #111726;
-            --surface: #111726;
-            --surface-2: #182238;
-            --surface2: #182238;
-            --card-bg: rgba(18, 26, 43, 0.85);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg-dark: #060a14;
+            --bg: #060a14;
+            --surface-1: #0f172a;
+            --surface: #0f172a;
+            --surface-2: #162238;
+            --surface2: #162238;
+            --card-bg: rgba(15, 23, 42, 0.82);
+            --card-border: rgba(255, 255, 255, 0.09);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-highlight: rgba(56, 189, 248, 0.25);
             --accent-blue: #38bdf8;
             --accent: #38bdf8;
             --accent-green: #34d399;
+            --green: #34d399;
             --accent2: #34d399;
             --accent-amber: #fbbf24;
+            --yellow: #fbbf24;
             --accent-red: #f87171;
+            --red: #f87171;
             --text-primary: #f8fafc;
             --text: #f8fafc;
             --text-strong: #ffffff;
             --text-secondary: #94a3b8;
             --text-muted: #64748b;
             --muted: #94a3b8;
+            --shadow-card: 0 12px 32px -4px rgba(0, 0, 0, 0.45);
         }
+
         html[data-theme="light"] {
             --bg-dark: #f4f7fc;
             --bg: #f4f7fc;
@@ -56,189 +64,621 @@
             --card-bg: #ffffff;
             --card-border: rgba(15, 23, 42, 0.12);
             --border: rgba(15, 23, 42, 0.12);
+            --border-highlight: rgba(29, 78, 216, 0.22);
             --text-primary: #0f172a;
             --text: #0f172a;
             --text-strong: #020617;
             --text-secondary: #475569;
             --text-muted: #64748b;
             --muted: #64748b;
+            --accent-blue: #0284c7;
+            --accent: #0284c7;
+            --accent-green: #16a34a;
+            --green: #16a34a;
+            --accent-amber: #d97706;
+            --yellow: #d97706;
+            --accent-red: #dc2626;
+            --red: #dc2626;
+            --shadow-card: 0 10px 28px -4px rgba(15, 23, 42, 0.08);
         }
 
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: var(--bg-dark);
+            background-color: var(--bg);
             color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'Sora', 'Inter', sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        .navbar {
-            border-bottom: 1px solid var(--card-border);
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(9, 13, 22, 0.8);
-            backdrop-filter: blur(12px);
-        }
-
-        .brand-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand-badge {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            color: var(--accent-blue);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .live-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(52, 211, 153, 0.1);
-            border: 1px solid rgba(52, 211, 153, 0.3);
-            color: var(--accent-green);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--accent-green);
-            box-shadow: 0 0 8px var(--accent-green);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
         }
 
         .main-container {
-            max-width: 1000px;
+            max-width: 980px;
             width: 100%;
-            margin: 32px auto;
-            padding: 0 20px;
-            box-sizing: border-box;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
             flex: 1;
         }
 
-        .hero-banner {
-            background: linear-gradient(135deg, rgba(24, 34, 56, 0.6) 0%, rgba(17, 23, 38, 0.9) 100%);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 28px;
+        /* ── Hero Section ── */
+        .hero-section {
+            text-align: center;
+            padding: 24px 0 32px;
+        }
+
+        .badge-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .tag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text-secondary);
+        }
+
+        .tag-badge.live-tag {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.35);
+            color: var(--accent-blue);
+        }
+
+        .live-dot-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--accent-blue);
+            box-shadow: 0 0 8px var(--accent-blue);
+            display: inline-block;
         }
 
         .hero-title {
-            font-size: 1.6rem;
+            font-size: clamp(1.8rem, 4.2vw, 2.6rem);
             font-weight: 800;
-            margin: 0 0 8px 0;
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--text-strong) 30%, var(--accent-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 10px;
+            letter-spacing: 0.02em;
         }
 
         .hero-sub {
             color: var(--text-secondary);
             font-size: 0.95rem;
-            margin: 0;
+            max-width: 640px;
+            margin: 0 auto;
+            line-height: 1.6;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-
-        .card {
+        /* ── Status Strip ── */
+        .status-strip-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 16px 22px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        .card-label {
-            font-size: 0.75rem;
+        .status-strip-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .state-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-        }
-
-        .card-value {
-            font-size: 1.8rem;
-            font-weight: 800;
+            letter-spacing: 0.04em;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .card-sub {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 6px;
+        .state-pill.state-complete {
+            background: rgba(56, 189, 248, 0.14);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: var(--accent-blue);
         }
 
-        .val-positive { color: var(--accent-green); }
-        .val-negative { color: var(--accent-red); }
-        .val-neutral { color: var(--accent-amber); }
+        .state-pill.state-open {
+            background: rgba(52, 211, 153, 0.14);
+            border: 1px solid rgba(52, 211, 153, 0.35);
+            color: var(--accent-green);
+        }
 
-        .timeline-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 24px;
+        .state-pill.state-notrade {
+            background: rgba(251, 191, 36, 0.14);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: var(--accent-amber);
+        }
+
+        .status-strip-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .session-date-label {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-strong);
+        }
+
+        .freshness-indicator {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-strip-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-pill {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* ── Metric Snapshot Grid ── */
+        .snapshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
             margin-bottom: 28px;
         }
 
-        .timeline-title {
-            font-size: 0.9rem;
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--border-highlight);
+            transform: translateY(-2px);
+        }
+
+        .metric-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.06em;
             color: var(--text-secondary);
+        }
+
+        .metric-icon {
+            font-size: 1rem;
+            opacity: 0.7;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.15;
+            margin-bottom: 6px;
+        }
+
+        .metric-sub {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .val-positive { color: var(--accent-green) !important; }
+        .val-negative { color: var(--accent-red) !important; }
+        .val-neutral { color: var(--accent-amber) !important; }
+
+        /* ── Execution Milestones Card ── */
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+        }
+
+        .panel-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-strong);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .milestones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .milestone-box {
+            background: var(--surface-2);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
+        }
+
+        .milestone-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .milestone-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-strong);
+        }
+
+        /* ── Why This Trade Section ── */
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
             margin-bottom: 16px;
         }
 
-        .timeline-row {
+        .fact-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .fact-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .fact-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .rationale-note {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            background: rgba(56, 189, 248, 0.05);
+            border-left: 3px solid var(--accent-blue);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* ── 4-Step Workflow Pipeline ── */
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .pipeline-step {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .step-num {
+            font-size: 0.72rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-blue);
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+        }
+
+        .step-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-strong);
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ── Activity Log Stream ── */
+        .activity-stream-box {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            max-height: 260px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            line-height: 1.65;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .activity-stream-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .activity-stream-box::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 2px solid var(--accent-blue);
+            color: var(--text-secondary);
+        }
+
+        .log-entry.entry-open {
+            border-left-color: var(--accent-green);
+            color: var(--text-strong);
+        }
+
+        .log-entry.entry-exit {
+            border-left-color: var(--accent-red);
+            color: var(--text-strong);
+        }
+
+        .log-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--accent-blue);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+            display: inline-flex;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--card-border);
-            font-size: 0.9rem;
+            gap: 6px;
         }
 
-        .timeline-row:last-child {
-            border-bottom: none;
+        .log-toggle-btn:hover {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: var(--accent-blue);
         }
 
-        .t-label { color: var(--text-secondary); }
-        .t-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+        /* ── Transparency Section ── */
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
 
+        .trust-item {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .trust-icon {
+            color: var(--accent-green);
+            font-weight: 800;
+            font-size: 0.95rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ── CTA Banner ── */
+        .cta-card {
+            background: linear-gradient(135deg, rgba(22, 34, 56, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
+            border: 1px solid var(--border-highlight);
+            border-radius: 16px;
+            padding: 30px 24px;
+            text-align: center;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .cta-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text-strong);
+            margin-bottom: 8px;
+        }
+
+        .cta-sub {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            max-width: 540px;
+            margin: 0 auto 20px;
+        }
+
+        .cta-btn-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .primary-cta-btn {
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 10px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .primary-cta-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .secondary-cta-btn {
+            background: var(--surface-2);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .secondary-cta-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--accent-blue);
+        }
+
+        /* ── Research & Compliance Disclosure ── */
+        .disclosure-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 28px;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .disclosure-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── Premarket Notice ── */
         .premarket-box {
             background: rgba(251, 191, 36, 0.08);
             border: 1px solid rgba(251, 191, 36, 0.25);
             border-radius: 12px;
-            padding: 20px;
+            padding: 16px;
             color: var(--accent-amber);
             margin-bottom: 24px;
             display: none;
+            font-size: 0.88rem;
         }
 
+        @media (max-width: 640px) {
+            .hero-title { font-size: 1.6rem; }
+            .status-strip-card { flex-direction: column; align-items: flex-start; }
+            .status-strip-right { width: 100%; justify-content: flex-start; }
+            .snapshot-grid { grid-template-columns: 1fr; }
+            .milestones-grid { grid-template-columns: 1fr 1fr; }
+            .facts-grid { grid-template-columns: 1fr 1fr; }
+            .pipeline-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -266,69 +706,253 @@
     </nav>
 
     <div class="main-container">
-        <!-- Pre-Market Freshness Banner -->
+        <!-- Pre-Market Freshness Banner (Dynamic) -->
         <div class="premarket-box" id="premarketBanner">
-            <strong>Session Initializing:</strong> Today's trading session is preparing. Entry window opens at 09:30 IST.
+            <strong>Session Initializing:</strong> Today's trading session is preparing. Automated entry window opens at 09:30 IST.
         </div>
 
-        <div class="hero-banner">
-            <h1 class="hero-title">Automated Nifty Trading Session</h1>
-            <p class="hero-sub" id="sessionLabel">Trading Session — Live Monitoring</p>
+        <!-- 1. Hero Section -->
+        <section class="hero-section">
+            <div class="badge-strip">
+                <span class="tag-badge live-tag"><span class="live-dot-pulse"></span> LIVE DATA</span>
+                <span class="tag-badge">PAPER TRADING</span>
+                <span class="tag-badge">NIFTY OPTIONS</span>
+            </div>
+            <h1 class="hero-title">AUTOMATED NIFTY OPTIONS STRATEGY</h1>
+            <div class="hero-subtitle">Rule-Based • Paper Trading • Live Market Data</div>
+            <p class="hero-sub">
+                An automated research strategy executing predefined rules against live NIFTY market data.
+            </p>
+        </section>
+
+        <!-- 2. Today's Live/Completed Status Strip -->
+        <div class="status-strip-card">
+            <div class="status-strip-left">
+                <div class="state-pill state-complete" id="sessionStateBadge">
+                    <span id="posStatus">--</span>
+                </div>
+                <div class="status-strip-meta">
+                    <div class="session-date-label" id="sessionLabel">Trading Session — Live Monitoring</div>
+                    <div class="freshness-indicator" id="timeUpdated">Syncing telemetry...</div>
+                </div>
+            </div>
+            <div class="status-strip-right">
+                <span class="meta-pill" id="posSub">Connecting...</span>
+                <span class="meta-pill" id="livePillText">Live Telemetry Active</span>
+            </div>
         </div>
 
-        <div class="grid">
-            <div class="card">
-                <div class="card-label">Position Status</div>
-                <div class="card-value" id="posStatus">--</div>
-                <div class="card-sub" id="posSub">Connecting...</div>
+        <!-- 3. Performance Snapshot Cards -->
+        <div class="snapshot-grid">
+            <div class="metric-card">
+                <div class="metric-card-header">
+                    <span class="metric-label">Session P&L (Points)</span>
+                    <span class="metric-icon">📊</span>
+                </div>
+                <div class="metric-value" id="pnlPoints">-- pts</div>
+                <div class="metric-sub">
+                    <span id="pnlPointsSub">Index Points Captured</span>
+                    <span id="valLotCount">1 Lot (65 Qty)</span>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-label">Session P&L (Points)</div>
-                <div class="card-value" id="pnlPoints">-- pts</div>
-                <div class="card-sub" id="pnlPointsSub">Index Points Captured</div>
+            <div class="metric-card">
+                <div class="metric-card-header">
+                    <span class="metric-label">Session P&L (Rupees)</span>
+                    <span class="metric-icon">₹</span>
+                </div>
+                <div class="metric-value" id="pnlRupees">--</div>
+                <div class="metric-sub">
+                    <span id="pnlRupeesSub">Net Realized Result</span>
+                    <span id="valTradeCount">1 Trade</span>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="card-label">Session P&L (Rupees)</div>
-                <div class="card-value" id="pnlRupees">--</div>
-                <div class="card-sub" id="pnlRupeesSub">Result (1 Lot / 65 Qty)</div>
+            <div class="metric-card">
+                <div class="metric-card-header">
+                    <span class="metric-label">Execution Summary</span>
+                    <span class="metric-icon">⚡</span>
+                </div>
+                <div class="metric-value" id="exitReason" style="font-size: 1.5rem;">--</div>
+                <div class="metric-sub">
+                    <span>Exit Trigger</span>
+                    <span id="valOptionSymbol">--</span>
+                </div>
             </div>
         </div>
 
-        <div class="timeline-card">
-            <div class="timeline-title">Session Milestones & Execution Timing</div>
-            <div class="timeline-row">
-                <span class="t-label">Entry Timestamp</span>
-                <span class="t-val" id="timeEntry">--</span>
+        <!-- 4. Session Milestones & Execution Timing -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span class="panel-title">⏱️ Session Milestones & Execution Timestamps</span>
             </div>
-            <div class="timeline-row">
-                <span class="t-label">Exit Timestamp</span>
-                <span class="t-val" id="timeExit">--</span>
-            </div>
-            <div class="timeline-row">
-                <span class="t-label">Session Exit Reason</span>
-                <span class="t-val" id="exitReason">--</span>
-            </div>
-            <div class="timeline-row">
-                <span class="t-label">Data Feed Freshness</span>
-                <span class="t-val" id="timeUpdated">--</span>
+            <div class="milestones-grid">
+                <div class="milestone-box">
+                    <div class="milestone-label">Entry Timestamp</div>
+                    <div class="milestone-val" id="timeEntry">--</div>
+                </div>
+                <div class="milestone-box">
+                    <div class="milestone-label">Entry Fill Price</div>
+                    <div class="milestone-val" id="valEntryPrice">--</div>
+                </div>
+                <div class="milestone-box">
+                    <div class="milestone-label">Exit Timestamp</div>
+                    <div class="milestone-val" id="timeExit">--</div>
+                </div>
+                <div class="milestone-box">
+                    <div class="milestone-label">Closing Quote (Bid/Ask)</div>
+                    <div class="milestone-val" id="valClosingQuote">--</div>
+                </div>
             </div>
         </div>
+
+        <!-- 5. Why This Trade? (Rule-Based Rationale) -->
+        <div class="panel-card" id="whySection">
+            <div class="panel-header">
+                <span class="panel-title">🎯 Why This Trade? (Verified Decision Inputs)</span>
+            </div>
+            <div class="facts-grid">
+                <div class="fact-card">
+                    <div class="fact-title">NIFTY Spot at Calc</div>
+                    <div class="fact-val" id="valNiftySpot">--</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-title">Baseline Volatility ATR(10)</div>
+                    <div class="fact-val" id="valAtr10">--</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-title">Selected Strike</div>
+                    <div class="fact-val" id="valSelectedStrike">--</div>
+                </div>
+                <div class="fact-card">
+                    <div class="fact-title">Execution Fill</div>
+                    <div class="fact-val" id="valEntryFillFact">--</div>
+                </div>
+            </div>
+            <div class="rationale-note">
+                <strong>Systematic Execution Logic:</strong> Strike selection and execution are rule-based and determined by the strategy's predefined market and volatility framework. Decisions are computed autonomously before the morning entry window.
+            </div>
+        </div>
+
+        <!-- 6. Strategy Workflow Pipeline -->
+        <div class="panel-card" id="workflowSection">
+            <div class="panel-header">
+                <span class="panel-title">🔄 Strategy Execution Workflow</span>
+            </div>
+            <div class="pipeline-grid">
+                <div class="pipeline-step">
+                    <div class="step-num">01</div>
+                    <div class="step-title">Market Scan</div>
+                    <div class="step-desc">Ingests morning market feeds and computes baseline index volatility.</div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="step-num">02</div>
+                    <div class="step-title">Strike Selection</div>
+                    <div class="step-desc">Systematically selects an out-of-the-money Call option strike based on predefined rules.</div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="step-num">03</div>
+                    <div class="step-title">Automated Execution</div>
+                    <div class="step-desc">Enters a simulated paper short Call position during the designated morning window.</div>
+                </div>
+                <div class="pipeline-step">
+                    <div class="step-num">04</div>
+                    <div class="step-title">Risk Management / Exit</div>
+                    <div class="step-desc">Continuously tracks live quotes against disciplined stop-loss rules and intraday cutoffs.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Session Activity Stream (Expandable) -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span class="panel-title">📜 Verified Session Activity Stream</span>
+                <span class="meta-pill" id="activityCountPill">0 Events</span>
+            </div>
+            <div class="activity-stream-box" id="activityBox">
+                <div class="log-entry">Awaiting activity telemetry...</div>
+            </div>
+            <button type="button" class="log-toggle-btn" id="btnToggleActivity" style="display:none;">
+                <span>View full activity stream ↓</span>
+            </button>
+        </div>
+
+        <!-- 8. Trust & Transparency ("What You're Seeing") -->
+        <div class="panel-card">
+            <div class="panel-header">
+                <span class="panel-title">🛡️ What You're Seeing (Transparency & Integrity)</span>
+            </div>
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <span class="trust-icon">✓</span>
+                    <span>Live exchange market data</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">✓</span>
+                    <span>Automated rule execution</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">✓</span>
+                    <span>Paper-trading simulation</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">✓</span>
+                    <span>Timestamped session telemetry</span>
+                </div>
+                <div class="trust-item">
+                    <span class="trust-icon">✓</span>
+                    <span>Results shown without hiding losses</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Primary Call to Action -->
+        <div class="cta-card">
+            <div class="cta-title">Quantitative Research & Live Engineering</div>
+            <p class="cta-sub">
+                Explore our ongoing quantitative research, market models, and open systems engineering.
+            </p>
+            <div class="cta-btn-row">
+                <a href="../" class="primary-cta-btn">
+                    EXPLORE THE RESEARCH &amp; METHODOLOGY →
+                </a>
+                <a href="#workflowSection" class="secondary-cta-btn">
+                    SEE HOW THE STRATEGY WORKS
+                </a>
+            </div>
+        </div>
+
+        <!-- 10. Research / Paper Trading Disclosure -->
+        <section class="disclosure-card" aria-label="Research and Simulation Disclosure">
+            <div class="disclosure-title">⚖️ RESEARCH / PAPER TRADING DISCLOSURE</div>
+            <p>
+                This page displays telemetry from an automated quantitative research strategy operating in a paper-trading simulation environment. Trade executions, fills, and P&L metrics are calculated against live market data for algorithmic validation and research purposes. This does not represent a live brokerage account and does not constitute financial, legal, or investment advice.
+            </p>
+        </section>
     </div>
 
-    <div class="footer">
-        Disclosure: Performance shown is from an automated simulation environment. All telemetry is updated in near-real-time.
-    </div>
-
+    <!-- Telemetry Client Script -->
     <script>
         const PUBLIC_API_URL = 'https://sell-ce-paper-status.itscreativeman04.workers.dev/public';
+        const LOT_SIZE = 65;
+
+        let fullActivityList = [];
+        let isExpanded = false;
+
+        function safeSetText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        }
+
+        function safeSetClass(id, className) {
+            const el = document.getElementById(id);
+            if (el) el.className = className;
+        }
 
         function parseISODate(dateStr) {
             if (!dateStr) return null;
             try {
-                let s = String(dateStr).trim();
-                s = s.replace(/(\.\d{3})\d+/, '$1');
+                let s = String(dateStr).trim().replace(/(\.\d{3})\d+/, '$1');
                 const d = new Date(s);
                 if (!isNaN(d.getTime())) return d;
             } catch (e) {}
@@ -336,23 +960,85 @@
         }
 
         function evaluateFreshness(payload) {
-            const now = new Date();
-            const istDateStr = new Date(now.getTime() + (5.5 * 3600 * 1000)).toISOString().split('T')[0];
-            const istHours = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCHours();
-            const istMinutes = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCMinutes();
+            try {
+                const now = new Date();
+                const istDateStr = new Date(now.getTime() + (5.5 * 3600 * 1000)).toISOString().split('T')[0];
+                const istHours = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCHours();
+                const istMinutes = new Date(now.getTime() + (5.5 * 3600 * 1000)).getUTCMinutes();
 
-            const isPreMarket = (istHours === 9 && istMinutes < 30);
-            const payloadDate = payload.date || '';
+                const isPreMarket = (istHours === 9 && istMinutes < 30);
+                const payloadDate = payload && payload.date ? payload.date : '';
 
-            if (payloadDate && payloadDate !== istDateStr && isPreMarket) {
-                document.getElementById('premarketBanner').style.display = 'block';
-                document.getElementById('livePillText').innerText = 'Session Initializing';
-                return true;
+                const banner = document.getElementById('premarketBanner');
+                if (payloadDate && payloadDate !== istDateStr && isPreMarket) {
+                    if (banner) banner.style.display = 'block';
+                    safeSetText('livePillText', 'Session Initializing');
+                    return true;
+                }
+                if (banner) banner.style.display = 'none';
+                safeSetText('livePillText', 'Live Telemetry Active');
+            } catch (err) {
+                console.warn('evaluateFreshness non-blocking warning:', err);
             }
-            document.getElementById('premarketBanner').style.display = 'none';
-            document.getElementById('livePillText').innerText = 'Live Data Active';
             return false;
         }
+
+        function extractTimestamp(activity, pattern) {
+            if (!Array.isArray(activity)) return null;
+            for (let i = 0; i < activity.length; i++) {
+                const line = String(activity[i]);
+                if (pattern.test(line)) {
+                    const match = line.match(/^(\d{2}:\d{2}:\d{2})/);
+                    if (match) return `${match[1]} IST`;
+                }
+            }
+            return null;
+        }
+
+        function renderActivity(activity) {
+            const box = document.getElementById('activityBox');
+            const toggleBtn = document.getElementById('btnToggleActivity');
+            if (!box || !Array.isArray(activity) || activity.length === 0) return;
+
+            fullActivityList = activity;
+            safeSetText('activityCountPill', `${activity.length} Events`);
+
+            let itemsToDisplay = activity;
+            if (!isExpanded && activity.length > 8) {
+                // Show key milestone events: initialization, signal, entry, and the last 5 updates
+                const keyEvents = [];
+                if (activity.length > 0) keyEvents.push(activity[0]);
+                if (activity.length > 1 && !keyEvents.includes(activity[1])) keyEvents.push(activity[1]);
+                if (activity.length > 2 && !keyEvents.includes(activity[2])) keyEvents.push(activity[2]);
+
+                const recent = activity.slice(-5);
+                recent.forEach(r => { if (!keyEvents.includes(r)) keyEvents.push(r); });
+                itemsToDisplay = keyEvents;
+
+                if (toggleBtn) {
+                    toggleBtn.style.display = 'inline-flex';
+                    toggleBtn.innerHTML = `<span>View all ${activity.length} events ↓</span>`;
+                }
+            } else if (toggleBtn && activity.length > 8) {
+                toggleBtn.style.display = 'inline-flex';
+                toggleBtn.innerHTML = `<span>Collapse activity stream ↑</span>`;
+            }
+
+            box.innerHTML = '';
+            itemsToDisplay.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'log-entry';
+                if (/opened|short/i.test(item)) div.className += ' entry-open';
+                if (/closed|stop|target/i.test(item)) div.className += ' entry-exit';
+                div.textContent = item;
+                box.appendChild(div);
+            });
+        }
+
+        document.getElementById('btnToggleActivity')?.addEventListener('click', function() {
+            isExpanded = !isExpanded;
+            renderActivity(fullActivityList);
+        });
 
         async function fetchPublicData() {
             try {
@@ -360,102 +1046,147 @@
                 const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) return;
                 const data = await response.json();
+                if (!data) return;
 
-                if (evaluateFreshness(data)) return;
+                evaluateFreshness(data);
 
                 const isOpen = data.position_status === 'OPEN' || data.state === 'PAPER_POSITION_OPEN';
-                const isClosed = data.position_status === 'CLOSED' || data.state === 'SESSION_COMPLETE';
+                const isClosed = data.position_status === 'CLOSED' || data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED';
                 const isNoTrade = data.state === 'NO_TRADE';
 
-                // Session Date Label
+                // 1. Session Date & Label
                 if (data.date) {
-                    document.getElementById('sessionLabel').innerText = `Trading Session — ${data.date}`;
+                    safeSetText('sessionLabel', `Trading Session — ${data.date}`);
                 }
 
-                // Position Status
-                const posStatusEl = document.getElementById('posStatus');
-                const posSubEl = document.getElementById('posSub');
+                // 2. State & Position Status
+                const stateBadge = document.getElementById('sessionStateBadge');
                 if (isOpen) {
-                    posStatusEl.innerText = 'OPEN';
-                    posStatusEl.className = 'card-value val-positive';
-                    posSubEl.innerText = 'Active Short CE Position';
+                    safeSetText('posStatus', 'POSITION OPEN');
+                    safeSetClass('posStatus', 'val-positive');
+                    safeSetText('posSub', 'Active Short CE Position');
+                    if (stateBadge) stateBadge.className = 'state-pill state-open';
                 } else if (isClosed) {
-                    posStatusEl.innerText = 'CLOSED';
-                    posStatusEl.className = 'card-value val-neutral';
-                    posSubEl.innerText = 'Session Complete';
+                    safeSetText('posStatus', 'SESSION COMPLETE');
+                    safeSetClass('posStatus', 'val-neutral');
+                    safeSetText('posSub', 'Session Closed');
+                    if (stateBadge) stateBadge.className = 'state-pill state-complete';
                 } else if (isNoTrade) {
-                    posStatusEl.innerText = 'NO TRADE';
-                    posStatusEl.className = 'card-value val-neutral';
-                    posSubEl.innerText = 'Neutral Market Condition';
+                    safeSetText('posStatus', 'NO TRADE');
+                    safeSetClass('posStatus', 'val-neutral');
+                    safeSetText('posSub', 'Neutral Condition');
+                    if (stateBadge) stateBadge.className = 'state-pill state-notrade';
                 } else if (data.position_status) {
-                    posStatusEl.innerText = data.position_status;
+                    safeSetText('posStatus', data.position_status);
+                    safeSetText('posSub', data.state || 'Live');
                 }
 
-                // P&L Points
-                const pnlPts = data.unrealized_pnl_points !== undefined && data.unrealized_pnl_points !== null
-                    ? data.unrealized_pnl_points
-                    : (data.net_pnl_points !== undefined && data.net_pnl_points !== null
-                        ? data.net_pnl_points
-                        : (data.net_points !== undefined && data.net_points !== null ? data.net_points : (isNoTrade ? 0.0 : null)));
-
-                if (pnlPts !== null) {
-                    const pts = parseFloat(pnlPts);
-                    const el = document.getElementById('pnlPoints');
-                    el.innerText = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts`;
-                    el.className = `card-value ${pts > 0 ? 'val-positive' : (pts < 0 ? 'val-negative' : 'val-neutral')}`;
-                    document.getElementById('pnlPointsSub').innerText = isOpen ? 'Live Mark-to-Market P&L' : 'Index Points Captured';
-                }
-
-                // P&L Rupees (1 Lot = 65 Qty)
-                const pnlRs = data.net_pnl_rupees !== undefined && data.net_pnl_rupees !== null
-                    ? data.net_pnl_rupees
-                    : (data.net_rupees !== undefined && data.net_rupees !== null
-                        ? data.net_rupees
-                        : (pnlPts !== null ? pnlPts * 65 : (isNoTrade ? 0.0 : null)));
-
-                if (pnlRs !== null) {
-                    const rs = parseFloat(pnlRs);
-                    const el = document.getElementById('pnlRupees');
-                    el.innerText = `${rs >= 0 ? '+₹' : '-₹'}${Math.abs(Math.round(rs)).toLocaleString('en-IN')}`;
-                    el.className = `card-value ${rs > 0 ? 'val-positive' : (rs < 0 ? 'val-negative' : 'val-neutral')}`;
-                    document.getElementById('pnlRupeesSub').innerText = isOpen ? 'Unrealized P&L (1 Lot / 65 Qty)' : 'Net Realized Result';
-                }
-
-                // Milestones: Entry Time
-                if (data.entry_time) {
-                    document.getElementById('timeEntry').innerText = `${data.entry_time} IST`;
-                } else if (isOpen) {
-                    document.getElementById('timeEntry').innerText = '09:30:00 IST';
+                // 3. P&L Points (Prefer final_net_points, fallback to unrealized_pnl_points)
+                let pnlPts = null;
+                if (data.final_net_points !== undefined && data.final_net_points !== null) {
+                    pnlPts = Number(data.final_net_points);
+                } else if (data.unrealized_pnl_points !== undefined && data.unrealized_pnl_points !== null) {
+                    pnlPts = Number(data.unrealized_pnl_points);
+                } else if (data.net_pnl_points !== undefined && data.net_pnl_points !== null) {
+                    pnlPts = Number(data.net_pnl_points);
                 } else if (isNoTrade) {
-                    document.getElementById('timeEntry').innerText = '--';
+                    pnlPts = 0.0;
                 }
 
-                // Milestones: Exit Time
-                if (data.exit_time) {
-                    document.getElementById('timeExit').innerText = `${data.exit_time} IST`;
-                } else if (isOpen) {
-                    document.getElementById('timeExit').innerText = 'Pending (Active Session)';
-                } else if (isNoTrade) {
-                    document.getElementById('timeExit').innerText = '--';
+                const pnlPtsEl = document.getElementById('pnlPoints');
+                if (pnlPts !== null && !isNaN(pnlPts)) {
+                    const ptsText = `${pnlPts >= 0 ? '+' : ''}${pnlPts.toFixed(2)} pts`;
+                    if (pnlPtsEl) {
+                        pnlPtsEl.innerText = ptsText;
+                        pnlPtsEl.className = `metric-value ${pnlPts > 0 ? 'val-positive' : (pnlPts < 0 ? 'val-negative' : 'val-neutral')}`;
+                    }
+                    safeSetText('pnlPointsSub', isOpen ? 'Live Mark-to-Market P&L' : 'Index Points Captured');
                 }
 
-                // Milestones: Exit Reason
-                if (data.exit_reason) {
-                    document.getElementById('exitReason').innerText = data.exit_reason;
-                } else if (isOpen) {
-                    document.getElementById('exitReason').innerText = 'Position Open';
-                } else if (data.no_trade_reason) {
-                    document.getElementById('exitReason').innerText = data.no_trade_reason;
-                } else if (isNoTrade) {
-                    document.getElementById('exitReason').innerText = 'NO_TRADE';
+                // 4. P&L Rupees (Prefer final_net_rupees, fallback to net_pnl_rupees or pnlPts * LOT_SIZE)
+                let pnlRs = null;
+                if (data.final_net_rupees !== undefined && data.final_net_rupees !== null) {
+                    pnlRs = Number(data.final_net_rupees);
+                } else if (data.net_pnl_rupees !== undefined && data.net_pnl_rupees !== null) {
+                    pnlRs = Number(data.net_pnl_rupees);
+                } else if (pnlPts !== null && !isNaN(pnlPts)) {
+                    pnlRs = pnlPts * LOT_SIZE;
                 }
 
-                // Data Feed Freshness
+                const pnlRsEl = document.getElementById('pnlRupees');
+                if (pnlRs !== null && !isNaN(pnlRs)) {
+                    const sign = pnlRs >= 0 ? '+₹' : '-₹';
+                    const rsText = `${sign}${Math.abs(Math.round(pnlRs)).toLocaleString('en-IN')}`;
+                    if (pnlRsEl) {
+                        pnlRsEl.innerText = rsText;
+                        pnlRsEl.className = `metric-value ${pnlRs > 0 ? 'val-positive' : (pnlRs < 0 ? 'val-negative' : 'val-neutral')}`;
+                    }
+                    safeSetText('pnlRupeesSub', isOpen ? 'Unrealized Result (1 Lot)' : 'Net Realized Result');
+                }
+
+                // 5. Exit Reason & Summary
+                const exitReasonStr = data.exit_reason || data.no_trade_reason || (isOpen ? 'POSITION OPEN' : (isNoTrade ? 'NO TRADE' : '--'));
+                const exitReasonEl = document.getElementById('exitReason');
+                if (exitReasonEl) {
+                    exitReasonEl.innerText = exitReasonStr;
+                    if (exitReasonStr === 'STOP') exitReasonEl.className = 'metric-value val-negative';
+                    else if (exitReasonStr === 'TARGET') exitReasonEl.className = 'metric-value val-positive';
+                    else exitReasonEl.className = 'metric-value';
+                }
+
+                if (data.option_symbol) {
+                    safeSetText('valOptionSymbol', data.option_symbol);
+                }
+
+                // 6. Timestamps & Execution Milestones (Derive deterministically from activity)
+                let entryTime = data.entry_time || extractTimestamp(data.activity, /opened|short/i);
+                if (!entryTime && isOpen) entryTime = '09:30:00 IST';
+                safeSetText('timeEntry', entryTime || (isNoTrade ? '--' : '--'));
+
+                let exitTime = data.exit_time || extractTimestamp(data.activity, /closed|stop|target|complete/i);
+                if (!exitTime && isOpen) exitTime = 'Active (In Progress)';
+                safeSetText('timeExit', exitTime || (isNoTrade ? '--' : '--'));
+
+                if (data.entry_price) {
+                    const ep = `₹${Number(data.entry_price).toFixed(2)}`;
+                    safeSetText('valEntryPrice', ep);
+                    safeSetText('valEntryFillFact', ep);
+                }
+
+                if (data.option_bid && data.option_ask) {
+                    safeSetText('valClosingQuote', `₹${Number(data.option_bid).toFixed(2)} / ₹${Number(data.option_ask).toFixed(2)}`);
+                } else if (data.option_ltp) {
+                    safeSetText('valClosingQuote', `LTP ₹${Number(data.option_ltp).toFixed(2)}`);
+                }
+
+                // 7. Decision Facts & Trade Count
+                if (data.nifty_spot) {
+                    safeSetText('valNiftySpot', `₹${Number(data.nifty_spot).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
+                }
+                if (data.atr10) {
+                    safeSetText('valAtr10', `${Number(data.atr10).toFixed(2)} pts`);
+                }
+                if (data.selected_strike) {
+                    safeSetText('valSelectedStrike', `${Number(data.selected_strike).toLocaleString('en-IN')} CE`);
+                }
+                safeSetText('valTradeCount', isNoTrade ? '0 Trades' : '1 Trade');
+
+                // 8. Activity Stream
+                if (Array.isArray(data.activity)) {
+                    renderActivity(data.activity);
+                }
+
+                // 9. Data Feed Freshness
                 const updateDt = parseISODate(data.last_update || data.updated_at);
                 if (updateDt) {
                     const secAgo = Math.max(0, Math.floor((Date.now() - updateDt.getTime()) / 1000));
-                    document.getElementById('timeUpdated').innerText = secAgo < 15 ? 'Just now' : `${secAgo}s ago (${updateDt.toLocaleTimeString('en-IN', { hour12: true, timeZone: 'Asia/Kolkata' })} IST)`;
+                    const timeStr = updateDt.toLocaleTimeString('en-IN', { hour12: false, timeZone: 'Asia/Kolkata' });
+                    const freshnessStr = isClosed
+                        ? `Session Completed · Last update: ${timeStr} IST`
+                        : (secAgo < 15 ? 'Live · Updated just now' : `Live · Updated ${secAgo}s ago (${timeStr} IST)`);
+                    safeSetText('timeUpdated', freshnessStr);
                 }
+
             } catch (err) {
                 console.warn('Public dashboard update error:', err);
             }
@@ -465,6 +1196,7 @@
         setInterval(fetchPublicData, 5000);
     </script>
     <script src="../shared/theme.js"></script>
+
     <footer class="sub-footer">
       <a href="../">The Mishra Ventures</a> &nbsp;·&nbsp; Live Strategy &nbsp;·&nbsp; themishraventures.com/mishra-ventures/live-strategy/
     </footer>
