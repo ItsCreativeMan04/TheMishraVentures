@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dedicated NIFTY Options Open Interest Analytics, Walls, PCR & Strike Chain Distribution — The Mishra Ventures Desk">
+    <title>NIFTY Options Open Interest Analytics | The Mishra Ventures</title>
+
+    <link rel="stylesheet" href="../../../shared/global.css?v=20260814" />
+    <link rel="stylesheet" href="../../../shared/components.css?v=20260814" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('lm-theme');
+          var theme = saved || (window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) { /* private mode */ }
+      })();
+
+      function initThemeSwitch() {
+        var sw = document.getElementById('themeSwitch');
+        if (!sw) return;
+        function update() {
+          var current = document.documentElement.getAttribute('data-theme') || 'dark';
+          var opts = sw.querySelectorAll('.ts-opt');
+          opts.forEach(function (btn) {
+            var isTarget = btn.getAttribute('data-set-theme') === current;
+            btn.classList.toggle('is-on', isTarget);
+            btn.setAttribute('aria-pressed', isTarget ? 'true' : 'false');
+          });
+        }
+        sw.addEventListener('click', function (e) {
+          var btn = e.target.closest('.ts-opt');
+          if (!btn) return;
+          var target = btn.getAttribute('data-set-theme');
+          document.documentElement.setAttribute('data-theme', target);
+          try { localStorage.setItem('lm-theme', target); } catch (ex) {}
+          update();
+        });
+        update();
+      }
+      document.addEventListener('DOMContentLoaded', initThemeSwitch);
+    </script>
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg: #090d16;
+            --surface-1: #111726;
+            --surface: #111726;
+            --surface-2: #182238;
+            --surface2: #182238;
+            --card-bg: rgba(18, 26, 43, 0.85);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(56, 189, 248, 0.2);
+            --text-primary: #f8fafc;
+            --text: #f8fafc;
+            --text-strong: #ffffff;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent: #38bdf8;
+            --accent-green: #22c55e;
+            --green: #22c55e;
+            --accent2: #22c55e;
+            --accent-red: #ef4444;
+            --red: #ef4444;
+            --accent-amber: #f59e0b;
+            --yellow: #f59e0b;
+            --accent-purple: #a855f7;
+            --nav-bg: rgba(6, 10, 20, 0.88);
+            --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        html[data-theme="light"] {
+            --bg-dark: #f4f7fc;
+            --bg: #f4f7fc;
+            --surface-1: #ffffff;
+            --surface: #ffffff;
+            --surface-2: #eef2f9;
+            --surface2: #eef2f9;
+            --card-bg: #ffffff;
+            --card-border: rgba(15, 23, 42, 0.12);
+            --border: rgba(15, 23, 42, 0.12);
+            --border-highlight: rgba(29, 78, 216, 0.2);
+            --text-primary: #0f172a;
+            --text: #0f172a;
+            --text-strong: #060a14;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --muted: #475569;
+            --accent-blue: #1d4ed8;
+            --accent: #1d4ed8;
+            --accent-green: #15803d;
+            --green: #15803d;
+            --accent2: #15803d;
+            --accent-red: #b91c1c;
+            --red: #b91c1c;
+            --accent-amber: #b45309;
+            --yellow: #b45309;
+            --accent-purple: #6d28d9;
+            --nav-bg: rgba(255, 255, 255, 0.92);
+            --shadow-glow: 0 4px 20px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Sora', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 0 0 40px 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 16px auto 0;
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Top Breadcrumb & Return Bar */
+        .sub-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: transform 0.15s ease;
+        }
+        .back-link:hover {
+            transform: translateX(-2px);
+            text-decoration: underline;
+        }
+
+        /* Hero Header Card */
+        .live-header {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .symbol-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            font-family: 'Sora', sans-serif;
+        }
+        .header-metrics {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .metric-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .metric-label {
+            font-size: 0.725rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Status & Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .badge-green { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-neutral { background: rgba(148, 163, 184, 0.12); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.2); }
+
+        .live-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(18, 26, 43, 0.6);
+            border: 1px solid var(--border-highlight);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .dot.green { background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+        .dot.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
+        .dot.red { background: var(--accent-red); }
+
+        /* Expiry Picker */
+        .expiry-select {
+            background: var(--surface-2);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        .expiry-select:focus, .expiry-select:hover {
+            border-color: var(--accent-blue);
+        }
+
+        /* Grids and Cards */
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .grid-2col {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            font-family: 'Sora', sans-serif;
+        }
+        .card-subtitle {
+            font-size: 0.775rem;
+            color: var(--text-secondary);
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: var(--shadow-glow);
+        }
+        .kpi-val {
+            font-size: 1.45rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.1;
+        }
+        .kpi-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Callout Box */
+        .callout-box {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.85rem;
+        }
+        .callout-blue { background: rgba(56, 189, 248, 0.06); border-color: rgba(56, 189, 248, 0.2); color: var(--text-primary); }
+        .callout-green { background: rgba(34, 197, 94, 0.06); border-color: rgba(34, 197, 94, 0.2); color: var(--text-primary); }
+        .callout-amber { background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.2); color: var(--text-primary); }
+        .callout-red { background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); color: var(--text-primary); }
+
+        /* Horizontal Bar Visualizer */
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 90px 1fr;
+            align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 2px 4px;
+            border-radius: 6px;
+            transition: background 0.15s ease;
+        }
+        .chart-row:hover {
+            background: var(--surface-2);
+        }
+        .chart-row.is-atm {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid var(--accent-blue);
+            font-weight: 700;
+        }
+        .chart-row.is-put-wall {
+            background: rgba(34, 197, 94, 0.1);
+        }
+        .chart-row.is-call-wall {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .chart-bar-left-wrap {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+        }
+        .chart-bar-right-wrap {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px;
+        }
+        .bar-left {
+            height: 16px;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.4), var(--accent-red));
+            border-radius: 4px 0 0 4px;
+            transition: width 0.3s ease;
+        }
+        .bar-right {
+            height: 16px;
+            background: linear-gradient(90deg, var(--accent-green), rgba(34, 197, 94, 0.4));
+            border-radius: 0 4px 4px 0;
+            transition: width 0.3s ease;
+        }
+        .chart-strike {
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Strike Table */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        table.oi-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.825rem;
+            text-align: right;
+        }
+        table.oi-table th {
+            position: sticky;
+            top: 0;
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--card-border);
+            z-index: 2;
+        }
+        table.oi-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            white-space: nowrap;
+        }
+        table.oi-table tr:hover {
+            background: var(--surface-2);
+        }
+        table.oi-table tr.row-atm {
+            background: rgba(56, 189, 248, 0.12);
+            font-weight: 700;
+        }
+        table.oi-table tr.row-atm td {
+            border-top: 1px solid var(--accent-blue);
+            border-bottom: 1px solid var(--accent-blue);
+        }
+        table.oi-table tr.row-put-wall td.col-pe {
+            background: rgba(34, 197, 94, 0.15);
+            font-weight: 700;
+        }
+        table.oi-table tr.row-call-wall td.col-ce {
+            background: rgba(239, 68, 68, 0.15);
+            font-weight: 700;
+        }
+        .strike-cell {
+            text-align: center;
+            font-weight: 800;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .pos-change { color: var(--accent-green); }
+        .neg-change { color: var(--accent-red); }
+
+        @media (max-width: 900px) {
+            .grid-2col { grid-template-columns: 1fr; }
+            .live-header { padding: 16px; }
+            .header-metrics { gap: 14px; width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+
+  <!-- Shared Standard Navigation Bar -->
+  <nav>
+    <a href="../../../" class="nav-brand">
+      <div class="nav-logo">📊</div>
+      <div>
+        <div class="nav-brand-text">Live Market</div>
+        <div class="nav-brand-sub">by The Mishra Ventures</div>
+      </div>
+    </a>
+    <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
+      <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+      </button>
+      <button type="button" class="ts-opt" data-set-theme="dark" aria-pressed="false" title="Dark theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+        </svg>
+      </button>
+    </div>
+    <a href="../../../" class="nav-home">← All Ventures</a>
+  </nav>
+
+<div class="container">
+
+    <!-- Sub Navigation Breadcrumb -->
+    <div class="sub-nav-bar">
+        <a href="../" class="back-link">← Back to Live Market Desk</a>
+        <div style="font-size: 0.8rem; color: var(--text-secondary);">
+            Options Chain & Open Interest Analytics
+        </div>
+    </div>
+
+    <!-- 1. LIVE HEADER & EXPIRY SELECTOR -->
+    <div class="live-header">
+        <div class="header-title-group">
+            <span class="symbol-title">NIFTY OPTIONS OI</span>
+            <div class="live-pill" id="val-feed-status-pill">
+                <span class="dot green" id="val-feed-dot"></span>
+                <span id="val-feed-status-text">OI SYNCED</span>
+            </div>
+            <select class="expiry-select" id="select-expiry" aria-label="Select Expiry">
+                <option value="">Loading expiries...</option>
+            </select>
+        </div>
+
+        <div class="header-metrics">
+            <div class="metric-box">
+                <span class="metric-label">Spot Price</span>
+                <span class="metric-value" style="color: var(--accent-blue);" id="val-spot-price">₹--.--</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">ATM Strike</span>
+                <span class="metric-value" id="val-atm-strike">--</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Last Snapshot</span>
+                <span class="metric-value" style="font-size: 0.95rem; color: var(--text-secondary);" id="val-last-update">--:--:-- IST</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. TOP OI SNAPSHOT (6-KPI Grid) -->
+    <div class="grid-kpi">
+        <div class="kpi-card">
+            <span class="metric-label">Total Put OI</span>
+            <span class="kpi-val" style="color: var(--accent-green);" id="val-total-pe">-- Cr</span>
+            <span class="kpi-sub" id="val-total-pe-lakh">-- Lakh contracts</span>
+        </div>
+        <div class="kpi-card">
+            <span class="metric-label">Total Call OI</span>
+            <span class="kpi-val" style="color: var(--accent-red);" id="val-total-ce">-- Cr</span>
+            <span class="kpi-sub" id="val-total-ce-lakh">-- Lakh contracts</span>
+        </div>
+        <div class="kpi-card">
+            <span class="metric-label">PCR (Put/Call Ratio)</span>
+            <span class="kpi-val" style="color: var(--accent-blue);" id="val-pcr">--</span>
+            <span class="kpi-sub" id="val-pcr-sentiment">Evaluating bias...</span>
+        </div>
+        <div class="kpi-card">
+            <span class="metric-label">Put Wall (Support)</span>
+            <span class="kpi-val" style="color: var(--accent-green);" id="val-put-wall-strike">--</span>
+            <span class="kpi-sub" id="val-put-wall-sub">-- pts from Spot</span>
+        </div>
+        <div class="kpi-card">
+            <span class="metric-label">Call Wall (Resistance)</span>
+            <span class="kpi-val" style="color: var(--accent-red);" id="val-call-wall-strike">--</span>
+            <span class="kpi-sub" id="val-call-wall-sub">-- pts from Spot</span>
+        </div>
+        <div class="kpi-card">
+            <span class="metric-label">Max Pain Level</span>
+            <span class="kpi-val" style="color: var(--accent-purple);" id="val-max-pain">--</span>
+            <span class="kpi-sub" id="val-max-pain-sub">Expiry settlement anchor</span>
+        </div>
+    </div>
+
+    <!-- 3. WALLS & FLOW ANALYSIS (2-Col Grid) -->
+    <div class="grid-2col">
+        <!-- Dedicated Wall Details Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">STRUCTURAL OI WALLS</h2>
+                    <span class="card-subtitle">Heavy open interest concentration levels</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="callout-box callout-green">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>Put Wall (Primary Support)</strong>
+                        <span class="status-badge badge-green" id="val-put-wall-badge">--</span>
+                    </div>
+                    <div style="font-size: 0.85rem; margin-top: 4px;" id="val-put-wall-desc">
+                        Evaluating downside options protection...
+                    </div>
+                </div>
+
+                <div class="callout-box callout-red">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>Call Wall (Primary Resistance)</strong>
+                        <span class="status-badge badge-red" id="val-call-wall-badge">--</span>
+                    </div>
+                    <div style="font-size: 0.85rem; margin-top: 4px;" id="val-call-wall-desc">
+                        Evaluating overhead options ceiling...
+                    </div>
+                </div>
+
+                <div class="callout-box callout-blue" style="font-size: 0.8rem;">
+                    <strong>Zone Confluence Alignment:</strong>
+                    <ul id="list-zone-confluence" style="margin-left: 18px; margin-top: 4px;">
+                        <li>Syncing structural zone alignment...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sentiment & Fresh Writing Flow -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">OI FLOW & SENTIMENT READ</h2>
+                    <span class="card-subtitle">Intraday writing activity & net addition pace</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="callout-box callout-amber" id="box-flow-read">
+                    <div style="font-weight: 700;" id="val-flow-read-title">Net Flow Heuristic</div>
+                    <div style="font-size: 0.85rem; margin-top: 2px;" id="val-flow-read-text">
+                        Evaluating options writing pace...
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-green);">Max Fresh PE Addition</span>
+                        <div style="font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-pe-build">--</div>
+                    </div>
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-red);">Max Fresh CE Addition</span>
+                        <div style="font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-ce-build">--</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.775rem; color: var(--text-secondary); line-height: 1.5; padding: 6px 0;" id="val-disclosure">
+                    Heuristic context, not probabilities. OI mixes writing, hedging and unwinding. Never overrides macro structure or invalidation rules.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. VISUAL OI DISTRIBUTION CHART -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">OI DISTRIBUTION BY STRIKE</h2>
+                <span class="card-subtitle">Comparison of Call OI (Red, Left) vs Put OI (Green, Right)</span>
+            </div>
+            <div style="display: flex; gap: 16px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
+                <span style="color: var(--accent-red);">■ Call Open Interest</span>
+                <span style="color: var(--accent-green);">■ Put Open Interest</span>
+                <span style="color: var(--accent-blue);">■ ATM Strike</span>
+            </div>
+        </div>
+
+        <div class="chart-container" id="container-oi-chart">
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                Generating strike distribution visual...
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. STRIKE-WISE OI CHAIN TABLE -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">FULL STRIKE-BY-STRIKE OI CHAIN</h2>
+                <span class="card-subtitle" id="label-strikes-count">Loading strike data...</span>
+            </div>
+            <span class="status-badge badge-blue" id="badge-active-expiry">EXPIRY --</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="oi-table">
+                <thead>
+                    <tr>
+                        <th style="color: var(--accent-red); text-align: left;">Call OI Chg</th>
+                        <th style="color: var(--accent-red);">Call Total OI</th>
+                        <th style="text-align: center; width: 120px;">Strike Price</th>
+                        <th style="color: var(--accent-green);">Put Total OI</th>
+                        <th style="color: var(--accent-green); text-align: right;">Put OI Chg</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-oi-chain">
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-secondary);">
+                            Loading full options chain data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- DATA FETCHER & RENDERER SCRIPT -->
+<script>
+    const WORKER_URL = 'https://live-market-status.itscreativeman04.workers.dev';
+    const READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
+    const REFRESH_MS = 30000;
+
+    let selectedExpiry = null;
+    let cachedData = null;
+
+    // Number Formatting Helpers
+    function isFiniteNum(val) {
+        return val !== null && val !== undefined && typeof val === 'number' && Number.isFinite(val);
+    }
+
+    function fmtPrice(val) {
+        if (!isFiniteNum(val)) return '₹--.--';
+        return '₹' + Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtStrike(val) {
+        if (!isFiniteNum(val)) return 'N/A';
+        return Number(val).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function fmtOI(val) {
+        if (!isFiniteNum(val)) return 'N/A';
+        const num = Number(val);
+        const abs = Math.abs(num);
+        if (abs >= 10000000) {
+            return (num / 10000000).toFixed(2) + ' Cr';
+        } else if (abs >= 100000) {
+            return (num / 100000).toFixed(2) + ' L';
+        }
+        return num.toLocaleString('en-IN');
+    }
+
+    function fmtLakh(val) {
+        if (!isFiniteNum(val)) return 'N/A';
+        return (Number(val) / 100000).toFixed(2) + ' L';
+    }
+
+    function fmtChange(val) {
+        if (!isFiniteNum(val)) return '--';
+        const num = Number(val);
+        const sign = num > 0 ? '+' : '';
+        return sign + fmtOI(num);
+    }
+
+    function computeATM(spotPrice, chain) {
+        if (!isFiniteNum(spotPrice) || !Array.isArray(chain) || chain.length === 0) return null;
+        let closest = chain[0].strike;
+        let minDiff = Math.abs(spotPrice - closest);
+        for (const row of chain) {
+            const diff = Math.abs(spotPrice - row.strike);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = row.strike;
+            }
+        }
+        return closest;
+    }
+
+    async function fetchOIData() {
+        try {
+            const res = await fetch(`${WORKER_URL}?symbol=NIFTY&_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Authorization': `Bearer ${READ_TOKEN}` }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            cachedData = data;
+            renderOIDashboard(data);
+        } catch (err) {
+            console.error('Failed to fetch OI data:', err);
+            renderErrorState();
+        }
+    }
+
+    function renderErrorState() {
+        document.getElementById('val-feed-status-pill').className = 'status-badge badge-red';
+        document.getElementById('val-feed-dot').className = 'dot red';
+        document.getElementById('val-feed-status-text').textContent = 'FEED OFFLINE';
+    }
+
+    function renderOIDashboard(data) {
+        const oi = data.oi_summary || {};
+        const chains = data.oi_chains || {};
+        const spot = Number(data.current_price);
+
+        // 1. Expiries & Active Expiry Selection
+        const availableExpiries = Object.keys(chains);
+        const defaultExpiry = oi.expiry || (availableExpiries.length > 0 ? availableExpiries[0] : null);
+
+        if (!selectedExpiry || !chains[selectedExpiry]) {
+            selectedExpiry = defaultExpiry;
+        }
+
+        const expirySelect = document.getElementById('select-expiry');
+        if (availableExpiries.length > 0) {
+            expirySelect.innerHTML = availableExpiries.map(exp => 
+                `<option value="${exp}" ${exp === selectedExpiry ? 'selected' : ''}>Expiry: ${exp}</option>`
+            ).join('');
+        } else {
+            expirySelect.innerHTML = '<option value="">No expiry available</option>';
+        }
+
+        // 2. Feed Status & Spot Price
+        const now = Date.now();
+        const updatedTimeStr = data.updated_at ? new Date(data.updated_at).toLocaleTimeString('en-IN') : '--:--:--';
+        document.getElementById('val-last-update').textContent = updatedTimeStr + ' IST';
+        document.getElementById('val-spot-price').textContent = fmtPrice(spot);
+
+        // Feed freshness badge
+        const feedPill = document.getElementById('val-feed-status-pill');
+        const feedDot = document.getElementById('val-feed-dot');
+        const feedText = document.getElementById('val-feed-status-text');
+
+        let isStale = false;
+        if (data.updated_at) {
+            const ageSec = (now - new Date(data.updated_at).getTime()) / 1000;
+            if (ageSec > 180) isStale = true;
+        }
+
+        if (isStale) {
+            feedPill.className = 'status-badge badge-amber';
+            feedDot.className = 'dot amber';
+            feedText.textContent = 'OI STALE';
+        } else {
+            feedPill.className = 'status-badge badge-green';
+            feedDot.className = 'dot green';
+            feedText.textContent = 'OI SYNCED';
+        }
+
+        // 3. Active Chain Extraction
+        const currentChain = (selectedExpiry && Array.isArray(chains[selectedExpiry])) ? chains[selectedExpiry] : [];
+        const atmStrike = computeATM(spot, currentChain);
+        document.getElementById('val-atm-strike').textContent = fmtStrike(atmStrike);
+        document.getElementById('badge-active-expiry').textContent = `EXPIRY ${selectedExpiry || '--'}`;
+        document.getElementById('label-strikes-count').textContent = `${currentChain.length} active strikes loaded for ${selectedExpiry || 'session'}`;
+
+        // 4. Compute Chain Aggregations
+        let chainPeOi = 0;
+        let chainCeOi = 0;
+        let maxOi = 1;
+
+        if (currentChain.length > 0) {
+            currentChain.forEach(row => {
+                const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
+                const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
+                chainPeOi += pe;
+                chainCeOi += ce;
+                if (pe > maxOi) maxOi = pe;
+                if (ce > maxOi) maxOi = ce;
+            });
+        }
+
+        const totalPe = chainPeOi > 0 ? chainPeOi : (isFiniteNum(oi.pe_flow) ? oi.pe_flow : null);
+        const totalCe = chainCeOi > 0 ? chainCeOi : (isFiniteNum(oi.ce_flow) ? oi.ce_flow : null);
+
+        document.getElementById('val-total-pe').textContent = fmtOI(totalPe);
+        document.getElementById('val-total-pe-lakh').textContent = isFiniteNum(totalPe) ? fmtLakh(totalPe) + ' contracts' : '--';
+
+        document.getElementById('val-total-ce').textContent = fmtOI(totalCe);
+        document.getElementById('val-total-ce-lakh').textContent = isFiniteNum(totalCe) ? fmtLakh(totalCe) + ' contracts' : '--';
+
+        // PCR Calculation & Sentiment Read
+        const pcrVal = isFiniteNum(oi.pcr) ? Number(oi.pcr) : ((totalCe && totalCe > 0) ? (totalPe / totalCe) : null);
+        const pcrEl = document.getElementById('val-pcr');
+        const pcrSentEl = document.getElementById('val-pcr-sentiment');
+
+        if (isFiniteNum(pcrVal)) {
+            pcrEl.textContent = pcrVal.toFixed(2);
+            if (pcrVal >= 1.25) {
+                pcrEl.style.color = 'var(--accent-green)';
+                pcrSentEl.textContent = 'Bullish / Put-heavy support';
+            } else if (pcrVal <= 0.75) {
+                pcrEl.style.color = 'var(--accent-red)';
+                pcrSentEl.textContent = 'Bearish / Call-heavy resistance';
+            } else {
+                pcrEl.style.color = 'var(--accent-blue)';
+                pcrSentEl.textContent = 'Balanced / Neutral flow';
+            }
+        } else {
+            pcrEl.textContent = 'N/A';
+            pcrSentEl.textContent = 'Insufficient data';
+        }
+
+        // 5. Walls & Distances
+        const putWallStrike = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.strike : (isFiniteNum(oi.put_wall) ? oi.put_wall : null);
+        const putWallOi = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.oi : null;
+
+        const callWallStrike = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.strike : (isFiniteNum(oi.call_wall) ? oi.call_wall : null);
+        const callWallOi = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.oi : null;
+
+        // Put Wall
+        if (isFiniteNum(putWallStrike)) {
+            document.getElementById('val-put-wall-strike').textContent = fmtStrike(putWallStrike);
+            document.getElementById('val-put-wall-badge').textContent = fmtStrike(putWallStrike) + (putWallOi ? ` (${fmtLakh(putWallOi)})` : '');
+            const dist = isFiniteNum(spot) ? (spot - putWallStrike) : null;
+            const distPct = isFiniteNum(spot) && spot > 0 ? ((spot - putWallStrike) / spot * 100).toFixed(2) : null;
+            document.getElementById('val-put-wall-sub').textContent = dist !== null ? `${dist.toFixed(1)} pts below Spot (${distPct}%)` : 'Major Put concentration';
+            document.getElementById('val-put-wall-desc').textContent = `Put Wall at ${fmtStrike(putWallStrike)} acts as primary structural options floor with ${fmtLakh(putWallOi)} open interest.`;
+        } else {
+            document.getElementById('val-put-wall-strike').textContent = 'N/A';
+            document.getElementById('val-put-wall-badge').textContent = 'N/A';
+            document.getElementById('val-put-wall-sub').textContent = 'Not identified';
+            document.getElementById('val-put-wall-desc').textContent = 'Put Wall concentration unavailable in current snapshot.';
+        }
+
+        // Call Wall
+        if (isFiniteNum(callWallStrike)) {
+            document.getElementById('val-call-wall-strike').textContent = fmtStrike(callWallStrike);
+            document.getElementById('val-call-wall-badge').textContent = fmtStrike(callWallStrike) + (callWallOi ? ` (${fmtLakh(callWallOi)})` : '');
+            const dist = isFiniteNum(spot) ? (callWallStrike - spot) : null;
+            const distPct = isFiniteNum(spot) && spot > 0 ? ((callWallStrike - spot) / spot * 100).toFixed(2) : null;
+            document.getElementById('val-call-wall-sub').textContent = dist !== null ? `${dist.toFixed(1)} pts above Spot (${distPct}%)` : 'Major Call concentration';
+            document.getElementById('val-call-wall-desc').textContent = `Call Wall at ${fmtStrike(callWallStrike)} acts as primary structural options ceiling with ${fmtLakh(callWallOi)} open interest.`;
+        } else {
+            document.getElementById('val-call-wall-strike').textContent = 'N/A';
+            document.getElementById('val-call-wall-badge').textContent = 'N/A';
+            document.getElementById('val-call-wall-sub').textContent = 'Not identified';
+            document.getElementById('val-call-wall-desc').textContent = 'Call Wall concentration unavailable in current snapshot.';
+        }
+
+        // Max Pain
+        const maxPain = isFiniteNum(oi.max_pain) ? oi.max_pain : null;
+        if (isFiniteNum(maxPain)) {
+            document.getElementById('val-max-pain').textContent = fmtStrike(maxPain);
+            const dist = isFiniteNum(spot) ? (spot - maxPain) : null;
+            document.getElementById('val-max-pain-sub').textContent = dist !== null ? `${Math.abs(dist).toFixed(1)} pts ${dist >= 0 ? 'below' : 'above'} Spot` : 'Settlement equilibrium';
+        } else {
+            document.getElementById('val-max-pain').textContent = 'N/A';
+            document.getElementById('val-max-pain-sub').textContent = 'Not available in current live payload';
+        }
+
+        // 6. Zone Confluence & Sentiment Read
+        const flowRead = oi.flow_read || 'Options open interest flow analysis active.';
+        document.getElementById('val-flow-read-text').textContent = flowRead;
+
+        const maxPeBuild = oi.max_pe_build;
+        if (maxPeBuild && isFiniteNum(maxPeBuild.strike)) {
+            document.getElementById('val-max-pe-build').textContent = `${fmtStrike(maxPeBuild.strike)} (+${fmtLakh(maxPeBuild.change)})`;
+        } else {
+            document.getElementById('val-max-pe-build').textContent = 'N/A';
+        }
+
+        const maxCeBuild = oi.max_ce_build;
+        if (maxCeBuild && isFiniteNum(maxCeBuild.strike)) {
+            document.getElementById('val-max-ce-build').textContent = `${fmtStrike(maxCeBuild.strike)} (+${fmtLakh(maxCeBuild.change)})`;
+        } else {
+            document.getElementById('val-max-ce-build').textContent = 'N/A';
+        }
+
+        const zcList = document.getElementById('list-zone-confluence');
+        if (Array.isArray(oi.zone_confluence) && oi.zone_confluence.length > 0) {
+            zcList.innerHTML = oi.zone_confluence.map(item => `<li>${item}</li>`).join('');
+        } else {
+            zcList.innerHTML = '<li>Options walls positioned within standard session boundaries.</li>';
+        }
+
+        if (oi.disclosure) {
+            document.getElementById('val-disclosure').textContent = oi.disclosure;
+        }
+
+        // 7. Render Horizontal Bar Chart & Table
+        renderOIChart(currentChain, maxOi, spot, atmStrike, putWallStrike, callWallStrike);
+        renderOITable(currentChain, spot, atmStrike, putWallStrike, callWallStrike, maxPain);
+    }
+
+    function renderOIChart(chain, maxOi, spot, atmStrike, putWallStrike, callWallStrike) {
+        const container = document.getElementById('container-oi-chart');
+        if (!Array.isArray(chain) || chain.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">No strike distribution data for this expiry.</div>';
+            return;
+        }
+
+        let html = '';
+        chain.forEach(row => {
+            const str = row.strike;
+            const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
+            const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
+
+            const cePct = Math.min(100, Math.max(2, (ce / maxOi) * 100));
+            const pePct = Math.min(100, Math.max(2, (pe / maxOi) * 100));
+
+            const isAtm = str === atmStrike;
+            const isPw = str === putWallStrike;
+            const isCw = str === callWallStrike;
+
+            let rowClass = 'chart-row';
+            if (isAtm) rowClass += ' is-atm';
+            if (isPw) rowClass += ' is-put-wall';
+            if (isCw) rowClass += ' is-call-wall';
+
+            html += `
+            <div class="${rowClass}">
+                <div class="chart-bar-left-wrap">
+                    <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(ce)}</span>
+                    <div class="bar-left" style="width: ${cePct}%;"></div>
+                </div>
+                <div class="chart-strike">
+                    ${fmtStrike(str)} ${isAtm ? '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>' : ''}
+                </div>
+                <div class="chart-bar-right-wrap">
+                    <div class="bar-right" style="width: ${pePct}%;"></div>
+                    <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(pe)}</span>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    }
+
+    function renderOITable(chain, spot, atmStrike, putWallStrike, callWallStrike, maxPain) {
+        const tbody = document.getElementById('tbody-oi-chain');
+        if (!Array.isArray(chain) || chain.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">No options chain records found.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        chain.forEach(row => {
+            const str = row.strike;
+            const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
+            const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
+            const ceChg = isFiniteNum(row.ce_oi_change) ? Number(row.ce_oi_change) : null;
+            const peChg = isFiniteNum(row.pe_oi_change) ? Number(row.pe_oi_change) : null;
+
+            const isAtm = str === atmStrike;
+            const isPw = str === putWallStrike;
+            const isCw = str === callWallStrike;
+            const isMp = str === maxPain;
+
+            let trClass = '';
+            if (isAtm) trClass = 'row-atm';
+            else if (isPw) trClass = 'row-put-wall';
+            else if (isCw) trClass = 'row-call-wall';
+
+            let strikeBadges = '';
+            if (isAtm) strikeBadges += ' <span class="status-badge badge-blue" style="font-size: 0.65rem; padding: 2px 6px;">ATM</span>';
+            if (isPw) strikeBadges += ' <span class="status-badge badge-green" style="font-size: 0.65rem; padding: 2px 6px;">PUT WALL</span>';
+            if (isCw) strikeBadges += ' <span class="status-badge badge-red" style="font-size: 0.65rem; padding: 2px 6px;">CALL WALL</span>';
+            if (isMp) strikeBadges += ' <span class="status-badge badge-purple" style="font-size: 0.65rem; padding: 2px 6px;">MAX PAIN</span>';
+
+            const ceChgClass = ceChg !== null ? (ceChg > 0 ? 'pos-change' : (ceChg < 0 ? 'neg-change' : '')) : '';
+            const peChgClass = peChg !== null ? (peChg > 0 ? 'pos-change' : (peChg < 0 ? 'neg-change' : '')) : '';
+
+            html += `
+            <tr class="${trClass}">
+                <td style="text-align: left;" class="${ceChgClass}">${fmtChange(ceChg)}</td>
+                <td class="col-ce" style="color: var(--accent-red); font-weight: 600;">${fmtOI(ce)}</td>
+                <td class="strike-cell">${fmtStrike(str)}${strikeBadges}</td>
+                <td class="col-pe" style="color: var(--accent-green); font-weight: 600;">${fmtOI(pe)}</td>
+                <td style="text-align: right;" class="${peChgClass}">${fmtChange(peChg)}</td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    // Expiry change listener
+    document.getElementById('select-expiry').addEventListener('change', function(e) {
+        selectedExpiry = e.target.value;
+        if (cachedData) renderOIDashboard(cachedData);
+    });
+
+    // Visibility-aware foreground polling
+    let pollInterval = null;
+    function startPolling() {
+        if (!pollInterval) {
+            pollInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    fetchOIData();
+                }
+            }, REFRESH_MS);
+        }
+    }
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            fetchOIData();
+            startPolling();
+        } else {
+            stopPolling();
+        }
+    });
+
+    // Initial load
+    fetchOIData();
+    startPolling();
+</script>
+
+</body>
+</html>
