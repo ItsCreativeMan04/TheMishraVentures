@@ -187,6 +187,12 @@
             border: 1px solid rgba(245, 158, 11, 0.3);
         }
 
+        .live-pill.closed, .live-pill.neutral {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-secondary);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
         .dot {
             width: 8px;
             height: 8px;
@@ -197,6 +203,7 @@
         .dot.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
         .dot.blue { background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue); }
         .dot.red { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); }
+        .dot.neutral, .dot.muted { background: var(--text-muted); box-shadow: 0 0 6px rgba(100, 116, 139, 0.4); }
 
         .header-metrics {
             display: flex;
@@ -365,6 +372,11 @@
         .callout-amber {
             background: rgba(245, 158, 11, 0.08);
             border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .callout-neutral {
+            background: rgba(100, 116, 139, 0.08);
+            border: 1px solid rgba(100, 116, 139, 0.25);
         }
 
         /* KEY LEVELS STYLES */
@@ -664,8 +676,9 @@
                 <span class="metric-value" style="font-size: 1.1rem;" id="val-phase">--</span>
             </div>
             <div class="metric-box">
-                <span class="metric-label">Last Updated</span>
+                <span class="metric-label" id="label-updated-time">Last Updated</span>
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-secondary);" id="val-updated-time">--:--:-- IST</span>
+                <span style="font-size: 0.72rem; color: var(--text-muted);" id="val-session-subline"></span>
             </div>
         </div>
     </div>
@@ -763,8 +776,8 @@
                 </div>
             </div>
 
-            <div class="callout-box callout-amber" style="margin-top: 4px;">
-                <span class="metric-label" style="color: var(--accent-amber);">SESSION OI FLOW · 09:15 → NOW</span>
+            <div class="callout-box callout-amber" id="box-oi-flow" style="margin-top: 4px;">
+                <span class="metric-label" id="label-oi-flow-title" style="color: var(--accent-amber);">SESSION OI FLOW · 09:15 → NOW</span>
                 <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
                     OI distribution analysis loading...
                 </div>
@@ -1210,6 +1223,65 @@
         return Number.isFinite(ageMin) ? Math.max(0, ageMin) : 999;
     }
 
+    function getISTDateComponents(dateObj = new Date()) {
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Kolkata',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            weekday: 'short',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(dateObj);
+        const map = {};
+        parts.forEach(p => map[p.type] = p.value);
+        const year = parseInt(map.year, 10);
+        const month = parseInt(map.month, 10);
+        const day = parseInt(map.day, 10);
+        let hour = parseInt(map.hour, 10);
+        if (hour === 24) hour = 0;
+        const minute = parseInt(map.minute, 10);
+        const second = parseInt(map.second, 10);
+        const weekday = map.weekday;
+        const isWeekend = weekday === 'Sat' || weekday === 'Sun';
+        const totalMinutes = hour * 60 + minute;
+        const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        return { year, month, day, hour, minute, second, weekday, isWeekend, totalMinutes, dateStr };
+    }
+
+    function getGlobalSessionState(data) {
+        // Explicit backend state override if supplied
+        if (data && (data.market_state === 'CLOSED' || data.market_state === 'SESSION_CLOSED' || data.session_closed === true)) {
+            return 'SESSION_CLOSED';
+        }
+        if (data && data.market_state === 'PRE_MARKET') {
+            return 'PRE_MARKET';
+        }
+
+        const nowIST = getISTDateComponents(new Date());
+
+        // Weekends are closed
+        if (nowIST.isWeekend) {
+            return 'SESSION_CLOSED';
+        }
+
+        // Before 09:15 IST on weekdays: PRE_MARKET
+        if (nowIST.totalMinutes < 555) {
+            return 'PRE_MARKET';
+        }
+
+        // At or after 15:15 IST (915 mins) on weekdays: SESSION_CLOSED
+        if (nowIST.totalMinutes >= 915) {
+            return 'SESSION_CLOSED';
+        }
+
+        // Between 09:15 and 15:14:59 IST: MARKET_OPEN
+        return 'MARKET_OPEN';
+    }
+
     async function refreshDashboard() {
         try {
             const res = await fetch(`${WORKER_URL}?symbol=NIFTY&t=${Date.now()}`, {
@@ -1233,10 +1305,14 @@
 
     function renderDashboard(data) {
         const wi = data.web_intelligence || {};
+        const sessionState = getGlobalSessionState(data);
+        const isClosed = sessionState === 'SESSION_CLOSED';
+        const isPreMarket = sessionState === 'PRE_MARKET';
+        const isMarketOpen = sessionState === 'MARKET_OPEN';
 
         // CANONICAL FRESHNESS CALCULATION
         const ageMin = calcAgeMinutes(data.updated_at);
-        const isStale = ageMin > 5 || data._isStale;
+        const isStale = isMarketOpen && (ageMin > 5 || data._isStale);
         const roundedAge = isFiniteNum(ageMin) && ageMin < 900 ? Math.round(ageMin) : null;
         const ageStr = roundedAge !== null ? `${roundedAge}m ago` : 'timestamp unavailable';
 
@@ -1244,15 +1320,37 @@
         const livePill = document.getElementById('val-live-pill');
         const liveDot = document.getElementById('val-live-dot');
         const liveText = document.getElementById('val-live-text');
+        const labelUpdatedTime = document.getElementById('label-updated-time');
+        const valUpdatedTime = document.getElementById('val-updated-time');
+        const valSessionSubline = document.getElementById('val-session-subline');
 
-        if (isStale) {
-            if (livePill) livePill.className = 'live-pill stale';
-            if (liveDot) liveDot.className = 'dot amber';
-            if (liveText) liveText.textContent = `STALE (${ageStr})`;
+        if (isClosed) {
+            if (livePill) livePill.className = 'live-pill closed';
+            if (liveDot) liveDot.className = 'dot neutral';
+            if (liveText) liveText.textContent = 'MARKET CLOSED';
+            if (labelUpdatedTime) labelUpdatedTime.textContent = 'Last Market Update';
+            if (valUpdatedTime) valUpdatedTime.textContent = formatTime(data.updated_at);
+            if (valSessionSubline) valSessionSubline.textContent = 'Session ended: 15:15 IST';
+        } else if (isPreMarket) {
+            if (livePill) livePill.className = 'live-pill neutral';
+            if (liveDot) liveDot.className = 'dot blue';
+            if (liveText) liveText.textContent = 'PRE-MARKET';
+            if (labelUpdatedTime) labelUpdatedTime.textContent = 'Last Update';
+            if (valUpdatedTime) valUpdatedTime.textContent = formatTime(data.updated_at);
+            if (valSessionSubline) valSessionSubline.textContent = 'Market opens: 09:15 IST';
         } else {
-            if (livePill) livePill.className = 'live-pill live';
-            if (liveDot) liveDot.className = 'dot green';
-            if (liveText) liveText.textContent = 'LIVE';
+            if (labelUpdatedTime) labelUpdatedTime.textContent = 'Last Updated';
+            if (valUpdatedTime) valUpdatedTime.textContent = formatTime(data.updated_at);
+            if (valSessionSubline) valSessionSubline.textContent = '';
+            if (isStale) {
+                if (livePill) livePill.className = 'live-pill stale';
+                if (liveDot) liveDot.className = 'dot amber';
+                if (liveText) liveText.textContent = `STALE (${ageStr})`;
+            } else {
+                if (livePill) livePill.className = 'live-pill live';
+                if (liveDot) liveDot.className = 'dot green';
+                if (liveText) liveText.textContent = 'LIVE';
+            }
         }
 
         document.getElementById('val-symbol').textContent = data.symbol || 'NIFTY';
@@ -1265,7 +1363,6 @@
                            (biasVal.toUpperCase().includes('BULL') ? 'status-badge badge-green' : 'status-badge badge-amber');
 
         document.getElementById('val-phase').textContent = data.phase || 'N/A';
-        document.getElementById('val-updated-time').textContent = formatTime(data.updated_at);
 
         // 2. MARKET SNAPSHOT
         const tf = wi.timeframe_structure || {};
@@ -1273,15 +1370,9 @@
         const m15 = tf.bias_15m || (data.bias ? data.bias : 'N/A');
         const m5 = tf.bias_5m || 'N/A';
 
-        document.getElementById('val-1h-bias').parentNode.replaceChild(
-            createSnapshotSpan('val-1h-bias', h1), document.getElementById('val-1h-bias')
-        );
-        document.getElementById('val-15m-bias').parentNode.replaceChild(
-            createSnapshotSpan('val-15m-bias', m15), document.getElementById('val-15m-bias')
-        );
-        document.getElementById('val-5m-bias').parentNode.replaceChild(
-            createSnapshotSpan('val-5m-bias', m5), document.getElementById('val-5m-bias')
-        );
+        updateSnapshotSpan('val-1h-bias', h1);
+        updateSnapshotSpan('val-15m-bias', m15);
+        updateSnapshotSpan('val-5m-bias', m5);
 
         document.getElementById('val-atr-used').textContent = isFiniteNum(data.atr_utilization) ?
             Number(data.atr_utilization).toFixed(1) + '%' : 'N/A';
@@ -1308,11 +1399,13 @@
             if (cprWidthEl) cprWidthEl.textContent = 'N/A';
         }
 
-        // 3. FUTURES VWAP CARD (Direct E2 Renderer with Explicit LIVE / STALE / UNAVAILABLE Handling)
+        // 3. FUTURES VWAP CARD (Direct E2 Renderer with Explicit LIVE / STALE / UNAVAILABLE / CLOSED Handling)
         const fv = data.futures_vwap || wi.futures_vwap || {};
         document.getElementById('val-fut-symbol').textContent = fv.symbol ? `${fv.symbol} (NFO)` : 'NIFTY Front-Month Future (NFO)';
-        document.getElementById('val-fut-ltp').textContent = fmtPrice(fv.ltp);
-        document.getElementById('val-fut-vwap').textContent = fmtPrice(fv.vwap);
+        
+        const hasValidFutValues = isFiniteNum(fv.ltp) && isFiniteNum(fv.vwap);
+        document.getElementById('val-fut-ltp').textContent = hasValidFutValues ? fmtPrice(fv.ltp) : (isFiniteNum(fv.ltp) ? fmtPrice(fv.ltp) : 'N/A');
+        document.getElementById('val-fut-vwap').textContent = hasValidFutValues ? fmtPrice(fv.vwap) : (isFiniteNum(fv.vwap) ? fmtPrice(fv.vwap) : 'N/A');
 
         const futDistEl = document.getElementById('val-fut-distance');
         if (isFiniteNum(fv.distance_points)) {
@@ -1325,38 +1418,66 @@
         }
 
         const futPosBadge = document.getElementById('val-fut-pos-badge');
-        const isFvStale = fv.is_stale === true || fv.state === 'STALE';
-        const isFvUnavail = fv.state === 'UNAVAILABLE' || (!isFiniteNum(fv.ltp) && !isFiniteNum(fv.vwap));
-        const futPos = String(fv.position || '--').toUpperCase();
-
-        if (isFvUnavail) {
-            futPosBadge.textContent = 'UNAVAILABLE';
-            futPosBadge.className = 'status-badge badge-neutral';
-        } else if (isFvStale) {
-            futPosBadge.textContent = `${futPos} · STALE`;
-            futPosBadge.className = 'status-badge badge-amber';
-        } else {
-            futPosBadge.textContent = futPos;
-            if (futPos === 'ABOVE') futPosBadge.className = 'status-badge badge-green';
-            else if (futPos === 'BELOW') futPosBadge.className = 'status-badge badge-red';
-            else if (futPos === 'AT') futPosBadge.className = 'status-badge badge-blue';
-            else futPosBadge.className = 'status-badge badge-neutral';
-        }
-
         const futBox = document.getElementById('val-fut-status-box');
-        if (isFvUnavail) futBox.className = 'callout-box callout-blue';
-        else if (isFvStale) futBox.className = 'callout-box callout-amber';
-        else if (futPos === 'ABOVE') futBox.className = 'callout-box callout-green';
-        else if (futPos === 'BELOW') futBox.className = 'callout-box callout-red';
-        else futBox.className = 'callout-box callout-blue';
+        const futStatusText = document.getElementById('val-fut-status-text');
 
-        document.getElementById('val-fut-status-text').textContent = fv.status_text || (isFvStale ? 'STALE · feed delayed' : (isFvUnavail ? 'Futures feed unavailable.' : 'Futures trading session VWAP tracking.'));
+        if (isClosed) {
+            if (hasValidFutValues) {
+                futPosBadge.textContent = 'SESSION CLOSED · LAST KNOWN';
+                futPosBadge.className = 'status-badge badge-neutral';
+                futBox.className = 'callout-box callout-neutral';
+                futStatusText.textContent = fv.status_text || 'Session closed. Displaying final session VWAP orientation.';
+            } else {
+                futPosBadge.textContent = 'SESSION CLOSED · NO SESSION VALUE';
+                futPosBadge.className = 'status-badge badge-neutral';
+                futBox.className = 'callout-box callout-neutral';
+                futStatusText.textContent = 'Session closed · No session value recorded.';
+            }
+        } else if (isPreMarket) {
+            futPosBadge.textContent = 'PRE-MARKET';
+            futPosBadge.className = 'status-badge badge-neutral';
+            futBox.className = 'callout-box callout-neutral';
+            futStatusText.textContent = 'Awaiting market open at 09:15 IST.';
+        } else {
+            const isFvStale = fv.is_stale === true || fv.state === 'STALE';
+            const isFvUnavail = fv.state === 'UNAVAILABLE' || (!isFiniteNum(fv.ltp) && !isFiniteNum(fv.vwap));
+            const futPos = String(fv.position || '--').toUpperCase();
+
+            if (isFvUnavail) {
+                futPosBadge.textContent = 'UNAVAILABLE';
+                futPosBadge.className = 'status-badge badge-neutral';
+                futBox.className = 'callout-box callout-blue';
+                futStatusText.textContent = 'Futures feed unavailable.';
+            } else if (isFvStale) {
+                futPosBadge.textContent = `${futPos} · STALE`;
+                futPosBadge.className = 'status-badge badge-amber';
+                futBox.className = 'callout-box callout-amber';
+                futStatusText.textContent = fv.status_text || 'STALE · feed delayed';
+            } else {
+                futPosBadge.textContent = futPos;
+                if (futPos === 'ABOVE') {
+                    futPosBadge.className = 'status-badge badge-green';
+                    futBox.className = 'callout-box callout-green';
+                } else if (futPos === 'BELOW') {
+                    futPosBadge.className = 'status-badge badge-red';
+                    futBox.className = 'callout-box callout-red';
+                } else if (futPos === 'AT') {
+                    futPosBadge.className = 'status-badge badge-blue';
+                    futBox.className = 'callout-box callout-blue';
+                } else {
+                    futPosBadge.className = 'status-badge badge-neutral';
+                    futBox.className = 'callout-box callout-blue';
+                }
+                futStatusText.textContent = fv.status_text || 'Futures trading session VWAP tracking.';
+            }
+        }
 
         // 4. ONE CANONICAL SOURCE: web_intelligence.morning_plan.status
         const mp = wi.morning_plan || {};
         const canonicalStatus = String(mp.status || data.setup_state || 'UNKNOWN').toUpperCase();
         
         const planStatusEl = document.getElementById('val-plan-status');
+        const planSubtitleEl = document.getElementById('label-plan-subtitle');
         const planThesisEl = document.getElementById('val-plan-thesis');
         const planListLabel = document.getElementById('label-plan-list');
         const planList = document.getElementById('list-plan-items');
@@ -1366,7 +1487,6 @@
 
         const thesisStr = String(mp.original_thesis || data.bias || 'NEUTRAL').toUpperCase();
         const thesisLower = thesisStr.toLowerCase();
-        planThesisEl.textContent = thesisStr;
 
         const activeCriteria = Array.isArray(mp.active_criteria) ? mp.active_criteria : [];
         const whyInvalidated = Array.isArray(mp.why_invalidated) ? mp.why_invalidated : [];
@@ -1421,96 +1541,108 @@
             }
         }
 
-        if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
-            planStatusEl.textContent = '✓ QUALIFIED';
-            planStatusEl.className = 'status-badge badge-green';
-            planListLabel.textContent = 'Active Setup Criteria';
+        if (isClosed) {
+            planStatusEl.textContent = 'SESSION COMPLETE';
+            planStatusEl.className = 'status-badge badge-neutral';
+            if (planSubtitleEl) planSubtitleEl.textContent = 'Final session status · Historical record';
+            planThesisEl.textContent = `${thesisStr} (${canonicalStatus})`;
+            planListLabel.textContent = 'Final Session Criteria Record';
             
-            let listHtml = '';
-            if (activeCriteria.length > 0) {
-                listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
-            } else {
-                listHtml += renderCriterionLi('All morning thesis conditions are satisfied.', 'pass');
-            }
-            if (infoNotes.length > 0) {
-                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
-            }
-            planList.innerHTML = listHtml;
+            const whyItems = whyInvalidated.length > 0 ? whyInvalidated : (data.invalidation_rule ? [data.invalidation_rule] : []);
+            let itemsHtml = '';
+            if (activeCriteria.length > 0) itemsHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
+            if (pendingStructural.length > 0) itemsHtml += pendingStructural.map(c => renderCriterionLi(c, 'pending')).join('');
+            if (whyItems.length > 0) itemsHtml += whyItems.map(c => renderCriterionLi(c, 'fail')).join('');
+            if (infoNotes.length > 0) itemsHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+            if (!itemsHtml) itemsHtml = renderCriterionLi(`Session concluded with outcome: ${canonicalStatus}.`, 'info');
+            planList.innerHTML = itemsHtml;
 
-            planCallout.className = 'callout-box callout-green';
-            planMeaning.textContent = `• ${thesisStr} morning thesis is qualified and active.`;
-            planWarning.textContent = '• Follow playbook execution criteria for qualified setups.';
-        } else if (canonicalStatus === 'INVALIDATED') {
-            planStatusEl.textContent = '❌ INVALIDATED';
-            planStatusEl.className = 'status-badge badge-red';
-            planListLabel.textContent = 'Why Was It Invalidated?';
-
-            const whyItems = whyInvalidated.length > 0 ? whyInvalidated : (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke morning invalidation level']);
-            let listHtml = whyItems.map(c => renderCriterionLi(c, 'fail')).join('');
-            if (infoNotes.length > 0) {
-                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
-            }
-            planList.innerHTML = listHtml;
-
-            planCallout.className = 'callout-box callout-red';
-            planMeaning.textContent = `• The original ${thesisLower} morning thesis is OFF for today.`;
-            planWarning.textContent = `• Important: This does NOT mean ${thesisStr === 'BULLISH' ? 'SELL' : 'BUY'}. Wait for a NEW qualified setup.`;
-        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
-            planStatusEl.textContent = '⏳ PENDING';
-            planStatusEl.className = 'status-badge badge-amber';
-            planListLabel.textContent = 'Thesis Formation Checks & Criteria';
-
-            let listHtml = '';
-            if (pendingStructural.length > 0) {
-                listHtml += pendingStructural.map(c => renderCriterionLi(c, 'pending')).join('');
-            }
-            if (whyInvalidated.length > 0) {
-                listHtml += whyInvalidated.map(c => renderCriterionLi(c, 'fail')).join('');
-            }
-            if (activeCriteria.length > 0) {
-                listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
-            }
-            if (!listHtml) {
-                listHtml = renderCriterionLi('Awaiting timeframe / structure confirmation.', 'pending');
-            }
-            if (infoNotes.length > 0) {
-                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
-            }
-            planList.innerHTML = listHtml;
-
-            planCallout.className = 'callout-box callout-amber';
-            planMeaning.textContent = `• ${thesisStr} morning thesis is still forming / evaluating conditions.`;
-            planWarning.textContent = '• Await completion of remaining qualification criteria before taking positions.';
-        } else if (canonicalStatus === 'NOT_QUALIFIED') {
-            planStatusEl.textContent = '⚠️ NO SETUP';
+            planCallout.className = 'callout-box callout-neutral';
+            planMeaning.textContent = `• Session concluded at 15:15 IST. Morning plan outcome: ${canonicalStatus} (${thesisStr}).`;
+            planWarning.textContent = '• Current Action: NO NEW ENTRIES.';
+        } else if (isPreMarket) {
+            planStatusEl.textContent = 'PRE-MARKET';
             planStatusEl.className = 'status-badge badge-neutral';
-            planListLabel.textContent = 'Context Filter Reasons';
-
-            const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias armed pre-market.'];
-            let listHtml = ctxItems.map(c => renderCriterionLi(c, 'info')).join('');
-            if (infoNotes.length > 0) {
-                listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
-            }
-            planList.innerHTML = listHtml;
-
+            if (planSubtitleEl) planSubtitleEl.textContent = 'Pre-market preparation · Awaiting 09:15';
+            planThesisEl.textContent = thesisStr;
+            planListLabel.textContent = 'Pre-Market Thesis Notes';
+            planList.innerHTML = renderCriterionLi('Pre-market preparation active. Setup evaluation begins at 09:15 IST.', 'info');
             planCallout.className = 'callout-box callout-blue';
-            planMeaning.textContent = '• No qualified morning thesis armed for today.';
-            planWarning.textContent = '• Stand aside; wait for fresh intraday structure.';
+            planMeaning.textContent = `• Initial bias: ${thesisStr}.`;
+            planWarning.textContent = '• Await market opening at 09:15 IST.';
         } else {
-            planStatusEl.textContent = '⚪ UNKNOWN';
-            planStatusEl.className = 'status-badge badge-neutral';
-            planListLabel.textContent = 'Feed Status';
-            planList.innerHTML = renderCriterionLi('Awaiting morning plan session data...', 'info');
-
-            planCallout.className = 'callout-box callout-blue';
-            planMeaning.textContent = '• Awaiting session feed.';
-            planWarning.textContent = '• Verify data connectivity.';
+            if (planSubtitleEl) planSubtitleEl.textContent = 'Thesis qualification & execution status';
+            planThesisEl.textContent = thesisStr;
+            if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
+                planStatusEl.textContent = '✓ QUALIFIED';
+                planStatusEl.className = 'status-badge badge-green';
+                planListLabel.textContent = 'Active Setup Criteria';
+                let listHtml = '';
+                if (activeCriteria.length > 0) listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
+                else listHtml += renderCriterionLi('All morning thesis conditions are satisfied.', 'pass');
+                if (infoNotes.length > 0) listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+                planList.innerHTML = listHtml;
+                planCallout.className = 'callout-box callout-green';
+                planMeaning.textContent = `• ${thesisStr} morning thesis is qualified and active.`;
+                planWarning.textContent = '• Follow playbook execution criteria for qualified setups.';
+            } else if (canonicalStatus === 'INVALIDATED') {
+                planStatusEl.textContent = '❌ INVALIDATED';
+                planStatusEl.className = 'status-badge badge-red';
+                planListLabel.textContent = 'Why Was It Invalidated?';
+                const whyItems = whyInvalidated.length > 0 ? whyInvalidated : (data.invalidation_rule ? [data.invalidation_rule] : ['Price broke morning invalidation level']);
+                let listHtml = whyItems.map(c => renderCriterionLi(c, 'fail')).join('');
+                if (infoNotes.length > 0) listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+                planList.innerHTML = listHtml;
+                planCallout.className = 'callout-box callout-red';
+                planMeaning.textContent = `• The original ${thesisLower} morning thesis is OFF for today.`;
+                planWarning.textContent = `• Important: This does NOT mean ${thesisStr === 'BULLISH' ? 'SELL' : 'BUY'}. Wait for a NEW qualified setup.`;
+            } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
+                planStatusEl.textContent = '⏳ PENDING';
+                planStatusEl.className = 'status-badge badge-amber';
+                planListLabel.textContent = 'Thesis Formation Checks & Criteria';
+                let listHtml = '';
+                if (pendingStructural.length > 0) listHtml += pendingStructural.map(c => renderCriterionLi(c, 'pending')).join('');
+                if (whyInvalidated.length > 0) listHtml += whyInvalidated.map(c => renderCriterionLi(c, 'fail')).join('');
+                if (activeCriteria.length > 0) listHtml += activeCriteria.map(c => renderCriterionLi(c, 'pass')).join('');
+                if (!listHtml) listHtml = renderCriterionLi('Awaiting timeframe / structure confirmation.', 'pending');
+                if (infoNotes.length > 0) listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+                planList.innerHTML = listHtml;
+                planCallout.className = 'callout-box callout-amber';
+                planMeaning.textContent = `• ${thesisStr} morning thesis is still forming / evaluating conditions.`;
+                planWarning.textContent = '• Await completion of remaining qualification criteria before taking positions.';
+            } else if (canonicalStatus === 'NOT_QUALIFIED') {
+                planStatusEl.textContent = '⚠️ NO SETUP';
+                planStatusEl.className = 'status-badge badge-neutral';
+                planListLabel.textContent = 'Context Filter Reasons';
+                const ctxItems = mp.context_reasons && mp.context_reasons.length > 0 ? mp.context_reasons : ['No high-conviction directional bias armed pre-market.'];
+                let listHtml = ctxItems.map(c => renderCriterionLi(c, 'info')).join('');
+                if (infoNotes.length > 0) listHtml += infoNotes.map(c => renderCriterionLi(c, 'info')).join('');
+                planList.innerHTML = listHtml;
+                planCallout.className = 'callout-box callout-blue';
+                planMeaning.textContent = '• No qualified morning thesis armed for today.';
+                planWarning.textContent = '• Stand aside; wait for fresh intraday structure.';
+            } else {
+                planStatusEl.textContent = '⚪ UNKNOWN';
+                planStatusEl.className = 'status-badge badge-neutral';
+                planListLabel.textContent = 'Feed Status';
+                planList.innerHTML = renderCriterionLi('Awaiting morning plan session data...', 'info');
+                planCallout.className = 'callout-box callout-blue';
+                planMeaning.textContent = '• Awaiting session feed.';
+                planWarning.textContent = '• Verify data connectivity.';
+            }
         }
 
         // 5. COMPACT MARKET SUMMARY / OI (Safe Chain Aggregation & Semantic Alignment)
         const oi = data.oi_summary || {};
         const activeExpiry = oi.expiry || '--';
-        document.getElementById('val-oi-subtitle').textContent = `Current positioning & walls · Expiry: ${activeExpiry}`;
+        const oiSubtitle = document.getElementById('val-oi-subtitle');
+        if (oiSubtitle) {
+            if (isClosed) {
+                oiSubtitle.textContent = `Session Snapshot · Expiry: ${activeExpiry} · Last update: ${formatTime(data.updated_at)}`;
+            } else {
+                oiSubtitle.textContent = `Current positioning & walls · Expiry: ${activeExpiry}`;
+            }
+        }
 
         const chain = (data.oi_chains && activeExpiry && Array.isArray(data.oi_chains[activeExpiry])) 
             ? data.oi_chains[activeExpiry] 
@@ -1555,7 +1687,10 @@
 
         const pcrVal = isFiniteNum(oi.pcr) ? Number(oi.pcr) : ((totalCeOi && totalCeOi > 0) ? (totalPeOi / totalCeOi) : null);
         const pcrPill = document.getElementById('val-pcr-pill');
-        if (isFiniteNum(pcrVal)) {
+        if (isClosed) {
+            pcrPill.textContent = isFiniteNum(pcrVal) ? `SESSION PCR ${pcrVal.toFixed(2)}` : 'SESSION PCR N/A';
+            pcrPill.className = 'status-badge badge-neutral';
+        } else if (isFiniteNum(pcrVal)) {
             pcrPill.textContent = `CURRENT PCR ${pcrVal.toFixed(2)}`;
             if (pcrVal >= 1.25) pcrPill.className = 'status-badge badge-green';
             else if (pcrVal <= 0.75) pcrPill.className = 'status-badge badge-red';
@@ -1565,7 +1700,24 @@
             pcrPill.className = 'status-badge badge-neutral';
         }
 
-        document.getElementById('val-oi-read').textContent = oi.flow_read || (oi.pcr_read ? `${oi.pcr_read}.` : 'Session cumulative open interest change analysis active.');
+        const oiFlowBox = document.getElementById('box-oi-flow');
+        const oiFlowTitle = document.getElementById('label-oi-flow-title');
+        const oiReadEl = document.getElementById('val-oi-read');
+        if (isClosed) {
+            if (oiFlowBox) oiFlowBox.className = 'callout-box callout-neutral';
+            if (oiFlowTitle) {
+                oiFlowTitle.style.color = 'var(--text-muted)';
+                oiFlowTitle.textContent = 'SESSION OI SNAPSHOT · 09:15 → 15:15';
+            }
+            if (oiReadEl) oiReadEl.textContent = oi.flow_read || (oi.pcr_read ? `${oi.pcr_read}.` : 'Final session open interest snapshot captured.');
+        } else {
+            if (oiFlowBox) oiFlowBox.className = 'callout-box callout-amber';
+            if (oiFlowTitle) {
+                oiFlowTitle.style.color = 'var(--accent-amber)';
+                oiFlowTitle.textContent = 'SESSION OI FLOW · 09:15 → NOW';
+            }
+            if (oiReadEl) oiReadEl.textContent = oi.flow_read || (oi.pcr_read ? `${oi.pcr_read}.` : 'Session cumulative open interest change analysis active.');
+        }
 
         // 6. KEY LEVELS
         const kl = wi.key_levels || {};
@@ -1584,7 +1736,7 @@
         document.getElementById('val-inval-price').textContent = isFiniteNum(inv.price) ? fmtPrice(inv.price) : (isFiniteNum(data.levels?.invalidation) ? fmtPrice(data.levels.invalidation) : 'N/A');
         document.getElementById('val-inval-meaning').textContent = inv.meaning || "Break of this level invalidates today's morning plan.";
 
-        // 7. DECISION SUPPORT (Strict Single-Source Consistency with canonicalStatus)
+        // 7. DECISION SUPPORT (Strict Single-Source Consistency with canonicalStatus and Session State)
         const ds = wi.decision_support || {};
         const dsFocusEl = document.getElementById('val-ds-focus');
         const dsWhyEl = document.getElementById('val-ds-why');
@@ -1592,95 +1744,137 @@
         const dsNextWhyEl = document.getElementById('val-ds-next-why');
         const dsInstructionEl = document.getElementById('val-ds-instruction');
 
-        dsNextEl.textContent = ds.next_level_to_watch || data.decision_next_event || '--';
-        dsNextWhyEl.textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
-
-        let focusText = 'WAIT';
-        let whyText = 'Evaluating market conditions.';
-        let instrText = 'STAND ASIDE';
-
-        if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
-            focusText = ds.current_focus || 'FOLLOW SETUP RULES';
-            whyText = ds.why || `${thesisStr} morning thesis is QUALIFIED and active. Setup criteria are satisfied.`;
-            instrText = ds.instruction || 'FOLLOW PLAYBOOK EXECUTION CRITERIA';
-        } else if (canonicalStatus === 'INVALIDATED') {
-            focusText = 'STAND ASIDE';
-            whyText = ds.why || `The original ${thesisLower} morning thesis is INVALIDATED for today. Do not force entries on the original thesis.`;
-            instrText = 'WAIT FOR A NEW QUALIFIED SETUP';
-        } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
-            focusText = 'WAIT';
-            whyText = (ds.why && !ds.why.toLowerCase().includes('invalidated') && !ds.why.toLowerCase().includes('off for today')) 
-                ? ds.why 
-                : `${thesisStr} morning thesis is PENDING confirmation. Await completion of structural checks.`;
-            instrText = 'WAIT FOR COMPLETION OF PENDING CHECKS';
-        } else if (canonicalStatus === 'NOT_QUALIFIED') {
-            focusText = 'STAND ASIDE';
-            whyText = ds.why || 'No high-conviction directional setup armed today.';
-            instrText = 'STAND ASIDE';
+        if (isClosed) {
+            dsFocusEl.textContent = 'SESSION CLOSED';
+            dsFocusEl.style.color = 'var(--text-secondary)';
+            dsWhyEl.textContent = 'Session concluded at 15:15 IST. Market is closed for today.';
+            dsNextEl.textContent = `Final Reference: ${ds.next_level_to_watch || data.decision_next_event || 'N/A'}`;
+            dsNextWhyEl.textContent = 'Nearest structural reference level from today\'s session.';
+            dsInstructionEl.textContent = 'NO NEW ENTRIES';
+            dsInstructionEl.style.color = 'var(--text-muted)';
+        } else if (isPreMarket) {
+            dsFocusEl.textContent = 'STAND ASIDE';
+            dsFocusEl.style.color = 'var(--accent-blue)';
+            dsWhyEl.textContent = 'Pre-market session active. Awaiting market open at 09:15 IST.';
+            dsNextEl.textContent = ds.next_level_to_watch || data.decision_next_event || '--';
+            dsNextWhyEl.textContent = 'Key reference level to monitor on open.';
+            dsInstructionEl.textContent = 'WAIT FOR MARKET OPEN';
+            dsInstructionEl.style.color = 'var(--accent-blue)';
         } else {
-            focusText = 'AWAITING FEED';
-            whyText = 'Awaiting live market decision support data.';
-            instrText = 'STAND ASIDE';
-        }
+            dsNextEl.textContent = ds.next_level_to_watch || data.decision_next_event || '--';
+            dsNextWhyEl.textContent = ds.why_watch || 'Nearest important reference level. Watch reaction or acceptance.';
 
-        // Semantic color mapping for Current Focus
-        const focusUpper = focusText.toUpperCase();
-        let focusColor = 'var(--text-muted)';
-        if (focusUpper.includes('BUY') || focusUpper.includes('LONG') || focusUpper.includes('EXECUTE') || focusUpper.includes('ARMED')) {
-            focusColor = 'var(--accent-green)';
-        } else if (focusUpper.includes('SELL') || focusUpper.includes('SHORT')) {
-            focusColor = 'var(--accent-red)';
-        } else if (focusUpper.includes('WAIT')) {
-            focusColor = 'var(--accent-amber)';
-        } else if (focusUpper.includes('STAND ASIDE')) {
-            focusColor = canonicalStatus === 'INVALIDATED' ? 'var(--accent-red)' : 'var(--accent-amber)';
-        } else {
-            focusColor = 'var(--text-muted)';
-        }
+            let focusText = 'WAIT';
+            let whyText = 'Evaluating market conditions.';
+            let instrText = 'STAND ASIDE';
 
-        // Semantic color mapping for Instruction
-        const instrUpper = instrText.toUpperCase();
-        let instrColor = 'var(--text-muted)';
-        if (instrUpper.includes('FOLLOW QUALIFIED') || instrUpper.includes('EXECUTE') || instrUpper.includes('BUY') || instrUpper.includes('LONG')) {
-            instrColor = 'var(--accent-green)';
-        } else if (instrUpper.includes('SELL') || instrUpper.includes('SHORT') || instrUpper.includes('INVALIDATED')) {
-            instrColor = 'var(--accent-red)';
-        } else if (instrUpper.includes('WAIT') || instrUpper.includes('PENDING')) {
-            instrColor = 'var(--accent-amber)';
-        } else {
-            instrColor = 'var(--text-muted)';
-        }
+            if (canonicalStatus === 'QUALIFIED' || canonicalStatus === 'VALID') {
+                focusText = ds.current_focus || 'FOLLOW SETUP RULES';
+                whyText = ds.why || `${thesisStr} morning thesis is QUALIFIED and active. Setup criteria are satisfied.`;
+                instrText = ds.instruction || 'FOLLOW PLAYBOOK EXECUTION CRITERIA';
+            } else if (canonicalStatus === 'INVALIDATED') {
+                focusText = 'STAND ASIDE';
+                whyText = ds.why || `The original ${thesisLower} morning thesis is INVALIDATED for today. Do not force entries on the original thesis.`;
+                instrText = 'WAIT FOR A NEW QUALIFIED SETUP';
+            } else if (canonicalStatus === 'PENDING' || canonicalStatus === 'WEAKENING' || canonicalStatus === 'FORMING') {
+                focusText = 'WAIT';
+                whyText = (ds.why && !ds.why.toLowerCase().includes('invalidated') && !ds.why.toLowerCase().includes('off for today')) 
+                    ? ds.why 
+                    : `${thesisStr} morning thesis is PENDING confirmation. Await completion of structural checks.`;
+                instrText = 'WAIT FOR COMPLETION OF PENDING CHECKS';
+            } else if (canonicalStatus === 'NOT_QUALIFIED') {
+                focusText = 'STAND ASIDE';
+                whyText = ds.why || 'No high-conviction directional setup armed today.';
+                instrText = 'STAND ASIDE';
+            } else {
+                focusText = 'AWAITING FEED';
+                whyText = 'Awaiting live market decision support data.';
+                instrText = 'STAND ASIDE';
+            }
 
-        dsFocusEl.textContent = focusText;
-        dsFocusEl.style.color = focusColor;
-        dsWhyEl.textContent = whyText;
-        dsInstructionEl.textContent = instrText;
-        dsInstructionEl.style.color = instrColor;
+            // Semantic color mapping for Current Focus
+            const focusUpper = focusText.toUpperCase();
+            let focusColor = 'var(--text-muted)';
+            if (focusUpper.includes('BUY') || focusUpper.includes('LONG') || focusUpper.includes('EXECUTE') || focusUpper.includes('ARMED')) {
+                focusColor = 'var(--accent-green)';
+            } else if (focusUpper.includes('SELL') || focusUpper.includes('SHORT')) {
+                focusColor = 'var(--accent-red)';
+            } else if (focusUpper.includes('WAIT')) {
+                focusColor = 'var(--accent-amber)';
+            } else if (focusUpper.includes('STAND ASIDE')) {
+                focusColor = canonicalStatus === 'INVALIDATED' ? 'var(--accent-red)' : 'var(--accent-amber)';
+            } else {
+                focusColor = 'var(--text-muted)';
+            }
+
+            // Semantic color mapping for Instruction
+            const instrUpper = instrText.toUpperCase();
+            let instrColor = 'var(--text-muted)';
+            if (instrUpper.includes('FOLLOW QUALIFIED') || instrUpper.includes('EXECUTE') || instrUpper.includes('BUY') || instrUpper.includes('LONG')) {
+                instrColor = 'var(--accent-green)';
+            } else if (instrUpper.includes('SELL') || instrUpper.includes('SHORT') || instrUpper.includes('INVALIDATED')) {
+                instrColor = 'var(--accent-red)';
+            } else if (instrUpper.includes('WAIT') || instrUpper.includes('PENDING')) {
+                instrColor = 'var(--accent-amber)';
+            } else {
+                instrColor = 'var(--text-muted)';
+            }
+
+            dsFocusEl.textContent = focusText;
+            dsFocusEl.style.color = focusColor;
+            dsWhyEl.textContent = whyText;
+            dsInstructionEl.textContent = instrText;
+            dsInstructionEl.style.color = instrColor;
+        }
 
         // 8. ORDER FLOW SHADOW
         const ofs = wi.order_flow_shadow || data.order_flow_shadow || {};
+        const ofBadge = document.getElementById('val-of-badge');
         const ofFeedEl = document.getElementById('val-of-feed');
         const rawOfFeed = ofs.feed_status || 'LIVE';
         const rawOfUpper = String(rawOfFeed).toUpperCase();
 
-        let ofBadgeClass = 'badge-neutral';
-        let ofLabel = rawOfFeed;
+        if (isClosed) {
+            if (ofBadge) {
+                ofBadge.textContent = 'SESSION CLOSED';
+                ofBadge.className = 'status-badge badge-neutral';
+            }
+            ofFeedEl.innerHTML = `<span class="status-badge badge-neutral">SESSION CLOSED</span>`;
+            document.getElementById('val-of-qual-note').textContent = `Session closed at 15:15 IST. Final captured context (Last update: ${formatTime(data.updated_at)}).`;
+        } else if (isPreMarket) {
+            if (ofBadge) {
+                ofBadge.textContent = 'PRE-MARKET';
+                ofBadge.className = 'status-badge badge-neutral';
+            }
+            ofFeedEl.innerHTML = `<span class="status-badge badge-neutral">PRE-MARKET</span>`;
+            document.getElementById('val-of-qual-note').textContent = 'Order flow tracking begins at 09:15 IST.';
+        } else {
+            if (ofBadge) {
+                ofBadge.textContent = 'SHADOW MODE';
+                ofBadge.className = 'status-badge badge-amber';
+            }
+            let ofBadgeClass = 'badge-neutral';
+            let ofLabel = rawOfFeed;
 
-        if (isStale || rawOfUpper === 'STALE') {
-            ofBadgeClass = 'badge-amber';
-            ofLabel = isStale ? `STALE (${ageStr})` : 'STALE';
-        } else if (rawOfUpper === 'LIVE' || rawOfUpper === 'CONNECTED') {
-            ofBadgeClass = 'badge-green';
-            ofLabel = 'LIVE';
-        } else if (rawOfUpper === 'OFFLINE' || rawOfUpper === 'DISCONNECTED') {
-            ofBadgeClass = 'badge-red';
-            ofLabel = 'OFFLINE';
-        } else if (rawOfUpper === 'CONNECTING') {
-            ofBadgeClass = 'badge-neutral';
-            ofLabel = 'CONNECTING';
+            if (isStale || rawOfUpper === 'STALE') {
+                ofBadgeClass = 'badge-amber';
+                ofLabel = isStale ? `STALE (${ageStr})` : 'STALE';
+            } else if (rawOfUpper === 'LIVE' || rawOfUpper === 'CONNECTED') {
+                ofBadgeClass = 'badge-green';
+                ofLabel = 'LIVE';
+            } else if (rawOfUpper === 'OFFLINE' || rawOfUpper === 'DISCONNECTED') {
+                ofBadgeClass = 'badge-red';
+                ofLabel = 'OFFLINE';
+            } else if (rawOfUpper === 'CONNECTING') {
+                ofBadgeClass = 'badge-neutral';
+                ofLabel = 'CONNECTING';
+            }
+
+            ofFeedEl.innerHTML = `<span class="status-badge ${ofBadgeClass}">${ofLabel}</span>`;
+            document.getElementById('val-of-qual-note').textContent = isStale ?
+                `Snapshot age: ${ageStr} (Last observed backend feed state: ${rawOfFeed}).` :
+                `${ofs.combined_updates_pct || 74.55}% combined updates (single packet contains multiple trades).`;
         }
-
-        ofFeedEl.innerHTML = `<span class="status-badge ${ofBadgeClass}">${ofLabel}</span>`;
 
         const ofPressEl = document.getElementById('val-of-pressure');
         const pressVal = ofs.pressure || 'N/A';
@@ -1694,9 +1888,6 @@
         alignEl.innerHTML = getStructureBadgeHTML(alignVal);
 
         document.getElementById('val-of-cvd-note').textContent = ofs.cvd_provenance_note || 'CVD = our research estimate of net buying vs selling pressure since this stream started. It is NOT exchange-reported CVD.';
-        document.getElementById('val-of-qual-note').textContent = isStale ?
-            `Snapshot age: ${ageStr} (Last observed backend feed state: ${rawOfFeed}).` :
-            `${ofs.combined_updates_pct || 74.55}% combined updates (single packet contains multiple trades).`;
 
         // 9. SESSION INTELLIGENCE TIMELINE (Scrollable container, all events retained, newest first)
         const tlList = document.getElementById('timeline-list');
@@ -1706,9 +1897,21 @@
         let events = [];
         if (Array.isArray(rawEvents) && rawEvents.length > 0) {
             if (wi.timeline && Array.isArray(wi.timeline)) {
-                events = wi.timeline;
+                events = [...wi.timeline];
             } else {
                 events = [...rawEvents].reverse();
+            }
+        }
+
+        if (isClosed) {
+            const hasClosedMarker = events.some(e => String(e.what_changed || e.event || '').toUpperCase().includes('SESSION CLOSED'));
+            if (!hasClosedMarker) {
+                events.unshift({
+                    time: '15:15',
+                    severity: 'INFO',
+                    what_changed: 'SESSION CLOSED · 15:15 IST',
+                    what_it_means: 'LMI session concluded. Final snapshot captured.'
+                });
             }
         }
 
@@ -1737,14 +1940,25 @@
         const facts = (mc.facts && Array.isArray(mc.facts) && mc.facts.length > 0) ? mc.facts : parsedComm.facts;
         const interp = (mc.interpretation && (Array.isArray(mc.interpretation) || (typeof mc.interpretation === 'string' && mc.interpretation.trim()))) ? mc.interpretation : (parsedComm.interpretation || data.decision_reason || '');
 
-        const hasLiveContent = facts.length > 0 || (typeof interp === 'string' && interp.trim().length > 0) || Boolean(mc.synthesis);
-
-        if (mc.is_live || hasLiveContent) {
-            commPill.className = 'live-pill live';
-            commTimeEl.textContent = `LIVE • ${mc.timestamp || formatTime(data.updated_at)}`;
+        if (isClosed) {
+            commPill.className = 'live-pill closed';
+            if (commPill.querySelector('.dot')) commPill.querySelector('.dot').className = 'dot neutral';
+            commTimeEl.textContent = 'SESSION COMPLETE';
+        } else if (isPreMarket) {
+            commPill.className = 'live-pill neutral';
+            if (commPill.querySelector('.dot')) commPill.querySelector('.dot').className = 'dot blue';
+            commTimeEl.textContent = 'PRE-MARKET';
         } else {
-            commPill.className = 'live-pill stale';
-            commTimeEl.textContent = mc.timestamp ? `UPDATED ${mc.timestamp} IST` : 'OFFLINE';
+            const hasLiveContent = facts.length > 0 || (typeof interp === 'string' && interp.trim().length > 0) || Boolean(mc.synthesis);
+            if (mc.is_live || hasLiveContent) {
+                commPill.className = 'live-pill live';
+                if (commPill.querySelector('.dot')) commPill.querySelector('.dot').className = 'dot green';
+                commTimeEl.textContent = `LIVE • ${mc.timestamp || formatTime(data.updated_at)}`;
+            } else {
+                commPill.className = 'live-pill stale';
+                if (commPill.querySelector('.dot')) commPill.querySelector('.dot').className = 'dot amber';
+                commTimeEl.textContent = mc.timestamp ? `UPDATED ${mc.timestamp} IST` : 'OFFLINE';
+            }
         }
 
         const factsList = document.getElementById('list-comm-facts');
@@ -1774,18 +1988,26 @@
         }
         
         const actionEl = document.getElementById('val-comm-action');
-        const actionVal = mc.current_action || mc.action || ds.current_focus || data.action_verdict || 'STAND ASIDE';
-        const actionUpper = String(actionVal).toUpperCase();
-        let actionClass = 'badge-neutral';
-        if (actionUpper.includes('MANAGE')) actionClass = 'badge-blue';
-        else if (actionUpper.includes('BUY') || actionUpper.includes('LONG') || actionUpper.includes('EXECUTE') || actionUpper.includes('ARMED')) actionClass = 'badge-green';
-        else if (actionUpper.includes('SELL') || actionUpper.includes('SHORT')) actionClass = 'badge-red';
-        else if (actionUpper.includes('WAIT')) actionClass = 'badge-amber';
-        else if (actionUpper.includes('STAND ASIDE')) actionClass = 'badge-neutral';
-        else actionClass = 'badge-amber';
+        if (isClosed) {
+            actionEl.textContent = 'NO NEW ENTRIES';
+            actionEl.className = 'status-badge badge-neutral';
+        } else if (isPreMarket) {
+            actionEl.textContent = 'STAND ASIDE';
+            actionEl.className = 'status-badge badge-neutral';
+        } else {
+            const actionVal = mc.current_action || mc.action || ds.current_focus || data.action_verdict || 'STAND ASIDE';
+            const actionUpper = String(actionVal).toUpperCase();
+            let actionClass = 'badge-neutral';
+            if (actionUpper.includes('MANAGE')) actionClass = 'badge-blue';
+            else if (actionUpper.includes('BUY') || actionUpper.includes('LONG') || actionUpper.includes('EXECUTE') || actionUpper.includes('ARMED')) actionClass = 'badge-green';
+            else if (actionUpper.includes('SELL') || actionUpper.includes('SHORT')) actionClass = 'badge-red';
+            else if (actionUpper.includes('WAIT')) actionClass = 'badge-amber';
+            else if (actionUpper.includes('STAND ASIDE')) actionClass = 'badge-neutral';
+            else actionClass = 'badge-amber';
 
-        actionEl.textContent = actionVal;
-        actionEl.className = `status-badge ${actionClass}`;
+            actionEl.textContent = actionVal;
+            actionEl.className = `status-badge ${actionClass}`;
+        }
 
         // 11. COMPACT FEED HEALTH BAR
         const healthMktDot = document.getElementById('health-mkt-dot');
@@ -1796,62 +2018,84 @@
         const healthOfVal = document.getElementById('health-of-val');
         const healthClockVal = document.getElementById('health-clock-val');
 
-        if (isStale) {
-            healthMktDot.className = 'dot amber';
-            healthMktVal.textContent = `STALE (${ageStr})`;
-            healthMktVal.style.color = 'var(--accent-amber)';
-        } else {
-            healthMktDot.className = 'dot green';
-            healthMktVal.textContent = 'LIVE (0.5s)';
-            healthMktVal.style.color = 'var(--accent-green)';
-        }
+        if (isClosed) {
+            healthMktDot.className = 'dot neutral';
+            healthMktVal.textContent = 'SESSION CLOSED';
+            healthMktVal.style.color = 'var(--text-secondary)';
 
-        if (data.oi_summary && data.oi_summary.expiry) {
-            healthOiDot.className = 'dot green';
-            healthOiVal.textContent = `SYNCED (${data.oi_summary.expiry})`;
-            healthOiVal.style.color = 'var(--accent-green)';
-        } else {
-            healthOiDot.className = 'dot amber';
+            healthOiDot.className = 'dot neutral';
+            healthOiVal.textContent = 'SESSION SNAPSHOT';
+            healthOiVal.style.color = 'var(--text-secondary)';
+
+            healthOfDot.className = 'dot neutral';
+            healthOfVal.textContent = 'SESSION CLOSED';
+            healthOfVal.style.color = 'var(--text-secondary)';
+        } else if (isPreMarket) {
+            healthMktDot.className = 'dot blue';
+            healthMktVal.textContent = 'AWAITING OPEN';
+            healthMktVal.style.color = 'var(--accent-blue)';
+
+            healthOiDot.className = 'dot blue';
             healthOiVal.textContent = 'AWAITING';
-            healthOiVal.style.color = 'var(--accent-amber)';
-        }
+            healthOiVal.style.color = 'var(--accent-blue)';
 
-        if (ofs && ofs.feed_status === 'LIVE' && !isStale) {
-            healthOfDot.className = 'dot green';
-            healthOfVal.textContent = 'LIVE (Mode 3)';
-            healthOfVal.style.color = 'var(--accent-green)';
-        } else if (ofs && (ofs.feed_status === 'STALE' || isStale)) {
-            healthOfDot.className = 'dot amber';
-            healthOfVal.textContent = 'STALE';
-            healthOfVal.style.color = 'var(--accent-amber)';
+            healthOfDot.className = 'dot blue';
+            healthOfVal.textContent = 'AWAITING';
+            healthOfVal.style.color = 'var(--accent-blue)';
         } else {
-            healthOfDot.className = 'dot red';
-            healthOfVal.textContent = ofs.feed_status || 'OFFLINE';
-            healthOfVal.style.color = 'var(--accent-red)';
+            if (isStale) {
+                healthMktDot.className = 'dot amber';
+                healthMktVal.textContent = `STALE (${ageStr})`;
+                healthMktVal.style.color = 'var(--accent-amber)';
+            } else {
+                healthMktDot.className = 'dot green';
+                healthMktVal.textContent = 'LIVE (0.5s)';
+                healthMktVal.style.color = 'var(--accent-green)';
+            }
+
+            if (data.oi_summary && data.oi_summary.expiry) {
+                healthOiDot.className = 'dot green';
+                healthOiVal.textContent = `SYNCED (${data.oi_summary.expiry})`;
+                healthOiVal.style.color = 'var(--accent-green)';
+            } else {
+                healthOiDot.className = 'dot amber';
+                healthOiVal.textContent = 'AWAITING';
+                healthOiVal.style.color = 'var(--accent-amber)';
+            }
+
+            if (ofs && ofs.feed_status === 'LIVE' && !isStale) {
+                healthOfDot.className = 'dot green';
+                healthOfVal.textContent = 'LIVE (Mode 3)';
+                healthOfVal.style.color = 'var(--accent-green)';
+            } else if (ofs && (ofs.feed_status === 'STALE' || isStale)) {
+                healthOfDot.className = 'dot amber';
+                healthOfVal.textContent = 'STALE';
+                healthOfVal.style.color = 'var(--accent-amber)';
+            } else {
+                healthOfDot.className = 'dot red';
+                healthOfVal.textContent = ofs.feed_status || 'OFFLINE';
+                healthOfVal.style.color = 'var(--accent-red)';
+            }
         }
 
         healthClockVal.textContent = formatTime(data.updated_at);
     }
 
-    function createSnapshotSpan(id, val) {
-        const span = document.createElement('span');
-        span.id = id;
-        const str = String(val).toUpperCase();
+    function updateSnapshotSpan(id, val) {
+        const span = document.getElementById(id);
+        if (!span) return;
+        const str = String(val || '--').toUpperCase();
+        span.className = 'snapshot-val';
         if (str.includes('BULL')) {
-            span.className = 'snapshot-val';
             span.style.color = 'var(--accent-green)';
         } else if (str.includes('BEAR')) {
-            span.className = 'snapshot-val';
             span.style.color = 'var(--accent-red)';
         } else if (str.includes('NEUTRAL') || str.includes('MIXED')) {
-            span.className = 'snapshot-val';
             span.style.color = 'var(--accent-amber)';
         } else {
-            span.className = 'snapshot-val';
             span.style.color = 'var(--text-muted)';
         }
-        span.textContent = val;
-        return span;
+        span.textContent = val || '--';
     }
 
     // Initial fetch and loop
