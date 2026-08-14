@@ -1032,7 +1032,7 @@
         return closest;
     }
 
-    // Tooltip handling
+    // Tooltip handling with Event Delegation
     const tooltip = document.getElementById('global-chart-tooltip');
     function showTooltip(e, html) {
         tooltip.innerHTML = html;
@@ -1042,12 +1042,64 @@
     function moveTooltip(e) {
         const x = e.clientX + 15;
         const y = e.clientY + 15;
-        tooltip.style.left = `${Math.min(window.innerWidth - 220, x)}px`;
-        tooltip.style.top = `${Math.min(window.innerHeight - 150, y)}px`;
+        tooltip.style.left = `${Math.min(window.innerWidth - 240, x)}px`;
+        tooltip.style.top = `${Math.min(window.innerHeight - 160, y)}px`;
     }
     function hideTooltip() {
         tooltip.style.display = 'none';
     }
+
+    // Global Event Delegation for Chart Tooltips (No inline handlers)
+    document.addEventListener('mouseover', function(e) {
+        const col = e.target.closest('[data-strike]');
+        if (!col) return;
+        const chartType = col.getAttribute('data-chart-type');
+        const strike = col.getAttribute('data-strike');
+        const tag = col.getAttribute('data-tag') || '';
+        
+        let html = '';
+        if (chartType === 'current') {
+            const ceOi = col.getAttribute('data-ce-oi') || 'N/A';
+            const peOi = col.getAttribute('data-pe-oi') || 'N/A';
+            const ceLakh = col.getAttribute('data-ce-lakh') || 'N/A';
+            const peLakh = col.getAttribute('data-pe-lakh') || 'N/A';
+            const lean = col.getAttribute('data-lean') || '';
+            html = `
+                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
+                    Strike ${strike} ${tag ? '· ' + tag : ''}
+                </div>
+                <div style="color: var(--accent-red);">Call OI: <strong>${ceOi}</strong> (${ceLakh})</div>
+                <div style="color: var(--accent-green);">Put OI: <strong>${peOi}</strong> (${peLakh})</div>
+                <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">${lean}</div>
+            `;
+        } else if (chartType === 'change') {
+            const ceChg = col.getAttribute('data-ce-chg') || '--';
+            const peChg = col.getAttribute('data-pe-chg') || '--';
+            const ceDir = col.getAttribute('data-ce-dir') || '';
+            const peDir = col.getAttribute('data-pe-dir') || '';
+            html = `
+                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
+                    Strike ${strike} ${tag ? '· ' + tag : ''} (09:15 → Now)
+                </div>
+                <div style="color: var(--accent-red);">Call Change: <strong>${ceChg}</strong> · ${ceDir}</div>
+                <div style="color: var(--accent-green);">Put Change: <strong>${peChg}</strong> · ${peDir}</div>
+            `;
+        }
+        if (html) showTooltip(e, html);
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (tooltip && tooltip.style.display === 'block') {
+            moveTooltip(e);
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        const col = e.target.closest('[data-strike]');
+        if (col && (!e.relatedTarget || !e.relatedTarget.closest('[data-strike]'))) {
+            hideTooltip();
+        }
+    });
 
     async function fetchOIData() {
         try {
@@ -1300,7 +1352,6 @@
             return;
         }
 
-        // Grid lines (Max, 75%, 50%, 25%)
         const maxLakh = (maxOi / 100000).toFixed(0);
         let gridHtml = `
         <div class="chart-grid-lines">
@@ -1332,30 +1383,30 @@
             if (isMp) colClass += ' is-mp';
 
             let tagHtml = '';
-            if (isAtm) tagHtml = '<span class="x-tag tag-atm">ATM</span>';
-            else if (isPw) tagHtml = '<span class="x-tag tag-pw">PW</span>';
-            else if (isCw) tagHtml = '<span class="x-tag tag-cw">CW</span>';
-            else if (isMp) tagHtml = '<span class="x-tag tag-mp">MP</span>';
+            let tagText = '';
+            if (isAtm) { tagHtml = '<span class="x-tag tag-atm">ATM</span>'; tagText = 'ATM'; }
+            else if (isPw) { tagHtml = '<span class="x-tag tag-pw">PW</span>'; tagText = 'PUT WALL'; }
+            else if (isCw) { tagHtml = '<span class="x-tag tag-cw">CW</span>'; tagText = 'CALL WALL'; }
+            else if (isMp) { tagHtml = '<span class="x-tag tag-mp">MP</span>'; tagText = 'MAX PAIN'; }
 
-            const tooltipHtml = `
-                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
-                    Strike ${fmtStrike(str)} ${isAtm ? '· ATM' : ''}
-                </div>
-                <div style="color: var(--accent-red);">Call OI: <strong>${fmtOI(ce)}</strong> (${fmtLakh(ce)})</div>
-                <div style="color: var(--accent-green);">Put OI: <strong>${fmtOI(pe)}</strong> (${fmtLakh(pe)})</div>
-                <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">
-                    ${pe > ce ? `Put Dominant (+${fmtLakh(pe - ce)})` : (ce > pe ? `Call Dominant (+${fmtLakh(ce - pe)})` : 'Balanced')}
-                </div>
-            `;
+            const leanText = pe > ce ? `Put Dominant (+${fmtLakh(pe - ce)})` : (ce > pe ? `Call Dominant (+${fmtLakh(ce - pe)})` : 'Balanced');
 
             colsHtml += `
-            <div class="${colClass}" onmouseenter="showTooltip(event, '${tooltipHtml.replace(/'/g, "\\'")}')" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">
+            <div class="${colClass}" 
+                 data-chart-type="current"
+                 data-strike="${fmtStrike(str)}"
+                 data-tag="${tagText}"
+                 data-ce-oi="${fmtOI(ce)}"
+                 data-pe-oi="${fmtOI(pe)}"
+                 data-ce-lakh="${fmtLakh(ce)}"
+                 data-pe-lakh="${fmtLakh(pe)}"
+                 data-lean="${leanText}">
                 <div class="bars-pair">
                     <div class="v-bar-ce" style="height: ${ceHeightPct}%;"></div>
                     <div class="v-bar-pe" style="height: ${peHeightPct}%;"></div>
                 </div>
                 <div class="x-strike-label">
-                    ${fmtStrike(str)}
+                    <span>${fmtStrike(str)}</span>
                     <div>${tagHtml}</div>
                 </div>
             </div>`;
@@ -1414,16 +1465,15 @@
             const ceDir = ceChg !== null ? (ceChg > 0 ? 'ADDITION (+)' : (ceChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
             const peDir = peChg !== null ? (peChg > 0 ? 'ADDITION (+)' : (peChg < 0 ? 'UNWINDING (-)' : 'FLAT')) : 'N/A';
 
-            const tooltipHtml = `
-                <div style="font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px;">
-                    Strike ${fmtStrike(str)} ${isAtm ? '· ATM' : ''} (09:15 → Now)
-                </div>
-                <div style="color: var(--accent-red);">Call Change: <strong>${fmtChange(ceChg)}</strong> · ${ceDir}</div>
-                <div style="color: var(--accent-green);">Put Change: <strong>${fmtChange(peChg)}</strong> · ${peDir}</div>
-            `;
-
             colsHtml += `
-            <div class="${colClass}" onmouseenter="showTooltip(event, '${tooltipHtml.replace(/'/g, "\\'")}')" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">
+            <div class="${colClass}" 
+                 data-chart-type="change"
+                 data-strike="${fmtStrike(str)}"
+                 data-tag="${isAtm ? 'ATM' : ''}"
+                 data-ce-chg="${fmtChange(ceChg)}"
+                 data-pe-chg="${fmtChange(peChg)}"
+                 data-ce-dir="${ceDir}"
+                 data-pe-dir="${peDir}">
                 <div class="change-top-half">
                     ${topCeBar}
                     ${topPeBar}
@@ -1433,7 +1483,7 @@
                     ${botPeBar}
                 </div>
                 <div class="x-strike-label">
-                    ${fmtStrike(str)}
+                    <span>${fmtStrike(str)}</span>
                     <div>${isAtm ? '<span class="x-tag tag-atm">ATM</span>' : ''}</div>
                 </div>
             </div>`;
