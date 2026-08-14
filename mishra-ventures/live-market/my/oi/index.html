@@ -473,12 +473,12 @@
         }
         .sensibull-chart-wrap {
             width: 100%;
-            height: 310px;
+            height: 275px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             position: relative;
-            padding: 24px 12px 0 12px;
+            padding: 16px 8px 0 8px;
             border-bottom: 2px solid var(--card-border);
         }
         .chart-grid-lines {
@@ -486,7 +486,7 @@
             top: 0;
             left: 0;
             right: 0;
-            bottom: 30px;
+            bottom: 48px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -512,7 +512,7 @@
             display: flex;
             align-items: flex-end;
             justify-content: space-around;
-            height: 240px;
+            height: 200px;
             z-index: 2;
             gap: 6px;
             width: 100%;
@@ -536,12 +536,12 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Subtle Vertical Guide Lines (Zero full-width colored background blocks) */
+        /* Subtle Vertical Guide Lines */
         .sensibull-strike-col.is-atm::before, .change-strike-col.is-atm::before {
             content: '';
             position: absolute;
             top: 0;
-            bottom: 30px;
+            bottom: 46px;
             left: 50%;
             width: 1px;
             border-left: 1px dashed rgba(56, 189, 248, 0.45);
@@ -552,7 +552,7 @@
             content: '';
             position: absolute;
             top: 0;
-            bottom: 30px;
+            bottom: 46px;
             left: 50%;
             width: 1px;
             border-left: 1px dashed rgba(34, 197, 94, 0.4);
@@ -563,7 +563,7 @@
             content: '';
             position: absolute;
             top: 0;
-            bottom: 30px;
+            bottom: 46px;
             left: 50%;
             width: 1px;
             border-left: 1px dashed rgba(239, 68, 68, 0.4);
@@ -574,10 +574,21 @@
             content: '';
             position: absolute;
             top: 0;
-            bottom: 30px;
+            bottom: 46px;
             left: 50%;
             width: 1px;
             border-left: 1px dashed rgba(168, 85, 247, 0.4);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .sensibull-strike-col.is-atm-mp::before, .change-strike-col.is-atm-mp::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 46px;
+            left: 50%;
+            width: 1px;
+            border-left: 1px dashed rgba(168, 85, 247, 0.55);
             pointer-events: none;
             z-index: 1;
         }
@@ -612,15 +623,15 @@
         /* Intraday Change Vertical Bars (Bi-Directional Zero-Baseline) */
         .change-chart-wrap {
             width: 100%;
-            height: 310px;
+            height: 275px;
             display: flex;
             flex-direction: column;
             position: relative;
-            padding: 12px 12px 0 12px;
+            padding: 8px 8px 0 8px;
         }
         .change-bars-row {
             display: flex;
-            height: 240px;
+            height: 200px;
             z-index: 2;
             gap: 6px;
             width: 100%;
@@ -637,6 +648,7 @@
             padding: 0 4px;
             border-radius: 6px;
             transition: background 0.15s ease;
+            background: transparent;
         }
         .change-strike-col:hover {
             background: rgba(255, 255, 255, 0.05);
@@ -691,27 +703,51 @@
             transition: height 0.3s ease;
         }
 
+        /* Clean Strike Axis & Dedicated Marker Strip */
         .x-strike-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.72rem;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-secondary);
             text-align: center;
+            height: 18px;
+            line-height: 18px;
             margin-top: 6px;
             white-space: nowrap;
+            width: 100%;
+            letter-spacing: -0.01em;
+        }
+        .x-marker-strip {
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 2px;
+            margin-bottom: 2px;
         }
         .x-tag {
-            font-size: 0.6rem;
+            font-size: 0.58rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
             padding: 1px 4px;
             border-radius: 3px;
-            font-weight: 700;
-            margin-top: 2px;
-            display: inline-block;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            line-height: 1.1;
+            letter-spacing: 0.02em;
         }
-        .tag-atm { background: rgba(56, 189, 248, 0.2); color: var(--accent-blue); }
-        .tag-pw { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
-        .tag-cw { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-        .tag-mp { background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); }
+        .tag-atm { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.35); }
+        .tag-pw { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.35); }
+        .tag-cw { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.35); }
+        .tag-mp { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.35); }
+        .tag-atm-mp {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+            color: #f8fafc;
+            border: 1px solid rgba(168, 85, 247, 0.45);
+        }
 
         /* Floating Tooltip */
         .chart-tooltip {
@@ -1573,19 +1609,33 @@
             const isPw = str === putWallStrike;
             const isCw = str === callWallStrike;
             const isMp = str === maxPain;
+            const isAtmAndMp = isAtm && isMp;
 
             let colClass = 'sensibull-strike-col';
-            if (isAtm) colClass += ' is-atm';
-            if (isPw) colClass += ' is-pw';
-            if (isCw) colClass += ' is-cw';
-            if (isMp) colClass += ' is-mp';
+            if (isAtmAndMp) colClass += ' is-atm-mp';
+            else if (isAtm) colClass += ' is-atm';
+            else if (isPw) colClass += ' is-pw';
+            else if (isCw) colClass += ' is-cw';
+            else if (isMp) colClass += ' is-mp';
 
-            let tagHtml = '';
+            let markerHtml = '';
             let tagText = '';
-            if (isAtm) { tagHtml = '<span class="x-tag tag-atm">ATM</span>'; tagText = 'ATM'; }
-            else if (isPw) { tagHtml = '<span class="x-tag tag-pw">PW</span>'; tagText = 'PUT WALL'; }
-            else if (isCw) { tagHtml = '<span class="x-tag tag-cw">CW</span>'; tagText = 'CALL WALL'; }
-            else if (isMp) { tagHtml = '<span class="x-tag tag-mp">MP</span>'; tagText = 'MAX PAIN'; }
+            if (isAtmAndMp) {
+                markerHtml = '<span class="x-tag tag-atm-mp">▲ ATM · MP</span>';
+                tagText = 'ATM · MAX PAIN';
+            } else if (isAtm) {
+                markerHtml = '<span class="x-tag tag-atm">▲ ATM</span>';
+                tagText = 'ATM';
+            } else if (isPw) {
+                markerHtml = '<span class="x-tag tag-pw">▲ PW</span>';
+                tagText = 'PUT WALL';
+            } else if (isCw) {
+                markerHtml = '<span class="x-tag tag-cw">▲ CW</span>';
+                tagText = 'CALL WALL';
+            } else if (isMp) {
+                markerHtml = '<span class="x-tag tag-mp">▲ MP</span>';
+                tagText = 'MAX PAIN';
+            }
 
             const leanText = pe > ce ? `Put Dominant (+${fmtLakh(pe - ce)})` : (ce > pe ? `Call Dominant (+${fmtLakh(ce - pe)})` : 'Balanced');
 
@@ -1603,10 +1653,8 @@
                     <div class="v-bar-ce" style="height: ${ceHeightPct}%;"></div>
                     <div class="v-bar-pe" style="height: ${peHeightPct}%;"></div>
                 </div>
-                <div class="x-strike-label">
-                    <span>${fmtStrike(str)}</span>
-                    <div>${tagHtml}</div>
-                </div>
+                <div class="x-strike-label">${fmtStrike(str)}</div>
+                <div class="x-marker-strip">${markerHtml}</div>
             </div>`;
         });
 
@@ -1656,19 +1704,33 @@
             const isPw = str === putWallStrike;
             const isCw = str === callWallStrike;
             const isMp = str === maxPain;
+            const isAtmAndMp = isAtm && isMp;
 
             let colClass = 'change-strike-col';
-            if (isAtm) colClass += ' is-atm';
-            if (isPw) colClass += ' is-pw';
-            if (isCw) colClass += ' is-cw';
-            if (isMp) colClass += ' is-mp';
+            if (isAtmAndMp) colClass += ' is-atm-mp';
+            else if (isAtm) colClass += ' is-atm';
+            else if (isPw) colClass += ' is-pw';
+            else if (isCw) colClass += ' is-cw';
+            else if (isMp) colClass += ' is-mp';
 
-            let tagHtml = '';
+            let markerHtml = '';
             let tagText = '';
-            if (isAtm) { tagHtml = '<span class="x-tag tag-atm">ATM</span>'; tagText = 'ATM'; }
-            else if (isPw) { tagHtml = '<span class="x-tag tag-pw">PW</span>'; tagText = 'PUT WALL'; }
-            else if (isCw) { tagHtml = '<span class="x-tag tag-cw">CW</span>'; tagText = 'CALL WALL'; }
-            else if (isMp) { tagHtml = '<span class="x-tag tag-mp">MP</span>'; tagText = 'MAX PAIN'; }
+            if (isAtmAndMp) {
+                markerHtml = '<span class="x-tag tag-atm-mp">▲ ATM · MP</span>';
+                tagText = 'ATM · MAX PAIN';
+            } else if (isAtm) {
+                markerHtml = '<span class="x-tag tag-atm">▲ ATM</span>';
+                tagText = 'ATM';
+            } else if (isPw) {
+                markerHtml = '<span class="x-tag tag-pw">▲ PW</span>';
+                tagText = 'PUT WALL';
+            } else if (isCw) {
+                markerHtml = '<span class="x-tag tag-cw">▲ CW</span>';
+                tagText = 'CALL WALL';
+            } else if (isMp) {
+                markerHtml = '<span class="x-tag tag-mp">▲ MP</span>';
+                tagText = 'MAX PAIN';
+            }
 
             // Top Half (Additions > 0)
             const topCeBar = (ceChg !== null && ceChg > 0) ? `<div class="v-chg-ce-add" style="height: ${ceHeightPct}%;"></div>` : `<div style="width: 15px;"></div>`;
@@ -1698,10 +1760,8 @@
                     ${botCeBar}
                     ${botPeBar}
                 </div>
-                <div class="x-strike-label">
-                    <span>${fmtStrike(str)}</span>
-                    <div>${tagHtml}</div>
-                </div>
+                <div class="x-strike-label">${fmtStrike(str)}</div>
+                <div class="x-marker-strip">${markerHtml}</div>
             </div>`;
         });
 
