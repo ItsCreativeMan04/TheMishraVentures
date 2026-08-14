@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dedicated NIFTY Options Open Interest Analytics, Walls, PCR & Strike Chain Distribution — The Mishra Ventures Desk">
+    <meta name="description" content="NIFTY Current Open Interest & Cumulative Intraday OI Change (09:15 → NOW) — The Mishra Ventures Desk">
     <title>NIFTY Options Open Interest Analytics | The Mishra Ventures</title>
 
     <link rel="stylesheet" href="../../../shared/global.css?v=20260814" />
@@ -120,7 +120,7 @@
             font-family: 'Inter', 'Sora', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-primary);
-            padding: 0 0 40px 0;
+            padding: 0 0 50px 0;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
@@ -132,7 +132,7 @@
             padding: 0 16px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
         /* Top Breadcrumb & Return Bar */
@@ -157,7 +157,7 @@
             text-decoration: underline;
         }
 
-        /* Hero Header Card */
+        /* Live Header Card */
         .live-header {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -178,7 +178,7 @@
             flex-wrap: wrap;
         }
         .symbol-title {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 800;
             letter-spacing: -0.02em;
             color: var(--text-primary);
@@ -208,7 +208,7 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Status & Badges */
+        /* Badges */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -250,7 +250,7 @@
         .dot.amber { background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber); }
         .dot.red { background: var(--accent-red); }
 
-        /* Expiry Picker */
+        /* Expiry Select */
         .expiry-select {
             background: var(--surface-2);
             border: 1px solid var(--card-border);
@@ -268,10 +268,33 @@
             border-color: var(--accent-blue);
         }
 
+        /* Section Headings */
+        .section-header {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
         /* Grids and Cards */
         .grid-kpi {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 16px;
         }
         .grid-2col {
@@ -296,6 +319,8 @@
             align-items: center;
             padding-bottom: 12px;
             border-bottom: 1px solid var(--card-border);
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .card-title {
             font-size: 0.95rem;
@@ -346,21 +371,41 @@
         .callout-amber { background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.2); color: var(--text-primary); }
         .callout-red { background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.2); color: var(--text-primary); }
 
-        /* Horizontal Bar Visualizer */
+        /* Chart Legends */
+        .chart-legend {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-box {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        /* Horizontal Side-by-Side Bar Chart */
         .chart-container {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 4px;
+            margin-top: 6px;
         }
         .chart-row {
             display: grid;
-            grid-template-columns: 1fr 90px 1fr;
+            grid-template-columns: 1fr 110px 1fr;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
-            padding: 2px 4px;
+            padding: 3px 6px;
             border-radius: 6px;
             transition: background 0.15s ease;
         }
@@ -368,44 +413,83 @@
             background: var(--surface-2);
         }
         .chart-row.is-atm {
-            background: rgba(56, 189, 248, 0.12);
+            background: rgba(56, 189, 248, 0.14);
             border: 1px solid var(--accent-blue);
             font-weight: 700;
         }
         .chart-row.is-put-wall {
-            background: rgba(34, 197, 94, 0.1);
+            background: rgba(34, 197, 94, 0.12);
         }
         .chart-row.is-call-wall {
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(239, 68, 68, 0.12);
         }
+        .chart-row.is-max-pain {
+            background: rgba(168, 85, 247, 0.12);
+        }
+
         .chart-bar-left-wrap {
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
         .chart-bar-right-wrap {
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .bar-left {
+
+        /* Current OI Bars (Solid) */
+        .bar-current-ce {
             height: 16px;
             background: linear-gradient(90deg, rgba(239, 68, 68, 0.4), var(--accent-red));
             border-radius: 4px 0 0 4px;
             transition: width 0.3s ease;
         }
-        .bar-right {
+        .bar-current-pe {
             height: 16px;
             background: linear-gradient(90deg, var(--accent-green), rgba(34, 197, 94, 0.4));
             border-radius: 0 4px 4px 0;
             transition: width 0.3s ease;
         }
+
+        /* Intraday Change Bars (Distinguishable Addition vs Unwinding) */
+        .bar-chg-ce-pos {
+            height: 16px;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.5), var(--accent-red));
+            border-radius: 4px 0 0 4px;
+            transition: width 0.3s ease;
+        }
+        .bar-chg-ce-neg {
+            height: 16px;
+            background: repeating-linear-gradient(45deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.2) 4px, rgba(239, 68, 68, 0.45) 4px, rgba(239, 68, 68, 0.45) 8px);
+            border: 1px dashed var(--accent-red);
+            border-radius: 4px 0 0 4px;
+            transition: width 0.3s ease;
+        }
+        .bar-chg-pe-pos {
+            height: 16px;
+            background: linear-gradient(90deg, var(--accent-green), rgba(34, 197, 94, 0.5));
+            border-radius: 0 4px 4px 0;
+            transition: width 0.3s ease;
+        }
+        .bar-chg-pe-neg {
+            height: 16px;
+            background: repeating-linear-gradient(45deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.2) 4px, rgba(34, 197, 94, 0.45) 4px, rgba(34, 197, 94, 0.45) 8px);
+            border: 1px dashed var(--accent-green);
+            border-radius: 0 4px 4px 0;
+            transition: width 0.3s ease;
+        }
+
         .chart-strike {
             text-align: center;
             font-weight: 700;
             color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
 
         /* Strike Table */
@@ -428,7 +512,7 @@
             top: 0;
             background: var(--surface-2);
             color: var(--text-secondary);
-            font-size: 0.75rem;
+            font-size: 0.725rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -507,8 +591,8 @@
     <!-- Sub Navigation Breadcrumb -->
     <div class="sub-nav-bar">
         <a href="../" class="back-link">← Back to Live Market Desk</a>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">
-            Options Chain & Open Interest Analytics
+        <div style="font-size: 0.8rem; color: var(--text-secondary);" id="label-top-expiry-sub">
+            Options Open Interest · Expiry 18 AUG 2026
         </div>
     </div>
 
@@ -541,20 +625,30 @@
         </div>
     </div>
 
-    <!-- 2. TOP OI SNAPSHOT (6-KPI Grid) -->
+    <!-- 2. CURRENT OPEN INTEREST SECTION -->
+    <div class="section-header">
+        <h2 class="section-title" id="heading-current-oi">
+            CURRENT OPEN INTEREST · EXPIRY 18 AUG 2026
+        </h2>
+        <span class="section-subtitle">
+            Point-in-time snapshot of current open contracts across the active strike window
+        </span>
+    </div>
+
+    <!-- Current OI 6-KPI Grid -->
     <div class="grid-kpi">
         <div class="kpi-card">
-            <span class="metric-label">Total Put OI</span>
+            <span class="metric-label">Total PE OI (Current)</span>
             <span class="kpi-val" style="color: var(--accent-green);" id="val-total-pe">-- Cr</span>
             <span class="kpi-sub" id="val-total-pe-lakh">-- Lakh contracts</span>
         </div>
         <div class="kpi-card">
-            <span class="metric-label">Total Call OI</span>
+            <span class="metric-label">Total CE OI (Current)</span>
             <span class="kpi-val" style="color: var(--accent-red);" id="val-total-ce">-- Cr</span>
             <span class="kpi-sub" id="val-total-ce-lakh">-- Lakh contracts</span>
         </div>
         <div class="kpi-card">
-            <span class="metric-label">PCR (Put/Call Ratio)</span>
+            <span class="metric-label">Current PCR (Put/Call Ratio)</span>
             <span class="kpi-val" style="color: var(--accent-blue);" id="val-pcr">--</span>
             <span class="kpi-sub" id="val-pcr-sentiment">Evaluating bias...</span>
         </div>
@@ -575,21 +669,121 @@
         </div>
     </div>
 
-    <!-- 3. WALLS & FLOW ANALYSIS (2-Col Grid) -->
+    <!-- Current OI Visual By Strike -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">CURRENT OI BY STRIKE</h3>
+                <span class="card-subtitle" id="sub-current-chart">Absolute Call OI (Left) vs Put OI (Right) · Expiry 18 AUG 2026</span>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-red);"></span> Call OI</div>
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-green);"></span> Put OI</div>
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-blue);"></span> ATM</div>
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-purple);"></span> Max Pain</div>
+            </div>
+        </div>
+
+        <div class="chart-container" id="container-current-oi-chart">
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                Generating current OI distribution...
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. INTRADAY OI CHANGE SECTION -->
+    <div class="section-header">
+        <h2 class="section-title">
+            INTRADAY OI CHANGE · 09:15 → NOW
+        </h2>
+        <span class="section-subtitle" id="sub-intraday-heading">
+            Cumulative session change · Expiry 18 AUG 2026 (since first successful session fetch)
+        </span>
+    </div>
+
+    <!-- Intraday OI Change Visual By Strike -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">INTRADAY STRIKE CHANGE</h3>
+                <span class="card-subtitle">Cumulative Call OI Change (Left) vs Put OI Change (Right)</span>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-red);"></span> Call Addition</div>
+                <div class="legend-item"><span class="legend-box" style="background: rgba(239, 68, 68, 0.3); border: 1px dashed var(--accent-red);"></span> Call Unwinding</div>
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-green);"></span> Put Addition</div>
+                <div class="legend-item"><span class="legend-box" style="background: rgba(34, 197, 94, 0.3); border: 1px dashed var(--accent-green);"></span> Put Unwinding</div>
+                <div class="legend-item"><span class="legend-box" style="background: var(--accent-blue);"></span> ATM</div>
+            </div>
+        </div>
+
+        <div class="chart-container" id="container-intraday-change-chart">
+            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                Generating intraday change visual...
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SESSION OI FLOW & WALLS (2-Col Grid) -->
     <div class="grid-2col">
-        <!-- Dedicated Wall Details Card -->
+        <!-- Session Flow Analysis Card -->
         <div class="card">
             <div class="card-header">
                 <div>
-                    <h2 class="card-title">STRUCTURAL OI WALLS</h2>
-                    <span class="card-subtitle">Heavy open interest concentration levels</span>
+                    <h3 class="card-title">SESSION OI FLOW · 09:15 → NOW</h3>
+                    <span class="card-subtitle">Cumulative session writing & positioning pace</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="callout-box callout-amber" id="box-flow-read">
+                    <div style="font-weight: 700;" id="val-flow-read-title">Session Flow Read</div>
+                    <div style="font-size: 0.85rem; margin-top: 2px;" id="val-flow-read-text">
+                        Evaluating session positioning pace...
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-green);">PE Net Change (09:15 → Now)</span>
+                        <div style="font-size: 1.15rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-pe-net-change">--</div>
+                    </div>
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-red);">CE Net Change (09:15 → Now)</span>
+                        <div style="font-size: 1.15rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-ce-net-change">--</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-green);">Max Intraday PE Build</span>
+                        <div style="font-size: 1.05rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-pe-build">--</div>
+                    </div>
+                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
+                        <span class="metric-label" style="color: var(--accent-red);">Max Intraday CE Build</span>
+                        <div style="font-size: 1.05rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-ce-build">--</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.775rem; color: var(--text-secondary); line-height: 1.5; padding: 4px 0;">
+                    Session cumulative OI change. Heuristic interpretation, not a standalone trading signal.
+                </div>
+            </div>
+        </div>
+
+        <!-- Structural Walls & Confluence Card -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">STRUCTURAL OI WALLS</h3>
+                    <span class="card-subtitle">Major open interest concentration levels</span>
                 </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div class="callout-box callout-green">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong>Put Wall (Primary Support)</strong>
+                        <strong>Put Wall (Downside Floor)</strong>
                         <span class="status-badge badge-green" id="val-put-wall-badge">--</span>
                     </div>
                     <div style="font-size: 0.85rem; margin-top: 4px;" id="val-put-wall-desc">
@@ -599,7 +793,7 @@
 
                 <div class="callout-box callout-red">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong>Call Wall (Primary Resistance)</strong>
+                        <strong>Call Wall (Overhead Ceiling)</strong>
                         <span class="status-badge badge-red" id="val-call-wall-badge">--</span>
                     </div>
                     <div style="font-size: 0.85rem; margin-top: 4px;" id="val-call-wall-desc">
@@ -615,68 +809,13 @@
                 </div>
             </div>
         </div>
-
-        <!-- Sentiment & Fresh Writing Flow -->
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">OI FLOW & SENTIMENT READ</h2>
-                    <span class="card-subtitle">Intraday writing activity & net addition pace</span>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div class="callout-box callout-amber" id="box-flow-read">
-                    <div style="font-weight: 700;" id="val-flow-read-title">Net Flow Heuristic</div>
-                    <div style="font-size: 0.85rem; margin-top: 2px;" id="val-flow-read-text">
-                        Evaluating options writing pace...
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
-                        <span class="metric-label" style="color: var(--accent-green);">Max Fresh PE Addition</span>
-                        <div style="font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-pe-build">--</div>
-                    </div>
-                    <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
-                        <span class="metric-label" style="color: var(--accent-red);">Max Fresh CE Addition</span>
-                        <div style="font-size: 1.1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 2px;" id="val-max-ce-build">--</div>
-                    </div>
-                </div>
-
-                <div style="font-size: 0.775rem; color: var(--text-secondary); line-height: 1.5; padding: 6px 0;" id="val-disclosure">
-                    Heuristic context, not probabilities. OI mixes writing, hedging and unwinding. Never overrides macro structure or invalidation rules.
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- 4. VISUAL OI DISTRIBUTION CHART -->
+    <!-- 5. FULL STRIKE TABLE -->
     <div class="card">
         <div class="card-header">
             <div>
-                <h2 class="card-title">OI DISTRIBUTION BY STRIKE</h2>
-                <span class="card-subtitle">Comparison of Call OI (Red, Left) vs Put OI (Green, Right)</span>
-            </div>
-            <div style="display: flex; gap: 16px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace;">
-                <span style="color: var(--accent-red);">■ Call Open Interest</span>
-                <span style="color: var(--accent-green);">■ Put Open Interest</span>
-                <span style="color: var(--accent-blue);">■ ATM Strike</span>
-            </div>
-        </div>
-
-        <div class="chart-container" id="container-oi-chart">
-            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
-                Generating strike distribution visual...
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. STRIKE-WISE OI CHAIN TABLE -->
-    <div class="card">
-        <div class="card-header">
-            <div>
-                <h2 class="card-title">FULL STRIKE-BY-STRIKE OI CHAIN</h2>
+                <h3 class="card-title">STRIKE-WISE OI & INTRADAY CHANGE</h3>
                 <span class="card-subtitle" id="label-strikes-count">Loading strike data...</span>
             </div>
             <span class="status-badge badge-blue" id="badge-active-expiry">EXPIRY --</span>
@@ -686,11 +825,11 @@
             <table class="oi-table">
                 <thead>
                     <tr>
-                        <th style="color: var(--accent-red); text-align: left;">Call OI Chg</th>
-                        <th style="color: var(--accent-red);">Call Total OI</th>
+                        <th style="color: var(--accent-red); text-align: left;">Intraday Call Chg</th>
+                        <th style="color: var(--accent-red);">Current Call OI</th>
                         <th style="text-align: center; width: 120px;">Strike Price</th>
-                        <th style="color: var(--accent-green);">Put Total OI</th>
-                        <th style="color: var(--accent-green); text-align: right;">Put OI Chg</th>
+                        <th style="color: var(--accent-green);">Current Put OI</th>
+                        <th style="color: var(--accent-green); text-align: right;">Intraday Put Chg</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-oi-chain">
@@ -715,7 +854,7 @@
     let selectedExpiry = null;
     let cachedData = null;
 
-    // Number Formatting Helpers
+    // Formatting Helpers
     function isFiniteNum(val) {
         return val !== null && val !== undefined && typeof val === 'number' && Number.isFinite(val);
     }
@@ -795,9 +934,9 @@
         const chains = data.oi_chains || {};
         const spot = Number(data.current_price);
 
-        // 1. Expiries & Active Expiry Selection
+        // 1. Expiry Selection
         const availableExpiries = Object.keys(chains);
-        const defaultExpiry = oi.expiry || (availableExpiries.length > 0 ? availableExpiries[0] : null);
+        const defaultExpiry = oi.expiry || (availableExpiries.length > 0 ? availableExpiries[0] : '18AUG2026');
 
         if (!selectedExpiry || !chains[selectedExpiry]) {
             selectedExpiry = defaultExpiry;
@@ -809,16 +948,21 @@
                 `<option value="${exp}" ${exp === selectedExpiry ? 'selected' : ''}>Expiry: ${exp}</option>`
             ).join('');
         } else {
-            expirySelect.innerHTML = '<option value="">No expiry available</option>';
+            expirySelect.innerHTML = `<option value="${defaultExpiry}">Expiry: ${defaultExpiry}</option>`;
         }
 
-        // 2. Feed Status & Spot Price
+        // Update Dynamic Expiry Headings
+        document.getElementById('label-top-expiry-sub').textContent = `Options Open Interest · Expiry ${selectedExpiry}`;
+        document.getElementById('heading-current-oi').textContent = `CURRENT OPEN INTEREST · EXPIRY ${selectedExpiry}`;
+        document.getElementById('sub-current-chart').textContent = `Absolute Call OI (Left) vs Put OI (Right) · Expiry ${selectedExpiry}`;
+        document.getElementById('sub-intraday-heading').textContent = `Cumulative session change · Expiry ${selectedExpiry} (since first successful session fetch)`;
+
+        // 2. Feed Status & Spot
         const now = Date.now();
         const updatedTimeStr = data.updated_at ? new Date(data.updated_at).toLocaleTimeString('en-IN') : '--:--:--';
         document.getElementById('val-last-update').textContent = updatedTimeStr + ' IST';
         document.getElementById('val-spot-price').textContent = fmtPrice(spot);
 
-        // Feed freshness badge
         const feedPill = document.getElementById('val-feed-status-pill');
         const feedDot = document.getElementById('val-feed-dot');
         const feedText = document.getElementById('val-feed-status-text');
@@ -843,22 +987,28 @@
         const currentChain = (selectedExpiry && Array.isArray(chains[selectedExpiry])) ? chains[selectedExpiry] : [];
         const atmStrike = computeATM(spot, currentChain);
         document.getElementById('val-atm-strike').textContent = fmtStrike(atmStrike);
-        document.getElementById('badge-active-expiry').textContent = `EXPIRY ${selectedExpiry || '--'}`;
-        document.getElementById('label-strikes-count').textContent = `${currentChain.length} active strikes loaded for ${selectedExpiry || 'session'}`;
+        document.getElementById('badge-active-expiry').textContent = `EXPIRY ${selectedExpiry}`;
+        document.getElementById('label-strikes-count').textContent = `${currentChain.length} active strikes loaded for ${selectedExpiry}`;
 
-        // 4. Compute Chain Aggregations
+        // 4. Compute Totals & Max Values
         let chainPeOi = 0;
         let chainCeOi = 0;
-        let maxOi = 1;
+        let maxCurrentOi = 1;
+        let maxChgOi = 1;
 
         if (currentChain.length > 0) {
             currentChain.forEach(row => {
                 const pe = isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0;
                 const ce = isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0;
+                const peChg = isFiniteNum(row.pe_oi_change) ? Math.abs(Number(row.pe_oi_change)) : 0;
+                const ceChg = isFiniteNum(row.ce_oi_change) ? Math.abs(Number(row.ce_oi_change)) : 0;
+
                 chainPeOi += pe;
                 chainCeOi += ce;
-                if (pe > maxOi) maxOi = pe;
-                if (ce > maxOi) maxOi = ce;
+                if (pe > maxCurrentOi) maxCurrentOi = pe;
+                if (ce > maxCurrentOi) maxCurrentOi = ce;
+                if (peChg > maxChgOi) maxChgOi = peChg;
+                if (ceChg > maxChgOi) maxChgOi = ceChg;
             });
         }
 
@@ -871,8 +1021,10 @@
         document.getElementById('val-total-ce').textContent = fmtOI(totalCe);
         document.getElementById('val-total-ce-lakh').textContent = isFiniteNum(totalCe) ? fmtLakh(totalCe) + ' contracts' : '--';
 
-        // PCR Calculation & Sentiment Read
-        const pcrVal = isFiniteNum(oi.pcr) ? Number(oi.pcr) : ((totalCe && totalCe > 0) ? (totalPe / totalCe) : null);
+        // PCR Calculation
+        const pcrVal = (selectedExpiry === oi.expiry && isFiniteNum(oi.pcr)) 
+            ? Number(oi.pcr) 
+            : ((totalCe && totalCe > 0) ? (totalPe / totalCe) : null);
         const pcrEl = document.getElementById('val-pcr');
         const pcrSentEl = document.getElementById('val-pcr-sentiment');
 
@@ -893,14 +1045,34 @@
             pcrSentEl.textContent = 'Insufficient data';
         }
 
-        // 5. Walls & Distances
-        const putWallStrike = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.strike : (isFiniteNum(oi.put_wall) ? oi.put_wall : null);
-        const putWallOi = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.oi : null;
+        // Walls (Nearest / Active Expiry)
+        let putWallStrike = null;
+        let putWallOi = null;
+        let callWallStrike = null;
+        let callWallOi = null;
 
-        const callWallStrike = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.strike : (isFiniteNum(oi.call_wall) ? oi.call_wall : null);
-        const callWallOi = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.oi : null;
+        if (selectedExpiry === oi.expiry) {
+            putWallStrike = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.strike : (isFiniteNum(oi.put_wall) ? oi.put_wall : null);
+            putWallOi = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.oi : null;
+            callWallStrike = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.strike : (isFiniteNum(oi.call_wall) ? oi.call_wall : null);
+            callWallOi = oi.call_wall && typeof oi.call_wall === 'object' ? oi.call_wall.oi : null;
+        } else if (currentChain.length > 0) {
+            // Find max for other expiries safely
+            const peBelow = currentChain.filter(r => isFiniteNum(r.pe_oi) && (!isFiniteNum(spot) || r.strike <= spot));
+            if (peBelow.length > 0) {
+                const best = peBelow.reduce((max, r) => r.pe_oi > max.pe_oi ? r : max, peBelow[0]);
+                putWallStrike = best.strike;
+                putWallOi = best.pe_oi;
+            }
+            const ceAbove = currentChain.filter(r => isFiniteNum(r.ce_oi) && (!isFiniteNum(spot) || r.strike >= spot));
+            if (ceAbove.length > 0) {
+                const best = ceAbove.reduce((max, r) => r.ce_oi > max.ce_oi ? r : max, ceAbove[0]);
+                callWallStrike = best.strike;
+                callWallOi = best.ce_oi;
+            }
+        }
 
-        // Put Wall
+        // Put Wall Rendering
         if (isFiniteNum(putWallStrike)) {
             document.getElementById('val-put-wall-strike').textContent = fmtStrike(putWallStrike);
             document.getElementById('val-put-wall-badge').textContent = fmtStrike(putWallStrike) + (putWallOi ? ` (${fmtLakh(putWallOi)})` : '');
@@ -915,7 +1087,7 @@
             document.getElementById('val-put-wall-desc').textContent = 'Put Wall concentration unavailable in current snapshot.';
         }
 
-        // Call Wall
+        // Call Wall Rendering
         if (isFiniteNum(callWallStrike)) {
             document.getElementById('val-call-wall-strike').textContent = fmtStrike(callWallStrike);
             document.getElementById('val-call-wall-badge').textContent = fmtStrike(callWallStrike) + (callWallOi ? ` (${fmtLakh(callWallOi)})` : '');
@@ -931,28 +1103,33 @@
         }
 
         // Max Pain
-        const maxPain = isFiniteNum(oi.max_pain) ? oi.max_pain : null;
+        const maxPain = (selectedExpiry === oi.expiry && isFiniteNum(oi.max_pain)) ? oi.max_pain : null;
         if (isFiniteNum(maxPain)) {
             document.getElementById('val-max-pain').textContent = fmtStrike(maxPain);
             const dist = isFiniteNum(spot) ? (spot - maxPain) : null;
             document.getElementById('val-max-pain-sub').textContent = dist !== null ? `${Math.abs(dist).toFixed(1)} pts ${dist >= 0 ? 'below' : 'above'} Spot` : 'Settlement equilibrium';
         } else {
             document.getElementById('val-max-pain').textContent = 'N/A';
-            document.getElementById('val-max-pain-sub').textContent = 'Not available in current live payload';
+            document.getElementById('val-max-pain-sub').textContent = selectedExpiry === oi.expiry ? 'Not available in live payload' : `Available on nearest weekly (${oi.expiry})`;
         }
 
-        // 6. Zone Confluence & Sentiment Read
-        const flowRead = oi.flow_read || 'Options open interest flow analysis active.';
+        // 5. Session Flow (09:15 → Now)
+        const flowRead = (selectedExpiry === oi.expiry && oi.flow_read) ? oi.flow_read : 'Session cumulative open interest change analysis active.';
         document.getElementById('val-flow-read-text').textContent = flowRead;
 
-        const maxPeBuild = oi.max_pe_build;
+        const peNet = isFiniteNum(oi.pe_flow) ? oi.pe_flow : null;
+        const ceNet = isFiniteNum(oi.ce_flow) ? oi.ce_flow : null;
+        document.getElementById('val-pe-net-change').textContent = peNet !== null ? fmtChange(peNet) : '--';
+        document.getElementById('val-ce-net-change').textContent = ceNet !== null ? fmtChange(ceNet) : '--';
+
+        const maxPeBuild = (selectedExpiry === oi.expiry) ? oi.max_pe_build : null;
         if (maxPeBuild && isFiniteNum(maxPeBuild.strike)) {
             document.getElementById('val-max-pe-build').textContent = `${fmtStrike(maxPeBuild.strike)} (+${fmtLakh(maxPeBuild.change)})`;
         } else {
             document.getElementById('val-max-pe-build').textContent = 'N/A';
         }
 
-        const maxCeBuild = oi.max_ce_build;
+        const maxCeBuild = (selectedExpiry === oi.expiry) ? oi.max_ce_build : null;
         if (maxCeBuild && isFiniteNum(maxCeBuild.strike)) {
             document.getElementById('val-max-ce-build').textContent = `${fmtStrike(maxCeBuild.strike)} (+${fmtLakh(maxCeBuild.change)})`;
         } else {
@@ -966,19 +1143,17 @@
             zcList.innerHTML = '<li>Options walls positioned within standard session boundaries.</li>';
         }
 
-        if (oi.disclosure) {
-            document.getElementById('val-disclosure').textContent = oi.disclosure;
-        }
-
-        // 7. Render Horizontal Bar Chart & Table
-        renderOIChart(currentChain, maxOi, spot, atmStrike, putWallStrike, callWallStrike);
-        renderOITable(currentChain, spot, atmStrike, putWallStrike, callWallStrike, maxPain);
+        // 6. Render Charts & Table
+        renderCurrentOIChart(currentChain, maxCurrentOi, atmStrike, putWallStrike, callWallStrike, maxPain);
+        renderIntradayChangeChart(currentChain, maxChgOi, atmStrike);
+        renderOITable(currentChain, atmStrike, putWallStrike, callWallStrike, maxPain);
     }
 
-    function renderOIChart(chain, maxOi, spot, atmStrike, putWallStrike, callWallStrike) {
-        const container = document.getElementById('container-oi-chart');
+    // Chart 1: Current Absolute Open Interest (Side-by-Side)
+    function renderCurrentOIChart(chain, maxOi, atmStrike, putWallStrike, callWallStrike, maxPain) {
+        const container = document.getElementById('container-current-oi-chart');
         if (!Array.isArray(chain) || chain.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">No strike distribution data for this expiry.</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">No current open interest data available for this expiry.</div>';
             return;
         }
 
@@ -994,23 +1169,31 @@
             const isAtm = str === atmStrike;
             const isPw = str === putWallStrike;
             const isCw = str === callWallStrike;
+            const isMp = str === maxPain;
 
             let rowClass = 'chart-row';
             if (isAtm) rowClass += ' is-atm';
-            if (isPw) rowClass += ' is-put-wall';
-            if (isCw) rowClass += ' is-call-wall';
+            else if (isPw) rowClass += ' is-put-wall';
+            else if (isCw) rowClass += ' is-call-wall';
+            else if (isMp) rowClass += ' is-max-pain';
+
+            let strikeTag = '';
+            if (isAtm) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>';
+            else if (isPw) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-green);">PW</span>';
+            else if (isCw) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-red);">CW</span>';
+            else if (isMp) strikeTag = '<span style="font-size: 0.65rem; color: var(--accent-purple);">MP</span>';
 
             html += `
             <div class="${rowClass}">
                 <div class="chart-bar-left-wrap">
                     <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(ce)}</span>
-                    <div class="bar-left" style="width: ${cePct}%;"></div>
+                    <div class="bar-current-ce" style="width: ${cePct}%;"></div>
                 </div>
                 <div class="chart-strike">
-                    ${fmtStrike(str)} ${isAtm ? '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>' : ''}
+                    <span>${fmtStrike(str)}</span> ${strikeTag}
                 </div>
                 <div class="chart-bar-right-wrap">
-                    <div class="bar-right" style="width: ${pePct}%;"></div>
+                    <div class="bar-current-pe" style="width: ${pePct}%;"></div>
                     <span style="font-size: 0.72rem; color: var(--text-secondary);">${fmtLakh(pe)}</span>
                 </div>
             </div>`;
@@ -1019,7 +1202,62 @@
         container.innerHTML = html;
     }
 
-    function renderOITable(chain, spot, atmStrike, putWallStrike, callWallStrike, maxPain) {
+    // Chart 2: Intraday OI Change (09:15 → Now)
+    function renderIntradayChangeChart(chain, maxChg, atmStrike) {
+        const container = document.getElementById('container-intraday-change-chart');
+        if (!Array.isArray(chain) || chain.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">Intraday change unavailable for this expiry.</div>';
+            return;
+        }
+
+        let html = '';
+        let hasAnyChange = false;
+
+        chain.forEach(row => {
+            const str = row.strike;
+            const ceChg = isFiniteNum(row.ce_oi_change) ? Number(row.ce_oi_change) : null;
+            const peChg = isFiniteNum(row.pe_oi_change) ? Number(row.pe_oi_change) : null;
+
+            if (ceChg !== null || peChg !== null) hasAnyChange = true;
+
+            const ceAbs = Math.abs(ceChg || 0);
+            const peAbs = Math.abs(peChg || 0);
+
+            const cePct = Math.min(100, Math.max(ceAbs > 0 ? 3 : 0, (ceAbs / maxChg) * 100));
+            const pePct = Math.min(100, Math.max(peAbs > 0 ? 3 : 0, (peAbs / maxChg) * 100));
+
+            const isAtm = str === atmStrike;
+            let rowClass = 'chart-row' + (isAtm ? ' is-atm' : '');
+
+            const ceBarClass = (ceChg !== null && ceChg < 0) ? 'bar-chg-ce-neg' : 'bar-chg-ce-pos';
+            const peBarClass = (peChg !== null && peChg < 0) ? 'bar-chg-pe-neg' : 'bar-chg-pe-pos';
+
+            html += `
+            <div class="${rowClass}">
+                <div class="chart-bar-left-wrap">
+                    <span style="font-size: 0.72rem; ${ceChg > 0 ? 'color: var(--accent-red); font-weight:600;' : (ceChg < 0 ? 'color: var(--text-muted);' : 'color: var(--text-secondary);')}">${fmtChange(ceChg)}</span>
+                    <div class="${ceBarClass}" style="width: ${cePct}%;"></div>
+                </div>
+                <div class="chart-strike">
+                    <span>${fmtStrike(str)}</span> ${isAtm ? '<span style="font-size: 0.65rem; color: var(--accent-blue);">ATM</span>' : ''}
+                </div>
+                <div class="chart-bar-right-wrap">
+                    <div class="${peBarClass}" style="width: ${pePct}%;"></div>
+                    <span style="font-size: 0.72rem; ${peChg > 0 ? 'color: var(--accent-green); font-weight:600;' : (peChg < 0 ? 'color: var(--text-muted);' : 'color: var(--text-secondary);')}">${fmtChange(peChg)}</span>
+                </div>
+            </div>`;
+        });
+
+        if (!hasAnyChange) {
+            container.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-secondary);">Intraday change baseline initializing...</div>';
+            return;
+        }
+
+        container.innerHTML = html;
+    }
+
+    // Strike Table
+    function renderOITable(chain, atmStrike, putWallStrike, callWallStrike, maxPain) {
         const tbody = document.getElementById('tbody-oi-chain');
         if (!Array.isArray(chain) || chain.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-secondary);">No options chain records found.</td></tr>';
