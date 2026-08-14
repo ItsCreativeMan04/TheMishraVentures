@@ -644,7 +644,7 @@
         </div>
     </div>
 
-    <!-- GRID 1: SNAPSHOT & FUTURES VWAP -->
+    <!-- GRID 1: ROW 1 (MARKET SNAPSHOT & COMPACT OI SUMMARY) -->
     <div class="grid-2col">
 
         <!-- 2. MARKET SNAPSHOT -->
@@ -695,6 +695,61 @@
             </div>
         </div>
 
+        <!-- 5. COMPACT MARKET SUMMARY / OI -->
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">MARKET SUMMARY / OI</h2>
+                    <span class="card-subtitle">Options positioning, walls & sentiment</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="status-badge badge-neutral" id="val-pcr-pill">PCR --</span>
+                    <a href="oi/" class="oi-btn-link" title="Open dedicated Options Chain & Open Interest Analytics">View Full OI →</a>
+                </div>
+            </div>
+
+            <div class="snapshot-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="snapshot-item">
+                    <span class="metric-label">Total Put OI</span>
+                    <span class="snapshot-val" style="color: var(--accent-green);" id="val-pe-total">-- Cr</span>
+                </div>
+                <div class="snapshot-item">
+                    <span class="metric-label">Total Call OI</span>
+                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-ce-total">-- Cr</span>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-green);">Put Wall (Support)</span>
+                        <span class="level-price" id="val-put-wall">N/A</span>
+                    </div>
+                    <div class="level-meaning" id="val-put-wall-meaning">Highest Put Open Interest concentration acting as structural downside support.</div>
+                </div>
+
+                <div class="level-row">
+                    <div class="level-header">
+                        <span class="metric-label" style="color: var(--accent-red);">Call Wall (Resistance)</span>
+                        <span class="level-price" id="val-call-wall">N/A</span>
+                    </div>
+                    <div class="level-meaning" id="val-call-wall-meaning">Highest Call Open Interest concentration acting as overhead resistance.</div>
+                </div>
+            </div>
+
+            <div class="callout-box callout-amber" style="margin-top: 4px;">
+                <span class="metric-label" style="color: var(--accent-amber);">OI Flow & Sentiment</span>
+                <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
+                    OI distribution analysis loading...
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- GRID 2: ROW 2 (FUTURES VWAP & MORNING PLAN) -->
+    <div class="grid-2col">
+
         <!-- 3. FUTURES VWAP CARD (New E2 Card) -->
         <div class="card" id="card-futures-vwap">
             <div class="card-header">
@@ -729,11 +784,6 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- GRID 2: MORNING PLAN & COMPACT OI SUMMARY -->
-    <div class="grid-2col">
-
         <!-- 4. MORNING PLAN (Canonical Conditional E2 View) -->
         <div class="card" id="card-morning-plan">
             <div class="card-header">
@@ -764,56 +814,6 @@
                 </div>
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="val-plan-warning">
                     • Follow qualified playbook rules.
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. COMPACT MARKET SUMMARY / OI -->
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">MARKET SUMMARY / OI</h2>
-                    <span class="card-subtitle">Options positioning, walls & sentiment</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="status-badge badge-neutral" id="val-pcr-pill">PCR --</span>
-                    <a href="oi/" class="oi-btn-link" title="Open dedicated Options Chain & Open Interest Analytics">View Full OI →</a>
-                </div>
-            </div>
-
-            <div class="snapshot-grid" style="grid-template-columns: repeat(2, 1fr);">
-                <div class="snapshot-item">
-                    <span class="metric-label">Total Put OI</span>
-                    <span class="snapshot-val" style="color: var(--accent-green);" id="val-pe-total">-- L</span>
-                </div>
-                <div class="snapshot-item">
-                    <span class="metric-label">Total Call OI</span>
-                    <span class="snapshot-val" style="color: var(--accent-red);" id="val-ce-total">-- L</span>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="level-row">
-                    <div class="level-header">
-                        <span class="metric-label" style="color: var(--accent-green);">Put Wall (Support)</span>
-                        <span class="level-price" id="val-put-wall">N/A</span>
-                    </div>
-                    <div class="level-meaning" id="val-put-wall-meaning">Highest Put Open Interest concentration acting as structural downside support.</div>
-                </div>
-
-                <div class="level-row">
-                    <div class="level-header">
-                        <span class="metric-label" style="color: var(--accent-red);">Call Wall (Resistance)</span>
-                        <span class="level-price" id="val-call-wall">N/A</span>
-                    </div>
-                    <div class="level-meaning" id="val-call-wall-meaning">Highest Call Open Interest concentration acting as overhead resistance.</div>
-                </div>
-            </div>
-
-            <div class="callout-box callout-amber" style="margin-top: 4px;">
-                <span class="metric-label" style="color: var(--accent-amber);">OI Flow & Sentiment</span>
-                <div style="font-size: 0.85rem; color: var(--text-primary);" id="val-oi-read">
-                    OI distribution analysis loading...
                 </div>
             </div>
         </div>
@@ -1066,6 +1066,76 @@
         return (Number(val) / 100000).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' L';
     }
 
+    function fmtOI(val) {
+        if (!isFiniteNum(val)) return 'N/A';
+        const num = Number(val);
+        if (Math.abs(num) >= 10000000) {
+            return (num / 10000000).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Cr';
+        }
+        if (Math.abs(num) >= 100000) {
+            return (num / 100000).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' L';
+        }
+        return num.toLocaleString('en-IN');
+    }
+
+    function stripRichMarkup(str) {
+        if (!str || typeof str !== 'string') return '';
+        return str.replace(/\[\/?bold[^\]]*\]/gi, '').replace(/\[\/?cyan\]/gi, '').replace(/\[\/?yellow\]/gi, '').replace(/\[\/?red\]/gi, '').replace(/\[\/?green\]/gi, '').trim();
+    }
+
+    function parseSynthesisCommentary(synthesisText, structuredComm, thesisReasons) {
+        let facts = [];
+        let interpretation = '';
+
+        if (synthesisText && typeof synthesisText === 'string') {
+            const clean = stripRichMarkup(synthesisText);
+            const lines = clean.split('\n').map(l => l.trim()).filter(Boolean);
+            let currentSection = '';
+
+            for (const line of lines) {
+                const upper = line.toUpperCase();
+                if (upper === 'FACTS' || upper.startsWith('FACTS')) {
+                    currentSection = 'FACTS';
+                    continue;
+                } else if (upper === 'INTERPRETATION' || upper.startsWith('INTERPRETATION')) {
+                    currentSection = 'INTERPRETATION';
+                    continue;
+                } else if (upper === 'BOTTOM LINE' || upper.startsWith('BOTTOM LINE') || upper === 'CURRENT ACTION' || upper.startsWith('CURRENT ACTION')) {
+                    currentSection = 'OTHER';
+                    continue;
+                }
+
+                if (currentSection === 'FACTS') {
+                    if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+                        facts.push(line.replace(/^[•\-\*]\s*/, ''));
+                    } else if (line.includes(':')) {
+                        facts.push(line);
+                    }
+                } else if (currentSection === 'INTERPRETATION') {
+                    interpretation += (interpretation ? ' ' : '') + line;
+                }
+            }
+        }
+
+        if (facts.length === 0) {
+            const sc = structuredComm || {};
+            const scFacts = [
+                ...(Array.isArray(sc.supporting_evidence) ? sc.supporting_evidence : []),
+                ...(Array.isArray(sc.contradicting_evidence) ? sc.contradicting_evidence : []),
+                ...(Array.isArray(thesisReasons) ? thesisReasons : [])
+            ];
+            if (scFacts.length > 0) {
+                facts = scFacts;
+            }
+        }
+
+        if (!interpretation && structuredComm && structuredComm.summary) {
+            interpretation = structuredComm.summary;
+        }
+
+        return { facts, interpretation };
+    }
+
     // STRUCTURE COLOR SEMANTICS HELPER
     function getStructureBadgeHTML(val) {
         if (!val || val === '--') return '<span class="status-badge badge-neutral">N/A</span>';
@@ -1200,10 +1270,10 @@
             if (cprWidthEl) {
                 const widthPts = isFiniteNum(cprObj.width) ? `${Number(cprObj.width).toFixed(2)} pts` : (isFiniteNum(cprObj.width_pts) ? `${Number(cprObj.width_pts).toFixed(2)} pts` : '-- pts');
                 const widthClass = data.cpr_width_class || cprObj.width_class || 'WIDE';
-                cprWidthEl.textContent = `${widthPts} · ${widthClass}`;
+                cprWidthEl.textContent = `${widthPts} · ${String(widthClass).toUpperCase()}`;
                 cprWidthEl.className = 'snapshot-val';
-                if (widthClass === 'WIDE') cprWidthEl.style.color = 'var(--accent-amber)';
-                else if (widthClass === 'NARROW') cprWidthEl.style.color = 'var(--accent-blue)';
+                if (String(widthClass).toUpperCase() === 'WIDE') cprWidthEl.style.color = 'var(--accent-amber)';
+                else if (String(widthClass).toUpperCase() === 'NARROW') cprWidthEl.style.color = 'var(--accent-blue)';
                 else cprWidthEl.style.color = 'var(--text-primary)';
             }
         } else {
@@ -1211,7 +1281,7 @@
             if (cprWidthEl) cprWidthEl.textContent = 'N/A';
         }
 
-        // 3. FUTURES VWAP CARD (Direct E2 Renderer)
+        // 3. FUTURES VWAP CARD (Direct E2 Renderer with Explicit LIVE / STALE / UNAVAILABLE Handling)
         const fv = data.futures_vwap || wi.futures_vwap || {};
         document.getElementById('val-fut-symbol').textContent = fv.symbol ? `${fv.symbol} (NFO)` : 'NIFTY Front-Month Future (NFO)';
         document.getElementById('val-fut-ltp').textContent = fmtPrice(fv.ltp);
@@ -1228,19 +1298,32 @@
         }
 
         const futPosBadge = document.getElementById('val-fut-pos-badge');
+        const isFvStale = fv.is_stale === true || fv.state === 'STALE';
+        const isFvUnavail = fv.state === 'UNAVAILABLE' || (!isFiniteNum(fv.ltp) && !isFiniteNum(fv.vwap));
         const futPos = String(fv.position || '--').toUpperCase();
-        futPosBadge.textContent = futPos;
-        if (futPos === 'ABOVE') futPosBadge.className = 'status-badge badge-green';
-        else if (futPos === 'BELOW') futPosBadge.className = 'status-badge badge-red';
-        else if (futPos === 'AT') futPosBadge.className = 'status-badge badge-blue';
-        else futPosBadge.className = 'status-badge badge-neutral';
+
+        if (isFvUnavail) {
+            futPosBadge.textContent = 'UNAVAILABLE';
+            futPosBadge.className = 'status-badge badge-neutral';
+        } else if (isFvStale) {
+            futPosBadge.textContent = `${futPos} · STALE`;
+            futPosBadge.className = 'status-badge badge-amber';
+        } else {
+            futPosBadge.textContent = futPos;
+            if (futPos === 'ABOVE') futPosBadge.className = 'status-badge badge-green';
+            else if (futPos === 'BELOW') futPosBadge.className = 'status-badge badge-red';
+            else if (futPos === 'AT') futPosBadge.className = 'status-badge badge-blue';
+            else futPosBadge.className = 'status-badge badge-neutral';
+        }
 
         const futBox = document.getElementById('val-fut-status-box');
-        if (futPos === 'ABOVE') futBox.className = 'callout-box callout-green';
+        if (isFvUnavail) futBox.className = 'callout-box callout-blue';
+        else if (isFvStale) futBox.className = 'callout-box callout-amber';
+        else if (futPos === 'ABOVE') futBox.className = 'callout-box callout-green';
         else if (futPos === 'BELOW') futBox.className = 'callout-box callout-red';
         else futBox.className = 'callout-box callout-blue';
 
-        document.getElementById('val-fut-status-text').textContent = fv.status_text || 'Futures trading session VWAP tracking.';
+        document.getElementById('val-fut-status-text').textContent = fv.status_text || (isFvStale ? 'STALE · feed delayed' : (isFvUnavail ? 'Futures feed unavailable.' : 'Futures trading session VWAP tracking.'));
 
         // 4. ONE CANONICAL SOURCE: web_intelligence.morning_plan.status
         const mp = wi.morning_plan || {};
@@ -1311,12 +1394,29 @@
             planWarning.textContent = '• Verify data connectivity.';
         }
 
-        // 5. COMPACT MARKET SUMMARY / OI (Safe Object Extraction)
+        // 5. COMPACT MARKET SUMMARY / OI (Safe Chain Aggregation)
         const oi = data.oi_summary || {};
-        
-        // Extract total Put & Call OI
-        document.getElementById('val-pe-total').textContent = isFiniteNum(oi.pe_total) ? fmtLakh(oi.pe_total) : 'N/A';
-        document.getElementById('val-ce-total').textContent = isFiniteNum(oi.ce_total) ? fmtLakh(oi.ce_total) : 'N/A';
+        const activeExpiry = oi.expiry;
+        const chain = (data.oi_chains && activeExpiry && Array.isArray(data.oi_chains[activeExpiry])) 
+            ? data.oi_chains[activeExpiry] 
+            : (data.oi_chains && typeof data.oi_chains === 'object' && Object.keys(data.oi_chains).length > 0 ? Object.values(data.oi_chains)[0] : null);
+
+        let totalPeOi = null;
+        let totalCeOi = null;
+
+        if (Array.isArray(chain) && chain.length > 0) {
+            totalPeOi = chain.reduce((acc, row) => acc + (isFiniteNum(row.pe_oi) ? Number(row.pe_oi) : 0), 0);
+            totalCeOi = chain.reduce((acc, row) => acc + (isFiniteNum(row.ce_oi) ? Number(row.ce_oi) : 0), 0);
+        } else if (isFiniteNum(oi.pe_total) && isFiniteNum(oi.ce_total)) {
+            totalPeOi = Number(oi.pe_total);
+            totalCeOi = Number(oi.ce_total);
+        } else if (isFiniteNum(oi.pe_flow) && isFiniteNum(oi.ce_flow)) {
+            totalPeOi = Number(oi.pe_flow);
+            totalCeOi = Number(oi.ce_flow);
+        }
+
+        document.getElementById('val-pe-total').textContent = isFiniteNum(totalPeOi) ? fmtOI(totalPeOi) : 'N/A';
+        document.getElementById('val-ce-total').textContent = isFiniteNum(totalCeOi) ? fmtOI(totalCeOi) : 'N/A';
 
         // Extract Wall Strike & OI Objects safely
         const putWallStrike = oi.put_wall && typeof oi.put_wall === 'object' ? oi.put_wall.strike : (isFiniteNum(oi.put_wall) ? oi.put_wall : null);
@@ -1458,12 +1558,18 @@
             tlList.innerHTML = `<div class="timeline-item"><span class="timeline-meaning">No new structural event since 09:15 IST.</span></div>`;
         }
 
-        // 10. LIVE MARKET COMMENTARY (Dynamic E2 Binding & State Consistency)
+        // 10. LIVE MARKET COMMENTARY (Dynamic Synthesis & Structured Binding)
         const mc = wi.market_commentary || {};
         const commTimeEl = document.getElementById('val-comm-time');
         const commPill = document.getElementById('val-comm-pill');
-        
-        if (mc.is_live) {
+
+        const parsedComm = parseSynthesisCommentary(mc.synthesis, data.structured_commentary, data.thesis_reasons);
+        const facts = (mc.facts && Array.isArray(mc.facts) && mc.facts.length > 0) ? mc.facts : parsedComm.facts;
+        const interp = (mc.interpretation && (Array.isArray(mc.interpretation) || (typeof mc.interpretation === 'string' && mc.interpretation.trim()))) ? mc.interpretation : (parsedComm.interpretation || data.decision_reason || '');
+
+        const hasLiveContent = facts.length > 0 || (typeof interp === 'string' && interp.trim().length > 0) || Boolean(mc.synthesis);
+
+        if (mc.is_live || hasLiveContent) {
             commPill.className = 'live-pill live';
             commTimeEl.textContent = `LIVE • ${mc.timestamp || formatTime(data.updated_at)}`;
         } else {
@@ -1472,17 +1578,17 @@
         }
 
         const factsList = document.getElementById('list-comm-facts');
-        if (mc.facts && Array.isArray(mc.facts) && mc.facts.length > 0) {
-            factsList.innerHTML = mc.facts.map(f => `<li>${f}</li>`).join('');
+        if (facts.length > 0) {
+            factsList.innerHTML = facts.map(f => `<li>${f}</li>`).join('');
         } else {
             factsList.innerHTML = '<li>Live commentary temporarily unavailable.</li>';
         }
 
         const interpEl = document.getElementById('val-comm-interp');
-        if (mc.interpretation && Array.isArray(mc.interpretation) && mc.interpretation.length > 0) {
-            interpEl.innerHTML = mc.interpretation.map(i => `<p style="margin-bottom: 6px;">${i}</p>`).join('');
-        } else if (typeof mc.interpretation === 'string' && mc.interpretation.trim()) {
-            interpEl.textContent = mc.interpretation;
+        if (Array.isArray(interp) && interp.length > 0) {
+            interpEl.innerHTML = interp.map(i => `<p style="margin-bottom: 6px;">${i}</p>`).join('');
+        } else if (typeof interp === 'string' && interp.trim()) {
+            interpEl.textContent = interp;
         } else {
             interpEl.textContent = 'Evaluating market context...';
         }
@@ -1498,7 +1604,7 @@
         }
         
         const actionEl = document.getElementById('val-comm-action');
-        const actionVal = mc.action || mc.current_action || ds.current_focus || 'STAND ASIDE';
+        const actionVal = mc.current_action || mc.action || ds.current_focus || data.action_verdict || 'STAND ASIDE';
         actionEl.textContent = actionVal;
         actionEl.className = actionVal.includes('MANAGE') ? 'status-badge badge-blue' :
                             (actionVal.includes('BUY') || actionVal.includes('LONG') ? 'status-badge badge-green' :
