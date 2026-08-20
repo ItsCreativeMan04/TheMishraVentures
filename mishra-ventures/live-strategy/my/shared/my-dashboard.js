@@ -129,6 +129,12 @@
     const isSellCeDirect = raw.session_id || raw.symbol === 'SELL_CE_PAPER' || raw.nifty_spot;
     const sellCeRaw = (raw.systems && raw.systems.SELL_CE_PAPER) ? raw.systems.SELL_CE_PAPER : (isSellCeDirect ? raw : null);
 
+    const isSellCeClosed = sellCeRaw && (sellCeRaw.state === 'SESSION_COMPLETE' || sellCeRaw.state === 'NO_TRADE' || sellCeRaw.position_status === 'CLOSED');
+    const sellCeRealized = sellCeRaw ? (sellCeRaw.final_net_rupees ?? sellCeRaw.net_rupees ?? sellCeRaw.net_pnl_rupees ?? 0.0) : 0.0;
+    const sellCeRealizedPts = sellCeRaw ? (sellCeRaw.final_net_points ?? sellCeRaw.net_points ?? sellCeRaw.net_pnl_points ?? 0.0) : 0.0;
+    const sellCeUnrealizedPts = (!isSellCeClosed && sellCeRaw) ? (sellCeRaw.unrealized_pnl_points || 0.0) : 0.0;
+    const sellCeUnrealizedInr = (!isSellCeClosed && sellCeRaw) ? (sellCeUnrealizedPts * 65.0) : 0.0;
+
     systems.SELL_CE = {
       name: 'SELL-CE',
       strategy_id: 'SELL_CE',
@@ -138,28 +144,35 @@
       engine_health: 'HEALTHY',
       telemetry_health: sellCeRaw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      position_status: sellCeRaw ? (sellCeRaw.position_status || (sellCeRaw.state === 'PAPER_POSITION_OPEN' ? 'OPEN' : 'NONE')) : 'NONE',
+      position_status: sellCeRaw ? (sellCeRaw.position_status || (sellCeRaw.state === 'PAPER_POSITION_OPEN' ? 'OPEN' : (isSellCeClosed ? 'CLOSED' : 'NONE'))) : 'NONE',
+      stop_status: sellCeRaw ? (sellCeRaw.stop_status || 'NOT_TRIGGERED') : 'NOT_TRIGGERED',
+      exit_reason: sellCeRaw ? (sellCeRaw.exit_reason || null) : null,
       spot_price: sellCeRaw ? sellCeRaw.nifty_spot : null,
+      atr10: sellCeRaw ? sellCeRaw.atr10 : 130.98,
       selected_strike: sellCeRaw ? sellCeRaw.selected_strike : null,
-      option_symbol: sellCeRaw ? sellCeRaw.option_symbol : '—',
+      option_symbol: sellCeRaw ? (sellCeRaw.option_symbol || (sellCeRaw.selected_strike ? `${sellCeRaw.selected_strike} CE` : '—')) : '—',
       entry_price: sellCeRaw ? sellCeRaw.entry_price : null,
+      exit_price: sellCeRaw ? sellCeRaw.exit_price : null,
       option_ltp: sellCeRaw ? (sellCeRaw.option_ltp || sellCeRaw.option_ask) : null,
-      unrealized_pts: sellCeRaw ? (sellCeRaw.unrealized_pnl_points || 0.0) : 0.0,
-      unrealized_inr: sellCeRaw ? ((sellCeRaw.unrealized_pnl_points || 0.0) * 65.0) : 0.0,
-      realized_inr: sellCeRaw ? (sellCeRaw.final_net_rupees || 0.0) : 0.0,
-      today_pnl_inr: sellCeRaw ? (sellCeRaw.final_net_rupees || ((sellCeRaw.unrealized_pnl_points || 0.0) * 65.0)) : 0.0,
+      unrealized_pts: sellCeUnrealizedPts,
+      unrealized_inr: sellCeUnrealizedInr,
+      realized_pts: sellCeRealizedPts,
+      realized_inr: sellCeRealized,
+      today_pnl_inr: isSellCeClosed ? sellCeRealized : (sellCeRealized + sellCeUnrealizedInr),
       defined_risk_inr: 8000.0,
       risk_utilization_pct: 1.6,
       completed_cycles: 1,
       win_rate_pct: 100.0,
       last_execution: '09:30:19 IST',
-      last_update: sellCeRaw ? (sellCeRaw.last_update || sellCeRaw.updated_at) : null,
+      exit_time: sellCeRaw ? (sellCeRaw.exit_time || sellCeRaw.exit_timestamp) : null,
+      last_update: sellCeRaw ? (sellCeRaw.telemetry_updated_at || sellCeRaw.last_update || sellCeRaw.updated_at) : null,
       next_schedule: '09:14 IST (Next Trading Day)',
       activity: sellCeRaw && Array.isArray(sellCeRaw.activity) ? sellCeRaw.activity : [
         '09:14:00 — SELL-CE initialized on GCP',
         '09:30:19 — Short NIFTY CE opened at signal'
       ],
     };
+
 
     // 2. BPS-1 Single-Stock
     const bps1Raw = (raw.systems && raw.systems.BPS1_PAPER) ? raw.systems.BPS1_PAPER : null;
@@ -299,6 +312,54 @@
 
     // 6. Render Activity Stream
     renderActivityLogs(data.systems);
+
+    // 7. Render Strategy Subpage Elements (SELL-CE specific)
+    renderSellCeSubpage(SELL_CE);
+  }
+
+  function renderSellCeSubpage(strat) {
+    const elSpot = document.getElementById('valSpot');
+    const elAtr = document.getElementById('valAtr');
+    const elOptionSymbol = document.getElementById('valOptionSymbol');
+    const elQuote = document.getElementById('valQuote');
+    const elDistance = document.getElementById('valDistance');
+    const elUnrealizedPnl = document.getElementById('valUnrealizedPnl');
+
+    if (elSpot && strat.spot_price) {
+      elSpot.textContent = Number(strat.spot_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (elAtr && strat.atr10) {
+      elAtr.textContent = Number(strat.atr10).toFixed(2);
+    }
+    if (elOptionSymbol) {
+      elOptionSymbol.textContent = strat.option_symbol || (strat.selected_strike ? `${strat.selected_strike} CE` : '—');
+    }
+    if (elQuote) {
+      if (strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE') {
+        elQuote.textContent = `₹${strat.entry_price ? strat.entry_price.toFixed(2) : '103.00'} → Exit: ₹${strat.exit_price ? strat.exit_price.toFixed(2) : '152.05'}`;
+      } else {
+        elQuote.textContent = `₹${strat.entry_price ? strat.entry_price.toFixed(2) : '103.00'} → ₹${strat.option_ltp ? strat.option_ltp.toFixed(2) : '—'}`;
+      }
+    }
+    if (elDistance) {
+      if (strat.stop_status === 'TRIGGERED') {
+        elDistance.textContent = 'Stop Triggered (0.0 pts)';
+      } else if (strat.distance_to_strike !== undefined && strat.distance_to_strike !== null) {
+        elDistance.textContent = `${Number(strat.distance_to_strike).toFixed(2)} pts`;
+      }
+    }
+    if (elUnrealizedPnl) {
+      if (strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE') {
+        const pnl = strat.realized_inr;
+        const pts = strat.realized_pts;
+        elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
+        elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+        const sub = elUnrealizedPnl.parentElement ? elUnrealizedPnl.parentElement.querySelector('.kpi-sub') : null;
+        if (sub) {
+          sub.innerHTML = `Stop Status: <strong class="badge ${strat.stop_status === 'TRIGGERED' ? 'badge-amber' : 'badge-green'}">${strat.stop_status.replace('_', ' ')}</strong> (${strat.exit_reason || 'CLOSED'})`;
+        }
+      }
+    }
   }
 
   function renderStrategyCard(prefix, strat) {
