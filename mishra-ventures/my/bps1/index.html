@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BPS-1 Strategy Detail — /my/bps1</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lm-theme');
+        var theme = saved || (window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820a" />
+  <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820a" />
+  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260820a" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Nav Bar -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">⚡</div>
+      <div>
+        <div class="nav-brand-text">BPS-1 CONSOLE</div>
+        <div class="nav-brand-sub">Single-Stock Monthly Bull Put Spread</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="nav-home">← All Strategies (/my)</a>
+    </div>
+  </nav>
+
+  <div class="desk-wrap">
+
+    <!-- Sub-Nav & Status Bar -->
+    <div class="sub-nav-bar">
+      <a href="../" class="sub-nav-link">← Back to Overview (/my)</a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge badge-green">🟢 PAPER LIVE</span>
+        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
+      </div>
+    </div>
+
+    <!-- Strategy Header Card -->
+    <div class="operator-banner" style="margin-bottom: 1.5rem;">
+      <div class="banner-title-group">
+        <div class="banner-shield">
+          <span>🛡️</span> SIMULATION ONLY — NO REAL ORDERS
+        </div>
+        <div class="banner-heading">BPS1_MONTHLY_BULL_PUT_SPREAD_EOD (v1.0.0)</div>
+        <div class="banner-sub">Systematic Monthly Defined-Risk Bull Put Spread on 10 High-Liquidity NSE Single-Stock Equities</div>
+      </div>
+
+      <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">State</span>
+          <span id="badgeState" class="badge badge-cyan" style="margin-top: 2px;">STANDBY / MONITORING</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Last Run</span>
+          <span id="valLastUpdated" class="time-val mono">09:14:00 IST</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Next Cycle Evaluation</span>
+          <span class="time-val mono">Tomorrow 09:14 IST</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strategy Rules & Specifications -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Frozen Strategy Specifications & Portfolio State</div>
+      </div>
+
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">Active Spreads</div>
+          <div class="kpi-value mono">0 Open</div>
+          <div class="kpi-sub">Universe: <strong class="mono">10 Stocks (RELIANCE, HDFCBANK...)</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Defined Risk Allocation</div>
+          <div class="kpi-value mono">₹85,500</div>
+          <div class="kpi-sub">Max Risk Utilization: <strong class="mono">17.1%</strong> of ₹5L</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Target Entry Window</div>
+          <div class="kpi-value" style="font-size: 1.25rem; color: var(--desk-accent2);">26 – 32 DTE</div>
+          <div class="kpi-sub">Entry Timing: <strong class="mono">First Session Post-Expiry</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Spread Geometry</div>
+          <div class="kpi-value" style="font-size: 1.25rem;">5% OTM / 10% OTM</div>
+          <div class="kpi-sub">Short Put @ 5% OTM · Long Put @ 10% OTM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health & System Status -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Operational Health & Diagnostics</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Details</th>
+              <th>Host / Environment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>BPS-1 Paper Agent</strong></td>
+              <td><span class="badge badge-green">HEALTHY</span></td>
+              <td>Standalone isolated package (bps1_paper_agent)</td>
+              <td>GCP VM (nifty-ai-trading)</td>
+            </tr>
+            <tr>
+              <td><strong>Scheduler</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Mon-Fri 09:14 IST daily execution timer</td>
+              <td>systemd: trading-bps1.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Database</strong></td>
+              <td><span class="badge badge-green">OK</span></td>
+              <td>SQLite storage: /opt/trading/data/bps1/bps1_paper_agent.db</td>
+              <td>Local SSD on VM</td>
+            </tr>
+            <tr>
+              <td><strong>Email Notifications</strong></td>
+              <td><span class="badge badge-green">CONFIGURED</span></td>
+              <td>Resend API + SMTP fallback (ProOptionSeller04@gmail.com)</td>
+              <td>Sanitized alerts with [PAPER] prefix</td>
+            </tr>
+            <tr>
+              <td><strong>Broker Execution</strong></td>
+              <td><span class="badge badge-green">READ ONLY</span></td>
+              <td>AST safety scan verified 0 mutating order endpoints</td>
+              <td>Angel One SmartAPI Read-Only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">BPS-1 Strategy Activity Log</div>
+      </div>
+      <div id="activityFeedBox" class="activity-feed-box">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sub-footer">
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; BPS-1 Console &nbsp;·&nbsp; /my/bps1
+  </footer>
+
+  <script src="../shared/my-dashboard.js?v=20260820a"></script>
+</body>
+</html>

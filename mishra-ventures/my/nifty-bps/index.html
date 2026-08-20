@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIFTY BPS Strategy Detail — /my/nifty-bps</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lm-theme');
+        var theme = saved || (window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820a" />
+  <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820a" />
+  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260820a" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Nav Bar -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">⚡</div>
+      <div>
+        <div class="nav-brand-text">NIFTY BPS CONSOLE</div>
+        <div class="nav-brand-sub">Index Monthly Bull Put Spread</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="nav-home">← All Strategies (/my)</a>
+    </div>
+  </nav>
+
+  <div class="desk-wrap">
+
+    <!-- Sub-Nav & Status Bar -->
+    <div class="sub-nav-bar">
+      <a href="../" class="sub-nav-link">← Back to Overview (/my)</a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge badge-green">🟢 PAPER LIVE</span>
+        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
+      </div>
+    </div>
+
+    <!-- Strategy Header Card -->
+    <div class="operator-banner" style="margin-bottom: 1.5rem;">
+      <div class="banner-title-group">
+        <div class="banner-shield">
+          <span>🛡️</span> SIMULATION ONLY — NO REAL ORDERS
+        </div>
+        <div class="banner-heading">BPS_INDEX_MONTHLY_EOD (v1.0.0)</div>
+        <div class="banner-sub">Systematic Monthly Defined-Risk Bull Put Spread on NIFTY 50 Index Options (DTE 26–32 Calendar Days)</div>
+      </div>
+
+      <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">State</span>
+          <span id="badgeState" class="badge badge-cyan" style="margin-top: 2px;">STANDBY / MONITORING</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Last Run</span>
+          <span id="valLastUpdated" class="time-val mono">09:14:00 IST</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Next Cycle Evaluation</span>
+          <span class="time-val mono">Tomorrow 09:14 IST</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cycle Details & Metrics -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Current Cycle Architecture & Performance Metrics</div>
+      </div>
+
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">Underlying Index</div>
+          <div class="kpi-value mono">NIFTY 50</div>
+          <div class="kpi-sub">Dataset: <strong class="mono">NSE OPTIDX EOD</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Defined Risk Allocation</div>
+          <div class="kpi-value mono">₹85,500</div>
+          <div class="kpi-sub">Max Risk Utilization: <strong class="mono">17.1%</strong> of ₹5L</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Historical Win Rate</div>
+          <div class="kpi-value mono pnl-positive">96.67%</div>
+          <div class="kpi-sub">Backtest Profit Factor: <strong class="mono">22.28</strong> (29 Wins / 1 Loss)</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Spread Strike Selection</div>
+          <div class="kpi-value" style="font-size: 1.25rem;">5% OTM / 10% OTM</div>
+          <div class="kpi-sub">Short Put @ ~5% OTM · Long Put @ ~10% OTM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health & Operational Diagnostics -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Operational Health & Diagnostics</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Details</th>
+              <th>Host / Environment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>NIFTY BPS Agent</strong></td>
+              <td><span class="badge badge-green">HEALTHY</span></td>
+              <td>Standalone isolated package (nifty_bps_paper_agent)</td>
+              <td>GCP VM (nifty-ai-trading)</td>
+            </tr>
+            <tr>
+              <td><strong>Scheduler</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Mon-Fri 09:14 IST daily execution timer</td>
+              <td>systemd: trading-nifty-bps.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Database</strong></td>
+              <td><span class="badge badge-green">OK</span></td>
+              <td>SQLite storage: /opt/trading/data/nifty_bps/nifty_bps_paper_agent.db</td>
+              <td>Local SSD on VM</td>
+            </tr>
+            <tr>
+              <td><strong>Telemetry Watchdog</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Nightly integrity watchdog (00:00 IST)</td>
+              <td>systemd: trading-telemetry-watchdog.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Broker Execution</strong></td>
+              <td><span class="badge badge-green">READ ONLY</span></td>
+              <td>AST safety scan verified 0 mutating order endpoints</td>
+              <td>Angel One SmartAPI Read-Only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">NIFTY BPS Strategy Activity Log</div>
+      </div>
+      <div id="activityFeedBox" class="activity-feed-box">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sub-footer">
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; NIFTY BPS Console &nbsp;·&nbsp; /my/nifty-bps
+  </footer>
+
+  <script src="../shared/my-dashboard.js?v=20260820a"></script>
+</body>
+</html>

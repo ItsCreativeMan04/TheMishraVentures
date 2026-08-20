@@ -5,9 +5,23 @@
 # (mishra-ventures/live-market/, etc.) is left untouched.
 RedirectMatch 301 ^/$ /mishra-ventures/
 
+# ── Live Strategy Command Center & Operations Dashboard routes ──
+RewriteEngine On
+RewriteRule ^live-strategy/my/sell-ce/?$ /mishra-ventures/live-strategy/my/sell-ce/ [R=301,L]
+RewriteRule ^live-strategy/my/bps1/?$ /mishra-ventures/live-strategy/my/bps1/ [R=301,L]
+RewriteRule ^live-strategy/my/nifty-bps/?$ /mishra-ventures/live-strategy/my/nifty-bps/ [R=301,L]
+
+# ── Short Aliases (/my -> /live-strategy/my/) ──
+RewriteRule ^my/?$ /mishra-ventures/live-strategy/my/ [R=301,L]
+RewriteRule ^my/sell-ce/?$ /mishra-ventures/live-strategy/my/sell-ce/ [R=301,L]
+RewriteRule ^my/bps1/?$ /mishra-ventures/live-strategy/my/bps1/ [R=301,L]
+RewriteRule ^my/nifty-bps/?$ /mishra-ventures/live-strategy/my/nifty-bps/ [R=301,L]
+
 # ── Live Strategy Monitor route ──
 # Apache serves mishra-ventures/live-strategy/index.html (public)
 # and mishra-ventures/live-strategy/my/index.html (private) directly.
+
+
 
 # ── Don't let browsers cache the HTML ──
 #

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading Operations Desk — /my</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+
+  <!-- Inline blocking theme switcher script -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lm-theme');
+        var theme = saved || (window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820a" />
+  <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820a" />
+  <link rel="stylesheet" href="shared/my-dashboard.css?v=20260820a" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">⚡</div>
+      <div>
+        <div class="nav-brand-text">MY TRADING DESK</div>
+        <div class="nav-brand-sub">Defined-Risk Operations</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="/mishra-ventures/" class="nav-home">Ventures Hub</a>
+    </div>
+  </nav>
+
+  <div class="desk-wrap">
+
+    <!-- Top Operator Status Banner -->
+    <div class="operator-banner">
+      <div class="banner-title-group">
+        <div class="banner-shield">
+          <span>🛡️</span> SIMULATION ONLY — NO REAL BROKER ORDERS
+        </div>
+        <div class="banner-heading">Trading Operations Console</div>
+        <div class="banner-sub">Unified multi-strategy paper-trading telemetry & risk observability</div>
+      </div>
+
+      <!-- Telemetry Status & Manual Refresh Pill -->
+      <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">Status</span>
+          <span id="badgeOverallHealth" class="badge badge-green" style="margin-top: 2px;">🟢 HEALTHY</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Last Updated</span>
+          <span id="valLastUpdated" class="time-val mono">--:--:-- IST</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Data Age</span>
+          <span id="valDataAge" class="time-val mono">--</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Next Auto Refresh</span>
+          <span id="valNextRefresh" class="time-val mono">--:--:-- IST</span>
+        </div>
+        <button id="btnRefresh" class="btn-refresh">
+          <span>↻</span> Refresh Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Alert Box (Hidden by default) -->
+    <div id="alertBox" class="alert-box hidden">
+      <span>⚠️</span>
+      <span id="alertMsg">Telemetry refresh failed. Preserving last valid snapshot.</span>
+    </div>
+
+    <!-- Portfolio KPI Metric Summary -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Combined Paper P&L</div>
+        <div id="kpiCombinedPnl" class="kpi-value mono">₹0.00</div>
+        <div class="kpi-sub">
+          <span>Realized: <strong id="kpiRealizedPnl" class="mono">₹0.00</strong></span>
+          <span>·</span>
+          <span>Open MTM: <strong id="kpiUnrealizedPnl" class="mono">₹0.00</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Active Exposure & Risk</div>
+        <div id="kpiActiveUnits" class="kpi-value">0 Active</div>
+        <div class="kpi-sub">
+          <span>Defined Risk: <strong id="kpiRiskUtil" class="mono">0.0% (₹0k)</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">Reference Capital</div>
+        <div class="kpi-value mono">₹5,00,000</div>
+        <div class="kpi-sub">
+          <span>Available Margin Buffer: <strong class="mono">>11x</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">System Architecture</div>
+        <div class="kpi-value" style="font-size: 1.25rem; color: var(--desk-accent2);">3 Isolated Agents</div>
+        <div class="kpi-sub">
+          <span>GCP VM · Read-Only Broker API</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strategy Cards Grid -->
+    <div class="strategy-grid">
+
+      <!-- 1. SELL-CE -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>SELL-CE</h3>
+              <div class="strat-type">Intraday Momentum Short CE</div>
+            </div>
+            <span id="sellceStateBadge" class="badge badge-cyan">STANDBY</span>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle / Symbol</span>
+              <span id="sellcePosition" class="stat-val mono">No active cycle</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Paper P&L</span>
+              <span id="sellcePnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Defined Risk Allocation</span>
+              <span id="sellceRisk" class="stat-val mono">₹8.0k (1.6% cap)</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Scheduled Run</span>
+              <span id="sellceNextRun" class="stat-val" style="font-size: 0.76rem;">09:14 IST daily</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-green">Engine OK</span>
+          <a href="sell-ce/" class="btn-detail">View Details →</a>
+        </div>
+      </div>
+
+      <!-- 2. BPS-1 Single-Stock -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>BPS-1</h3>
+              <div class="strat-type">Single-Stock Bull Put Spread</div>
+            </div>
+            <span id="bps1StateBadge" class="badge badge-cyan">STANDBY</span>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle / Universe</span>
+              <span id="bps1Position" class="stat-val mono">10 Equities Universe</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Paper P&L</span>
+              <span id="bps1Pnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Defined Risk Allocation</span>
+              <span id="bps1Risk" class="stat-val mono">₹85.5k (17.1% cap)</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Scheduled Run</span>
+              <span id="bps1NextRun" class="stat-val" style="font-size: 0.76rem;">09:14 IST daily (Monthly Cycle)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-green">Engine OK</span>
+          <a href="bps1/" class="btn-detail">View Details →</a>
+        </div>
+      </div>
+
+      <!-- 3. NIFTY BPS Index -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>NIFTY BPS</h3>
+              <div class="strat-type">Index Bull Put Spread (v1.0.0)</div>
+            </div>
+            <span id="niftybpsStateBadge" class="badge badge-cyan">STANDBY</span>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle / Structure</span>
+              <span id="niftybpsPosition" class="stat-val mono">5% OTM Short / 10% Long</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Paper P&L</span>
+              <span id="niftybpsPnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Defined Risk Allocation</span>
+              <span id="niftybpsRisk" class="stat-val mono">₹85.5k (17.1% cap)</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Scheduled Run</span>
+              <span id="niftybpsNextRun" class="stat-val" style="font-size: 0.76rem;">09:14 IST daily (Monthly Cycle)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-green">Engine OK</span>
+          <a href="nifty-bps/" class="btn-detail">View Details →</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Performance Chart Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Cumulative Paper P&L Trajectory</div>
+        <div class="chart-legend">
+          <div class="legend-pill"><span class="legend-dot" style="background: #a855f7;"></span> Combined Total</div>
+          <div class="legend-pill"><span class="legend-dot" style="background: #f59e0b;"></span> SELL-CE</div>
+          <div class="legend-pill"><span class="legend-dot" style="background: #06b6d4;"></span> BPS-1</div>
+          <div class="legend-pill"><span class="legend-dot" style="background: #22c55e;"></span> NIFTY BPS</div>
+        </div>
+      </div>
+
+      <div class="chart-svg-container">
+        <svg id="chartSvg" class="chart-svg" viewBox="0 0 800 240"></svg>
+      </div>
+    </div>
+
+    <!-- Risk & Capital Matrix Table -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Strategy Risk & Capital Governance Matrix</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Strategy</th>
+              <th>Underlying</th>
+              <th>Risk Structure</th>
+              <th>Max Defined Risk</th>
+              <th>Risk Utilization</th>
+              <th>Backtest PF</th>
+              <th>Execution Mode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SELL_CE</strong></td>
+              <td>NIFTY Index Options</td>
+              <td>Dynamic ATR Trailing Stop</td>
+              <td class="mono">₹8,000</td>
+              <td class="mono">1.6%</td>
+              <td class="mono">1.94</td>
+              <td><span class="badge badge-green">PAPER LIVE</span></td>
+            </tr>
+            <tr>
+              <td><strong>BPS1_MONTHLY_BULL_PUT_SPREAD_EOD</strong></td>
+              <td>10 Single-Stock Equities</td>
+              <td>10-Spread Defined Max Loss</td>
+              <td class="mono">₹85,500</td>
+              <td class="mono">17.1%</td>
+              <td class="mono">22.28</td>
+              <td><span class="badge badge-green">PAPER LIVE</span></td>
+            </tr>
+            <tr>
+              <td><strong>BPS_INDEX_MONTHLY_EOD</strong></td>
+              <td>NIFTY 50 Index (OPTIDX)</td>
+              <td>5% OTM Short / 10% Long Put Spread</td>
+              <td class="mono">₹85,500</td>
+              <td class="mono">17.1%</td>
+              <td class="mono">22.28</td>
+              <td><span class="badge badge-green">PAPER LIVE</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Unified Recent Activity Stream -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Unified Operational Activity Log</div>
+        <div class="activity-filter-bar">
+          <button class="filter-btn active" data-filter="ALL">All Systems</button>
+          <button class="filter-btn" data-filter="SELL_CE">SELL-CE</button>
+          <button class="filter-btn" data-filter="BPS1">BPS-1</button>
+          <button class="filter-btn" data-filter="NIFTY_BPS">NIFTY BPS</button>
+        </div>
+      </div>
+
+      <div id="activityFeedBox" class="activity-feed-box">
+        <!-- Injected dynamically by my-dashboard.js -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sub-footer">
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; Private Trading Operations Desk &nbsp;·&nbsp; /my
+  </footer>
+
+  <script src="shared/my-dashboard.js?v=20260820a"></script>
+</body>
+</html>

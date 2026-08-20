@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SELL-CE Strategy Console – The Mishra Ventures</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lm-theme');
+        var theme = saved || (window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820b" />
+  <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820b" />
+  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260820b" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Nav Bar -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">⚡</div>
+      <div>
+        <div class="nav-brand-text">SELL-CE CONSOLE</div>
+        <div class="nav-brand-sub">Intraday Momentum Short CE</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="nav-home">← Command Center (/live-strategy/my/)</a>
+    </div>
+  </nav>
+
+  <div class="cmd-wrap">
+
+    <!-- Sub-Nav & Status Bar -->
+    <div class="sub-nav-bar">
+      <a href="../" class="sub-nav-link">← Back to Command Center (/live-strategy/my/)</a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge badge-green">🟢 PAPER LIVE</span>
+        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
+      </div>
+    </div>
+
+    <!-- Strategy Header Card -->
+    <div class="operator-banner" style="margin-bottom: 1.5rem;">
+      <div class="banner-title-group">
+        <div class="banner-shield">
+          <span>🛡️</span> PAPER TRADING — ZERO REAL BROKER ORDERS
+        </div>
+        <div class="banner-heading">SELL-CE (v1.0.0)</div>
+        <div class="banner-sub">Intraday 09:30 IST Momentum Call Selling on NIFTY Index Options with 10-period ATR Stop Loss</div>
+      </div>
+
+      <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">Engine Health</span>
+          <span id="sellceEngineBadge" class="badge badge-green" style="margin-top: 2px;">HEALTHY</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Telemetry</span>
+          <span id="sellceTeleBadge" class="badge badge-cyan" style="margin-top: 2px;">FRESH</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Last Updated</span>
+          <span id="valLastUpdated" class="time-val mono">—:—:— IST</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Data Age</span>
+          <span id="valDataAge" class="time-val mono">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="alertBox" class="alert-box hidden">
+      <span>⚠️</span>
+      <span id="alertMsg">⚠ Refresh failed. Showing last valid telemetry.</span>
+    </div>
+
+    <!-- Active Session Deep Dive -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Active Session / Market State</div>
+      </div>
+
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">NIFTY Spot Index</div>
+          <div id="valSpot" class="kpi-value mono">24,213.15</div>
+          <div class="kpi-sub">ATR(10): <strong id="valAtr" class="mono">130.98</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Selected Option Contract</div>
+          <div id="valOptionSymbol" class="kpi-value mono" style="font-size: 1.25rem;">24250 CE</div>
+          <div class="kpi-sub">Symbol: <strong class="mono">NIFTY25AUG2624250CE</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Entry / Current Quote</div>
+          <div id="valQuote" class="kpi-value mono" style="font-size: 1.25rem;">₹103.00 → ₹110.40</div>
+          <div class="kpi-sub">Distance to Strike: <strong id="valDistance" class="mono">36.85 pts</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Unrealized MTM P&L</div>
+          <div id="valUnrealizedPnl" class="kpi-value mono pnl-negative">-7.40 pts (-₹481)</div>
+          <div class="kpi-sub">Stop Status: <strong class="badge badge-green">NOT TRIGGERED</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health & Diagnostics -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Operational Health & Diagnostics</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Details</th>
+              <th>Host / Environment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Trading Engine</strong></td>
+              <td><span class="badge badge-green">HEALTHY</span></td>
+              <td>SELL_CE Paper Agent running active session loop</td>
+              <td>GCP VM (nifty-ai-trading)</td>
+            </tr>
+            <tr>
+              <td><strong>Scheduler</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Daily session timer: 09:14 IST Mon-Fri</td>
+              <td>systemd: trading-sellce.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Database</strong></td>
+              <td><span class="badge badge-green">OK</span></td>
+              <td>SQLite journal: /opt/trading/data/sell_ce/sell_ce.db</td>
+              <td>Local SSD on VM</td>
+            </tr>
+            <tr>
+              <td><strong>Telemetry Feed</strong></td>
+              <td><span class="badge badge-green">FRESH</span></td>
+              <td>Cloudflare KV status feed (sell-ce-paper-status)</td>
+              <td>Cloudflare Workers Edge</td>
+            </tr>
+            <tr>
+              <td><strong>Broker Connection</strong></td>
+              <td><span class="badge badge-green">CONNECTED</span></td>
+              <td>Read-only market data feeds (Angel One SmartAPI)</td>
+              <td>Zero mutating order endpoints</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Session Activity Logs -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Session Activity Log</div>
+      </div>
+      <div id="activityFeedBox" class="activity-feed-box">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sub-footer">
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; SELL-CE Console &nbsp;·&nbsp; /live-strategy/my/sell-ce/
+  </footer>
+
+  <script src="../shared/my-dashboard.js?v=20260820b"></script>
+</body>
+</html>

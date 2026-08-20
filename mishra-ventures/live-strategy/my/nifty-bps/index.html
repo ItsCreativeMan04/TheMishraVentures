@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIFTY BPS Strategy Console – The Mishra Ventures</title>
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('lm-theme');
+        var theme = saved || (window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820b" />
+  <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820b" />
+  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260820b" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Nav Bar -->
+  <nav>
+    <div class="nav-brand">
+      <div class="nav-logo">⚡</div>
+      <div>
+        <div class="nav-brand-text">NIFTY BPS CONSOLE</div>
+        <div class="nav-brand-sub">Index Monthly Bull Put Spread</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="../" class="nav-home">← Command Center (/live-strategy/my/)</a>
+    </div>
+  </nav>
+
+  <div class="cmd-wrap">
+
+    <!-- Sub-Nav & Status Bar -->
+    <div class="sub-nav-bar">
+      <a href="../" class="sub-nav-link">← Back to Command Center (/live-strategy/my/)</a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge badge-green">🟢 PAPER LIVE</span>
+        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
+      </div>
+    </div>
+
+    <!-- Strategy Header Card -->
+    <div class="operator-banner" style="margin-bottom: 1.5rem;">
+      <div class="banner-title-group">
+        <div class="banner-shield">
+          <span>🛡️</span> PAPER TRADING — ZERO REAL BROKER ORDERS
+        </div>
+        <div class="banner-heading">NIFTY BPS (BPS_INDEX_MONTHLY_EOD v1.0.0)</div>
+        <div class="banner-sub">Systematic Monthly Defined-Risk Bull Put Spread on NIFTY 50 Index Options (26–32 DTE Window)</div>
+      </div>
+
+      <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">Engine Health</span>
+          <span id="niftybpsEngineBadge" class="badge badge-green" style="margin-top: 2px;">HEALTHY</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Telemetry</span>
+          <span id="niftybpsTeleBadge" class="badge badge-cyan" style="margin-top: 2px;">FRESH</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Last Updated</span>
+          <span id="valLastUpdated" class="time-val mono">—:—:— IST</span>
+        </div>
+        <div class="time-item">
+          <span class="time-label">Data Age</span>
+          <span id="valDataAge" class="time-val mono">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="alertBox" class="alert-box hidden">
+      <span>⚠️</span>
+      <span id="alertMsg">⚠ Refresh failed. Showing last valid telemetry.</span>
+    </div>
+
+    <!-- Strategy Lifecycle Stage Stepper -->
+    <div class="panel" style="padding-bottom: 0.75rem;">
+      <div class="panel-header" style="margin-bottom: 0.75rem;">
+        <div class="panel-title">Strategy Execution Lifecycle</div>
+      </div>
+      <div id="lifecycleStepper" class="stepper-container">
+        <!-- Injected dynamically by my-dashboard.js -->
+      </div>
+    </div>
+
+    <!-- Current Cycle & Position Monitoring Grid -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Current Cycle Architecture & Position Metrics</div>
+      </div>
+
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">NIFTY Spot Index</div>
+          <div class="kpi-value mono">24,213.15</div>
+          <div class="kpi-sub">Dataset: <strong class="mono">NSE OPTIDX EOD</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Short Put Wing (~5% OTM)</div>
+          <div class="kpi-value mono" style="font-size: 1.35rem;">23000 PE</div>
+          <div class="kpi-sub">Distance: <strong id="valNiftyShortDist" class="mono pnl-positive">+1,213 pts (+5.0%)</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Long Put Wing (~10% OTM)</div>
+          <div class="kpi-value mono" style="font-size: 1.35rem;">21800 PE</div>
+          <div class="kpi-sub">Distance: <strong id="valNiftyLongDist" class="mono pnl-positive">+2,413 pts (+10.0%)</strong></div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Current Cycle MTM P&L</div>
+          <div class="kpi-value mono pnl-positive">₹0.00</div>
+          <div class="kpi-sub">Expiry: <strong class="mono">2026-08-27 (7 DTE)</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk & Defined Payoff Parameters -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Risk Governance & Payoff Envelope</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Payoff Parameter</th>
+              <th>Value</th>
+              <th>Economic Significance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Maximum Profit Potential</strong></td>
+              <td id="valNiftyMaxProfit" class="mono pnl-positive">+₹4,450.00</td>
+              <td>Gross credit received from short spread less long wing protection</td>
+            </tr>
+            <tr>
+              <td><strong>Maximum Defined Risk</strong></td>
+              <td id="valNiftyMaxLoss" class="mono pnl-negative">-₹85,500.00</td>
+              <td>100% loss-capped by long wing; zero tail-risk / zero unlimited loss</td>
+            </tr>
+            <tr>
+              <td><strong>Spread Breakeven (At Expiry)</strong></td>
+              <td id="valNiftyBreakeven" class="mono">₹22,911.00</td>
+              <td>Spot level below which spread enters net loss at terminal settlement</td>
+            </tr>
+            <tr>
+              <td><strong>Risk Utilization Ratio</strong></td>
+              <td class="mono">17.1%</td>
+              <td>₹85,500 max defined loss against ₹5,00,000 reference capital (>11x buffer)</td>
+            </tr>
+            <tr>
+              <td><strong>Backtest Profit Factor</strong></td>
+              <td class="mono pnl-positive">22.28</td>
+              <td>Validated on 30 official monthly contract cycles (29 Wins / 1 Loss)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Operational Diagnostics -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Operational Health & Diagnostics</div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Status</th>
+              <th>Details</th>
+              <th>Host / Environment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>NIFTY BPS Agent</strong></td>
+              <td><span class="badge badge-green">HEALTHY</span></td>
+              <td>Standalone isolated package (nifty_bps_paper_agent)</td>
+              <td>GCP VM (nifty-ai-trading)</td>
+            </tr>
+            <tr>
+              <td><strong>Scheduler</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Mon-Fri 09:14 IST daily execution timer</td>
+              <td>systemd: trading-nifty-bps.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Database</strong></td>
+              <td><span class="badge badge-green">OK</span></td>
+              <td>SQLite storage: /opt/trading/data/nifty_bps/nifty_bps_paper_agent.db</td>
+              <td>Local SSD on VM</td>
+            </tr>
+            <tr>
+              <td><strong>Telemetry Watchdog</strong></td>
+              <td><span class="badge badge-green">ACTIVE</span></td>
+              <td>Nightly integrity watchdog (00:00 IST)</td>
+              <td>systemd: trading-telemetry-watchdog.timer</td>
+            </tr>
+            <tr>
+              <td><strong>Broker Execution</strong></td>
+              <td><span class="badge badge-green">READ ONLY</span></td>
+              <td>AST safety scan verified 0 mutating order endpoints</td>
+              <td>Angel One SmartAPI Read-Only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">NIFTY BPS Activity Log</div>
+      </div>
+      <div id="activityFeedBox" class="activity-feed-box">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sub-footer">
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; NIFTY BPS Console &nbsp;·&nbsp; /live-strategy/my/nifty-bps/
+  </footer>
+
+  <script src="../shared/my-dashboard.js?v=20260820b"></script>
+</body>
+</html>

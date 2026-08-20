@@ -1,0 +1,28 @@
+# ============================================================================
+# PRIVATE TRADING OPERATIONS DESK — SECURITY & ROBOTS POLICY
+# ============================================================================
+
+<IfModule mod_headers.c>
+  # Strictly prevent search engine crawling, indexing, archiving, and snippets
+  Header set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet"
+  
+  # Prevent caching of private operational state in public/shared caches
+  Header set Cache-Control "no-store, no-cache, must-revalidate, private, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>
+
+# Prevent directory indexing
+Options -Indexes
+
+# ============================================================================
+# HTTP BASIC AUTHENTICATION (Uncomment to gate access at web server level)
+# ============================================================================
+# To enable:
+# 1. Generate .htpasswd outside web root (e.g. /home/user/.htpasswd-trading)
+# 2. Uncomment the lines below and set AuthUserFile to the absolute path:
+#
+# AuthType Basic
+# AuthName "Private Trading Desk — Operators Only"
+# AuthUserFile /home/REPLACE_WITH_USER/.htpasswd-trading
+# Require valid-user
