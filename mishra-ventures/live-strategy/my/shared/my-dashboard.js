@@ -167,9 +167,10 @@
       last_execution: '09:30:19 IST',
       exit_time: sellCeRaw ? (sellCeRaw.exit_time || sellCeRaw.exit_timestamp) : null,
       last_update: sellCeRaw ? (sellCeRaw.telemetry_updated_at || sellCeRaw.last_update || sellCeRaw.updated_at) : null,
+      session_id: sellCeRaw ? sellCeRaw.session_id : null,
       next_schedule: '09:14 IST (Next Trading Day)',
       activity: sellCeRaw && Array.isArray(sellCeRaw.activity) ? sellCeRaw.activity : [
-        '09:14:00 — SELL-CE initialized on GCP',
+        '09:14:00 — SELL-CE session initialized',
         '09:30:19 — Short NIFTY CE opened at signal'
       ],
     };
@@ -205,9 +206,10 @@
       win_rate_pct: 0.0,
       last_execution: '09:14:00 IST',
       last_update: bps1Raw ? bps1Raw.updated_at : '2026-08-20T09:14:00+05:30',
+      session_id: bps1Raw ? bps1Raw.session_id : null,
       next_schedule: 'Tomorrow 09:14 IST',
       activity: bps1Raw && Array.isArray(bps1Raw.activity) ? bps1Raw.activity : [
-        '09:14:00 — BPS-1 Paper Agent operational on GCP (trading-bps1.timer active)',
+        '09:14:00 — BPS-1 session initialized',
         '09:14:02 — 0 active positions. Monitoring 10 stock universe for monthly cycle window.'
       ],
     };
@@ -248,9 +250,10 @@
       lifecycle_stage: 'ACTIVE_MONITORING',
       last_execution: '09:14:00 IST',
       last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : '2026-08-20T09:14:00+05:30',
+      session_id: niftyBpsRaw ? niftyBpsRaw.session_id : null,
       next_schedule: 'Tomorrow 09:14 IST',
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
-        '09:14:00 — NIFTY BPS Agent operational on GCP (trading-nifty-bps.timer active)',
+        '09:14:00 — NIFTY BPS session initialized',
         '09:14:02 — Standby mode. Evaluating contract eligibility (DTE 26-32 calendar days).'
       ],
     };
@@ -291,7 +294,7 @@
       last_update: sic1Raw ? (sic1Raw.last_update || sic1Raw.updated_at) : '2026-08-21T11:29:35+05:30',
       next_schedule: sic1Raw ? (sic1Raw.next_schedule || 'Today 15:20 IST') : 'Today 15:20 IST',
       activity: sic1Raw && Array.isArray(sic1Raw.activity) ? sic1Raw.activity : [
-        '15:20:00 — NIFTY Weekly Defined-Risk Paper Agent operational on GCP',
+        '15:20:00 — NIFTY Weekly session initialized',
         '15:20:02 — Forward paper position active under 2.0% risk ceiling.'
       ],
     };
@@ -351,13 +354,24 @@
     // 5. Render Chart
     renderPnlChart(data.systems);
 
-    // 6. Render Activity Stream
+    // 6. Render Activity Stream (session-scoped, see renderActivityLogs)
     renderActivityLogs(data.systems);
 
-    // 7. Render Strategy Subpage Elements (SELL-CE specific)
+    // 7. Render Recovery Session Banner (no-op unless this page's strategy
+    //    is currently on a "_RECOVERY" session id)
+    renderRecoveryBanner(data.systems);
+
+    // 8. Render Strategy Subpage Elements (SELL-CE specific)
     renderSellCeSubpage(SELL_CE);
   }
 
+  // Generalized OPEN -> CLOSED terminal-state swap (Part 10): once a
+  // strategy reaches position_status=CLOSED / state=SESSION_COMPLETE, a
+  // console must stop showing live-position language ("Unrealized MTM
+  // P&L") and unrealized figures, and switch to the final realized P&L,
+  // exit reason, and completion time. Wired to SELL-CE's element ids
+  // today; any future console that renders the same id contract
+  // (valUnrealizedPnl / lblPnl / subPnl) gets this swap for free.
   function renderSellCeSubpage(strat) {
     const elSpot = document.getElementById('valSpot');
     const elAtr = document.getElementById('valAtr');
@@ -365,6 +379,8 @@
     const elQuote = document.getElementById('valQuote');
     const elDistance = document.getElementById('valDistance');
     const elUnrealizedPnl = document.getElementById('valUnrealizedPnl');
+    const elPnlLabel = document.getElementById('lblPnl');
+    const elPnlSub = document.getElementById('subPnl');
 
     if (elSpot && strat.spot_price) {
       elSpot.textContent = Number(strat.spot_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -389,16 +405,17 @@
         elDistance.textContent = `${Number(strat.distance_to_strike).toFixed(2)} pts`;
       }
     }
-    if (elUnrealizedPnl) {
-      if (strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE') {
-        const pnl = strat.realized_inr;
-        const pts = strat.realized_pts;
-        elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
-        elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
-        const sub = elUnrealizedPnl.parentElement ? elUnrealizedPnl.parentElement.querySelector('.kpi-sub') : null;
-        if (sub) {
-          sub.innerHTML = `Stop Status: <strong class="badge ${strat.stop_status === 'TRIGGERED' ? 'badge-amber' : 'badge-green'}">${strat.stop_status.replace('_', ' ')}</strong> (${strat.exit_reason || 'CLOSED'})`;
-        }
+    const isTerminal = strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE' || strat.state === 'NO_TRADE';
+    if (elUnrealizedPnl && isTerminal) {
+      const pnl = strat.realized_inr;
+      const pts = strat.realized_pts;
+      if (elPnlLabel) elPnlLabel.textContent = 'Realized P&L (Session Closed)';
+      elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
+      elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+      if (elPnlSub) {
+        const exitTimeStr = strat.exit_time ? formatISTTime(new Date(strat.exit_time)) : null;
+        elPnlSub.innerHTML = `Exit: <strong>${escapeHtml(strat.exit_reason || 'SESSION_COMPLETE')}</strong>`
+          + (exitTimeStr ? ` &nbsp;·&nbsp; Completed <strong class="mono">${exitTimeStr}</strong>` : '');
       }
     }
   }
@@ -528,6 +545,13 @@
 
     const zeroY = scaleY(0);
 
+    // Theme-aware, not hardcoded-dark: reads the page's own CSS custom
+    // properties so gridlines/labels stay legible in light mode too
+    // (previously hardcoded white rgba() was invisible on a light background).
+    const rootStyle = getComputedStyle(document.documentElement);
+    const gridColor = (rootStyle.getPropertyValue('--cmd-border-strong') || '#3b82f6').trim();
+    const labelColor = (rootStyle.getPropertyValue('--cmd-muted') || '#94a3b8').trim();
+
     let svgHtml = `
       <defs>
         <linearGradient id="gradCombined" x1="0" y1="0" x2="0" y2="1">
@@ -536,8 +560,8 @@
         </linearGradient>
       </defs>
       <!-- Gridlines -->
-      <line x1="${padX}" y1="${zeroY}" x2="${width - padX}" y2="${zeroY}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4"/>
-      <text x="${padX - 8}" y="${zeroY + 4}" fill="rgba(255,255,255,0.4)" font-size="10" text-anchor="end" font-family="JetBrains Mono">₹0</text>
+      <line x1="${padX}" y1="${zeroY}" x2="${width - padX}" y2="${zeroY}" stroke="${gridColor}" stroke-dasharray="4"/>
+      <text x="${padX - 8}" y="${zeroY + 4}" fill="${labelColor}" font-size="10" text-anchor="end" font-family="JetBrains Mono">₹0</text>
     `;
 
     // Path generators
@@ -558,60 +582,98 @@
     // X Axis Labels
     points.forEach((p, i) => {
       const x = scaleX(i);
-      svgHtml += `<text x="${x}" y="${height - 10}" fill="rgba(255,255,255,0.4)" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${p.label}</text>`;
+      svgHtml += `<text x="${x}" y="${height - 10}" fill="${labelColor}" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${p.label}</text>`;
     });
 
     svgEl.innerHTML = svgHtml;
   }
 
   // --- Chronological Activity Stream ---
+  //
+  // SESSION ACTIVITY ARCHITECTURE: a strategy console must never show a
+  // global platform activity stream -- only events belonging to its own
+  // exact strategy/session. The container's `data-strategy-scope`
+  // attribute (set in each console's HTML) is the single source of truth
+  // for that scoping. Absent (Command Center only) means "all strategies,
+  // with the filter bar" -- present means "this strategy's session only,
+  // no cross-strategy leakage, no filter bar needed."
+  const STRATEGY_META = {
+    SELL_CE: { label: 'SELL-CE', sysClass: 'sell-ce', badgeClass: 'badge-amber' },
+    BPS1: { label: 'BPS-1', sysClass: 'bps1', badgeClass: 'badge-cyan' },
+    NIFTY_BPS: { label: 'NIFTY BPS', sysClass: 'nifty-bps', badgeClass: 'badge-green' },
+    SIC1: { label: 'NIFTY Weekly', sysClass: 'sic1', badgeClass: 'badge-blue' },
+  };
+
   function renderActivityLogs(systems) {
     const container = document.getElementById('activityFeedBox');
     if (!container) return;
 
+    const scope = container.dataset.strategyScope || null;
+    const keysToRender = scope ? [scope] : Object.keys(STRATEGY_META);
+
     const allEvents = [];
-
-    // Tag SELL-CE events
-    if (systems.SELL_CE && systems.SELL_CE.activity) {
-      systems.SELL_CE.activity.forEach(msg => {
-        allEvents.push({ system: 'SELL-CE', sysClass: 'sell-ce', text: msg, time: extractTime(msg) });
-      });
-    }
-    // Tag BPS-1 events
-    if (systems.BPS1 && systems.BPS1.activity) {
-      systems.BPS1.activity.forEach(msg => {
-        allEvents.push({ system: 'BPS-1', sysClass: 'bps1', text: msg, time: extractTime(msg) });
-      });
-    }
-    // Tag NIFTY BPS events
-    if (systems.NIFTY_BPS && systems.NIFTY_BPS.activity) {
-      systems.NIFTY_BPS.activity.forEach(msg => {
-        allEvents.push({ system: 'NIFTY BPS', sysClass: 'nifty-bps', text: msg, time: extractTime(msg) });
-      });
-    }
-    // Tag NIFTY Weekly events (SIC1)
-    if (systems.SIC1 && systems.SIC1.activity) {
-      systems.SIC1.activity.forEach(msg => {
-        allEvents.push({ system: 'NIFTY Weekly', sysClass: 'sic1', text: msg, time: extractTime(msg) });
-      });
-    }
-
-    const filtered = allEvents.filter(ev => {
-      if (activeLogFilter === 'ALL') return true;
-      if (activeLogFilter === 'SELL_CE' && ev.system === 'SELL-CE') return true;
-      if (activeLogFilter === 'BPS1' && ev.system === 'BPS-1') return true;
-      if (activeLogFilter === 'NIFTY_BPS' && ev.system === 'NIFTY BPS') return true;
-      if (activeLogFilter === 'SIC1' && ev.system === 'NIFTY Weekly') return true;
-      return false;
+    keysToRender.forEach(key => {
+      const strat = systems[key];
+      const meta = STRATEGY_META[key];
+      if (!strat || !Array.isArray(strat.activity)) return;
+      strat.activity.forEach(item => allEvents.push(normalizeActivityItem(item, meta)));
     });
 
+    // Filter bar only applies when unscoped (Command Center); a scoped
+    // console shows its full session history, unfiltered.
+    const filtered = scope ? allEvents : allEvents.filter(ev => {
+      if (activeLogFilter === 'ALL') return true;
+      return ev.filterKey === activeLogFilter;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="activity-empty">No session activity yet.</div>`;
+      return;
+    }
+
+    // Scoped (single-strategy) consoles omit the redundant strategy badge
+    // -- the page itself already establishes which strategy this is.
     container.innerHTML = filtered.map(ev => `
-      <div class="activity-item ${ev.sysClass}">
-        <span class="badge ${getBadgeClassForSys(ev.system)}">${ev.system}</span>
+      <div class="activity-item ${ev.sysClass} sev-${ev.severity}">
+        ${scope ? '' : `<span class="badge ${ev.badgeClass}">${ev.label}</span>`}
         <span class="activity-time mono">${ev.time}</span>
-        <span class="activity-text">${stripTime(ev.text)}</span>
+        <span class="activity-text">
+          <span class="activity-title">${ev.title}</span>
+          ${ev.summary ? `<span class="activity-summary">${ev.summary}</span>` : ''}
+        </span>
       </div>
     `).join('');
+  }
+
+  // Accepts either the legacy flat string the backend has always sent
+  // ("09:30:19 — Short NIFTY CE opened at signal") or the structured
+  // {title, summary, severity, event_type, timestamp} schema, so the
+  // backend can adopt the richer schema without a UI break.
+  function normalizeActivityItem(item, meta) {
+    const filterKey = Object.keys(STRATEGY_META).find(k => STRATEGY_META[k] === meta);
+    if (typeof item === 'object' && item !== null) {
+      return {
+        label: meta.label, sysClass: meta.sysClass, badgeClass: meta.badgeClass, filterKey,
+        time: item.timestamp ? extractTime(String(item.timestamp)) : '--:--',
+        title: escapeHtml(item.title || item.summary || 'Session event'),
+        summary: item.title && item.summary ? escapeHtml(item.summary) : '',
+        severity: (item.severity || 'info').toLowerCase(),
+      };
+    }
+    const str = String(item);
+    return {
+      label: meta.label, sysClass: meta.sysClass, badgeClass: meta.badgeClass, filterKey,
+      time: extractTime(str),
+      title: escapeHtml(stripTime(str)),
+      summary: '',
+      severity: 'info',
+    };
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   function extractTime(str) {
@@ -623,12 +685,31 @@
     return str.replace(/^\d{2}:\d{2}(?::\d{2})?\s*[—\-:]\s*/, '');
   }
 
-  function getBadgeClassForSys(sys) {
-    if (sys === 'SELL-CE') return 'badge-amber';
-    if (sys === 'BPS-1') return 'badge-cyan';
-    if (sys === 'NIFTY BPS') return 'badge-green';
-    if (sys === 'NIFTY Weekly') return 'badge-blue';
-    return 'badge-gray';
+  // --- Recovery Session Banner ---
+  // A recovery session (session_id ending in "_RECOVERY") must be visually
+  // explicit -- never indistinguishable from an ordinary session -- without
+  // cluttering the page when there is nothing to recover from.
+  function renderRecoveryBanner(systems) {
+    const el = document.getElementById('recoveryBanner');
+    if (!el) return;
+
+    const activityBox = document.getElementById('activityFeedBox');
+    const scope = activityBox ? activityBox.dataset.strategyScope : null;
+    const strat = scope ? systems[scope] : null;
+    const sessionId = strat ? strat.session_id : null;
+
+    if (!sessionId || !/_RECOVERY$/.test(sessionId)) {
+      el.classList.add('hidden');
+      el.innerHTML = '';
+      return;
+    }
+
+    const origin = sessionId.replace(/_RECOVERY$/, '');
+    el.innerHTML = `
+      <span class="badge badge-amber">⚠ PAPER RECOVERY</span>
+      <span class="recovery-detail mono">Origin: ${escapeHtml(origin)} &nbsp;→&nbsp; Recovery: ${escapeHtml(sessionId)}</span>
+    `;
+    el.classList.remove('hidden');
   }
 
   // --- Timestamps & Stale Checker (Ticks every second) ---

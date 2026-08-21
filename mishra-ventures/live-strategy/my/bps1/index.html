@@ -19,35 +19,34 @@
 
   <link rel="stylesheet" href="/mishra-ventures/shared/global.css?v=20260820b" />
   <link rel="stylesheet" href="/mishra-ventures/shared/components.css?v=20260820b" />
-  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260820b" />
+  <link rel="stylesheet" href="../shared/my-dashboard.css?v=20260821c" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Nav Bar -->
   <nav>
-    <div class="nav-brand">
+    <a href="../" class="nav-brand">
       <div class="nav-logo">⚡</div>
       <div>
-        <div class="nav-brand-text">BPS-1 CONSOLE</div>
-        <div class="nav-brand-sub">Single-Stock Monthly Bull Put Spread</div>
+        <div class="nav-brand-text">BPS-1 Console</div>
+        <div class="nav-brand-sub">Live Strategy / Command Center</div>
       </div>
-    </div>
+    </a>
     <div style="display: flex; align-items: center; gap: 12px;">
-      <a href="../" class="nav-home">← Command Center (/live-strategy/my/)</a>
+      <div class="theme-switch" id="themeSwitch" role="group" aria-label="Colour theme">
+        <button type="button" class="ts-opt" data-set-theme="light" aria-pressed="false" title="Light theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <button type="button" class="ts-opt" data-set-theme="dark" aria-pressed="false" title="Dark theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        </button>
+      </div>
+      <a href="../" class="nav-home">← Command Center</a>
     </div>
   </nav>
 
   <div class="cmd-wrap">
-
-    <!-- Sub-Nav & Status Bar -->
-    <div class="sub-nav-bar">
-      <a href="../" class="sub-nav-link">← Back to Command Center (/live-strategy/my/)</a>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span class="badge badge-green">🟢 PAPER LIVE</span>
-        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
-      </div>
-    </div>
 
     <!-- Strategy Header Card -->
     <div class="operator-banner" style="margin-bottom: 1.5rem;">
@@ -55,11 +54,16 @@
         <div class="banner-shield">
           <span>🛡️</span> PAPER TRADING — ZERO REAL BROKER ORDERS
         </div>
-        <div class="banner-heading">BPS1_MONTHLY_BULL_PUT_SPREAD_EOD (v1.0.0)</div>
+        <div class="banner-heading">BPS-1 (v1.0.0)</div>
         <div class="banner-sub">Systematic Monthly Defined-Risk Bull Put Spread on 10 High-Liquidity NSE Single-Stock Equities</div>
+        <div id="recoveryBanner" class="recovery-banner hidden"></div>
       </div>
 
       <div class="telemetry-status-box">
+        <div class="time-item">
+          <span class="time-label">Session Status</span>
+          <span class="badge badge-green" style="margin-top: 2px;">🟢 PAPER LIVE</span>
+        </div>
         <div class="time-item">
           <span class="time-label">Engine Health</span>
           <span id="bps1EngineBadge" class="badge badge-green" style="margin-top: 2px;">HEALTHY</span>
@@ -76,6 +80,7 @@
           <span class="time-label">Data Age</span>
           <span id="valDataAge" class="time-val mono">—</span>
         </div>
+        <button id="btnRefresh" class="btn-refresh"><span>↻</span> Refresh Now</button>
       </div>
     </div>
 
@@ -131,39 +136,33 @@
               <th>Component</th>
               <th>Status</th>
               <th>Details</th>
-              <th>Host / Environment</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>BPS-1 Paper Agent</strong></td>
+              <td><strong>Engine</strong></td>
               <td><span class="badge badge-green">HEALTHY</span></td>
-              <td>Standalone isolated package (bps1_paper_agent)</td>
-              <td>GCP VM (nifty-ai-trading)</td>
+              <td>Isolated agent running normally</td>
             </tr>
             <tr>
               <td><strong>Scheduler</strong></td>
               <td><span class="badge badge-green">ACTIVE</span></td>
-              <td>Mon-Fri 09:14 IST daily execution timer</td>
-              <td>systemd: trading-bps1.timer</td>
+              <td>Mon–Fri 09:14 IST daily execution timer</td>
             </tr>
             <tr>
-              <td><strong>Database</strong></td>
-              <td><span class="badge badge-green">OK</span></td>
-              <td>SQLite storage: /opt/trading/data/bps1/bps1_paper_agent.db</td>
-              <td>Local SSD on VM</td>
+              <td><strong>Data</strong></td>
+              <td><span class="badge badge-green">FRESH</span></td>
+              <td>Session store reachable and current</td>
             </tr>
             <tr>
-              <td><strong>Email Notifications</strong></td>
+              <td><strong>Notifications</strong></td>
               <td><span class="badge badge-green">CONFIGURED</span></td>
-              <td>Resend API + SMTP fallback (ProOptionSeller04@gmail.com)</td>
-              <td>Sanitized alerts with [PAPER] prefix</td>
+              <td>Sanitized [PAPER] alert email active</td>
             </tr>
             <tr>
-              <td><strong>Broker Execution</strong></td>
+              <td><strong>Broker / Market Feed</strong></td>
               <td><span class="badge badge-green">READ ONLY</span></td>
-              <td>AST safety scan verified 0 mutating order endpoints</td>
-              <td>Angel One SmartAPI Read-Only</td>
+              <td>Read-only market data — zero mutating order endpoints</td>
             </tr>
           </tbody>
         </table>
@@ -173,10 +172,10 @@
     <!-- Activity Log -->
     <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">BPS-1 Strategy Activity Log</div>
+        <div class="panel-title">Session Activity Log</div>
       </div>
-      <div id="activityFeedBox" class="activity-feed-box">
-        <!-- Injected dynamically -->
+      <div id="activityFeedBox" class="activity-feed-box" data-strategy-scope="BPS1">
+        <!-- Injected dynamically -- BPS1 session events only, see Session Activity Architecture -->
       </div>
     </div>
 
@@ -186,6 +185,7 @@
     <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; BPS-1 Console &nbsp;·&nbsp; /live-strategy/my/bps1/
   </footer>
 
-  <script src="../shared/my-dashboard.js?v=20260820b"></script>
+  <script src="/mishra-ventures/shared/theme.js"></script>
+  <script src="../shared/my-dashboard.js?v=20260821c"></script>
 </body>
 </html>

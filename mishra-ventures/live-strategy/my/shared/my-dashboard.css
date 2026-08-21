@@ -30,6 +30,19 @@
   
   --shadow-panel: 0 12px 32px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+
+  /* components.css's shared nav/.nav-logo/.theme-switch rules read these
+     generic token names, not --cmd-*. Without this alias they render
+     blank (missing border, missing logo gradient) on every page here --
+     see the live-strategy audit, "CSS variable bridge". */
+  --border: var(--cmd-border);
+  --accent: var(--cmd-accent);
+  --accent2: var(--cmd-accent2);
+  --text: var(--cmd-text);
+  --text-strong: var(--cmd-text-strong);
+  --muted: var(--cmd-muted);
+  --surface: var(--cmd-surface);
+  --green: var(--pnl-pos);
 }
 
 html[data-theme="light"] {
@@ -466,7 +479,10 @@ body {
 .activity-item.sell-ce { border-left-color: var(--stat-amber); }
 .activity-item.bps1 { border-left-color: var(--stat-cyan); }
 .activity-item.nifty-bps { border-left-color: var(--pnl-pos); }
+.activity-item.sic1 { border-left-color: var(--cmd-accent); }
 .activity-item.system { border-left-color: var(--stat-purple); }
+.activity-item.sev-warning { border-left-color: var(--stat-amber); }
+.activity-item.sev-critical { border-left-color: var(--pnl-neg); }
 
 .activity-time {
   font-size: 0.72rem;
@@ -475,10 +491,40 @@ body {
 }
 .activity-text {
   flex: 1;
-  color: var(--cmd-text);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.activity-title { color: var(--cmd-text); }
+.activity-summary { font-size: 0.75rem; color: var(--cmd-muted); }
+.activity-empty {
+  text-align: center;
+  color: var(--cmd-muted);
+  font-size: 0.82rem;
+  padding: 1.5rem 0;
 }
 
-/* ── Lifecycle Stepper ── */
+/* ── Recovery Session Indicator ──
+   Must never look identical to an ordinary session (Part 14), but stays
+   collapsed (.hidden, set by default in HTML) when there is nothing to
+   recover from -- most sessions never show this. */
+.recovery-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.recovery-banner .recovery-detail {
+  font-size: 0.75rem;
+  color: var(--cmd-muted);
+}
+
+/* ── Lifecycle Stepper ──
+   Class names here (.step-node/.step-circle + .completed/.active/.pending)
+   match what renderLifecycleStepper() in my-dashboard.js actually emits --
+   a prior version of this file styled .step-item/.step-dot, which the JS
+   never rendered, so the stepper was unstyled div soup. */
 .stepper-container {
   display: flex;
   align-items: center;
@@ -490,46 +536,48 @@ body {
   margin-bottom: 1.5rem;
   overflow-x: auto;
 }
-.step-item {
+.step-node {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   text-align: center;
-  min-width: 110px;
+  min-width: 100px;
+  flex: 1;
 }
-.step-dot {
-  width: 24px;
-  height: 24px;
+.step-circle {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--cmd-surface);
   border: 2px solid var(--cmd-border-strong);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--cmd-muted);
 }
-.step-item.active .step-dot {
+.step-node.completed .step-circle {
+  background: var(--stat-cyan-bg);
+  border-color: var(--stat-cyan);
+  color: var(--stat-cyan);
+}
+.step-node.active .step-circle {
   background: var(--pnl-pos);
   border-color: var(--pnl-pos);
   color: #060a14;
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
 }
 .step-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--cmd-muted);
 }
-.step-item.active .step-label {
-  color: var(--pnl-pos);
-}
-.step-arrow {
-  color: var(--cmd-border-strong);
-  font-size: 14px;
-}
+.step-node.completed .step-label { color: var(--stat-cyan); }
+.step-node.active .step-label { color: var(--pnl-pos); }
 
 /* ── Error & Alert Notice ── */
 .alert-box {
