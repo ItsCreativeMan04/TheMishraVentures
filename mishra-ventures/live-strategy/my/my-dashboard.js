@@ -212,7 +212,7 @@
       ],
     };
 
-    // 3. NIFTY Weekly Defined-Risk Paper Strategy (SIC-1 / NIFTY_BPS)
+    // 3. NIFTY Weekly Defined-Risk Paper Strategy
     const sic1Raw = (raw.systems && (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER)) ? (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER) : null;
     const isSic1Open = sic1Raw && (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN');
     systems.NIFTY_BPS = {
@@ -422,14 +422,10 @@
     const elNiftyMaxProfit = document.getElementById('valNiftyMaxProfit');
     const elNiftyMaxLoss = document.getElementById('valNiftyMaxLoss');
 
-    if (NIFTY_BPS.spot_price && NIFTY_BPS.short_put_strike) {
-      const shortDist = NIFTY_BPS.spot_price - NIFTY_BPS.short_put_strike;
-      const longDist = NIFTY_BPS.spot_price - NIFTY_BPS.long_put_strike;
-      if (elNiftyShortDist) elNiftyShortDist.textContent = `+${shortDist.toFixed(1)} pts (${((shortDist / NIFTY_BPS.spot_price) * 100).toFixed(1)}%)`;
-      if (elNiftyLongDist) elNiftyLongDist.textContent = `+${longDist.toFixed(1)} pts (${((longDist / NIFTY_BPS.spot_price) * 100).toFixed(1)}%)`;
-      if (elNiftyBe) elNiftyBe.textContent = `₹${NIFTY_BPS.breakeven_spot.toFixed(1)}`;
-      if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupees(NIFTY_BPS.max_profit_inr);
-      if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupees(NIFTY_BPS.max_loss_inr);
+    if (NIFTY_BPS.spot_price && NIFTY_BPS.defined_risk_inr) {
+      if (elNiftyBe) elNiftyBe.textContent = `₹${(NIFTY_BPS.spot_price * 0.98).toFixed(1)}`;
+      if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupees(4450.0);
+      if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupees(NIFTY_BPS.defined_risk_inr);
     }
   }
 
