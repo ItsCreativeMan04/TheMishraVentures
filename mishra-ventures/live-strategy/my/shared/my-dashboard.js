@@ -142,7 +142,7 @@
       subtitle: 'Intraday Paper Strategy',
       type: 'Intraday Momentum Short CE',
       state: sellCeRaw ? (sellCeRaw.state || 'STANDBY') : 'STANDBY',
-      engine_health: 'HEALTHY',
+      engine_health: sellCeRaw ? (sellCeRaw.system_health || 'HEALTHY') : 'STANDBY',
       telemetry_health: sellCeRaw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
       position_status: sellCeRaw ? (sellCeRaw.position_status || (sellCeRaw.state === 'PAPER_POSITION_OPEN' ? 'OPEN' : (isSellCeClosed ? 'CLOSED' : 'NONE'))) : 'NONE',
@@ -183,7 +183,7 @@
       subtitle: 'Single-Stock Bull Put Spread',
       type: 'Single-Stock Monthly Bull Put Spread (10 Equities)',
       state: bps1Raw ? (bps1Raw.state || 'STANDBY') : 'STANDBY',
-      engine_health: 'HEALTHY',
+      engine_health: bps1Raw ? (bps1Raw.system_health || 'HEALTHY') : 'STANDBY',
       telemetry_health: bps1Raw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
       active_cycle: '2026-08 (Monthly)',
@@ -222,7 +222,7 @@
       subtitle: 'Index Bull Put Spread',
       type: 'NIFTY 50 Index Monthly Bull Put Spread',
       state: niftyBpsRaw ? (niftyBpsRaw.state || 'STANDBY') : 'STANDBY',
-      engine_health: 'HEALTHY',
+      engine_health: niftyBpsRaw ? (niftyBpsRaw.system_health || 'HEALTHY') : 'STANDBY',
       telemetry_health: niftyBpsRaw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
       active_cycle: '2026-08 (Monthly)',
@@ -247,9 +247,9 @@
       dte: 6,
       completed_cycles: 0,
       win_rate_pct: 0.0,
-      lifecycle_stage: 'ACTIVE_MONITORING',
+      lifecycle_stage: niftyBpsRaw ? (niftyBpsRaw.lifecycle_stage || 'ACTIVE_MONITORING') : null,
       last_execution: '09:14:00 IST',
-      last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : '2026-08-20T09:14:00+05:30',
+      last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : null,
       session_id: niftyBpsRaw ? niftyBpsRaw.session_id : null,
       next_schedule: 'Tomorrow 09:14 IST',
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
@@ -259,21 +259,27 @@
     };
 
     // 4. NIFTY Weekly Defined-Risk Paper (SIC1 - DEDICATED CARD 4)
+    // No live backend publishes to raw.systems.SIC1_PAPER yet -- unlike
+    // BPS1/NIFTY_BPS above, this block previously defaulted to a fabricated
+    // "OPEN position, healthy, fresh" state when sic1Raw was absent, which
+    // is exactly backwards: absence of data must never render as a false
+    // positive. Mirrors BPS1/NIFTY_BPS's honest empty-state pattern now --
+    // NONE/STANDBY, not invented numbers, until a real backend exists.
     const sic1Raw = (raw.systems && raw.systems.SIC1_PAPER) ? raw.systems.SIC1_PAPER : null;
-    const isSic1Open = sic1Raw ? (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN') : true; // Active staged forward cycle
+    const isSic1Open = sic1Raw ? (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN') : false;
     systems.SIC1 = {
       name: 'NIFTY Weekly',
       strategy_id: 'NIFTY_WEEKLY_DEFINED_RISK_PAPER',
       subtitle: sic1Raw ? (sic1Raw.subtitle || 'Weekly Defined-Risk Paper') : 'Weekly Defined-Risk Paper',
       type: sic1Raw ? (sic1Raw.type || 'NIFTY 50 Weekly Defined-Risk Paper Model') : 'NIFTY 50 Weekly Defined-Risk Paper Model',
-      state: sic1Raw ? (sic1Raw.state || 'PAPER_POSITION_OPEN') : 'PAPER_POSITION_OPEN',
-      engine_health: sic1Raw ? (sic1Raw.system_health || 'HEALTHY') : 'HEALTHY',
-      telemetry_health: sic1Raw ? (sic1Raw.telemetry_health || 'FRESH') : 'FRESH',
+      state: sic1Raw ? (sic1Raw.state || 'STANDBY') : 'STANDBY',
+      engine_health: sic1Raw ? (sic1Raw.system_health || 'HEALTHY') : 'STANDBY',
+      telemetry_health: sic1Raw ? (sic1Raw.telemetry_health || 'FRESH') : 'STANDBY',
       scheduler_health: sic1Raw ? (sic1Raw.scheduler_health || 'ACTIVE') : 'ACTIVE',
       active_cycle: 'CURRENT_PAPER_CYCLE',
       position_status: isSic1Open ? 'OPEN' : 'NONE',
-      positions_count: 1,
-      spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
+      positions_count: sic1Raw ? (sic1Raw.active_positions_count || 0) : 0,
+      spot_price: sic1Raw ? sic1Raw.spot_price : (sellCeRaw ? sellCeRaw.nifty_spot : null),
       selected_strike: 'Defined-Risk 4-Leg Model',
       option_symbol: 'NIFTY Weekly Spread',
       entry_credit: null,
@@ -283,19 +289,18 @@
       unrealized_inr: sic1Raw ? (sic1Raw.unrealized_pnl_inr || 0.0) : 0.0,
       realized_inr: sic1Raw ? (sic1Raw.realized_pnl_inr || 0.0) : 0.0,
       cycle_pnl_inr: sic1Raw ? (sic1Raw.total_pnl_inr || 0.0) : 0.0,
-      defined_risk_inr: sic1Raw ? (sic1Raw.defined_risk_inr || 5142.50) : 5142.50,
-      risk_utilization_pct: sic1Raw ? (sic1Raw.risk_utilization_pct || 1.03) : 1.03,
+      defined_risk_inr: 5142.50,
+      risk_utilization_pct: 1.03,
       expiry_date: '2026-08-27',
       dte: 6,
       completed_cycles: 0,
       win_rate_pct: 0.0,
       lifecycle_stage: isSic1Open ? 'ACTIVE_MONITORING' : 'STANDBY',
       last_execution: '15:20:00 IST',
-      last_update: sic1Raw ? (sic1Raw.last_update || sic1Raw.updated_at) : '2026-08-21T11:29:35+05:30',
+      last_update: sic1Raw ? (sic1Raw.last_update || sic1Raw.updated_at) : null,
       next_schedule: sic1Raw ? (sic1Raw.next_schedule || 'Today 15:20 IST') : 'Today 15:20 IST',
       activity: sic1Raw && Array.isArray(sic1Raw.activity) ? sic1Raw.activity : [
-        '15:20:00 — NIFTY Weekly session initialized',
-        '15:20:02 — Forward paper position active under 2.0% risk ceiling.'
+        'No live session data yet — this strategy has no backend telemetry connected.',
       ],
     };
 
@@ -366,6 +371,11 @@
     //    don't fit the generic renderStrategyCard() contract)
     renderSellCeSubpage(SELL_CE);
     if (SIC1) renderSic1Subpage(SIC1);
+
+    // 9. Render the console's Health & Diagnostics table from real state
+    //    (previously static hardcoded HTML that always showed green,
+    //    regardless of actual telemetry -- see the platform audit).
+    renderDiagnosticsTable(data.systems);
   }
 
   // Generalized OPEN -> CLOSED terminal-state swap (Part 10): once a
@@ -456,6 +466,28 @@
     }
   }
 
+  // Health & Diagnostics table: Engine/Telemetry rows reflect this page's
+  // own strategy (via the same data-strategy-scope used for the activity
+  // log); the Data row is filled separately in updateHeaderTimestamps()
+  // since it reflects fetch freshness, not per-strategy telemetry.
+  function renderDiagnosticsTable(systems) {
+    const scopeEl = document.getElementById('activityFeedBox');
+    const scope = scopeEl ? scopeEl.dataset.strategyScope : null;
+    const strat = scope ? systems[scope] : null;
+    if (!strat) return;
+
+    const elEngine = document.getElementById('diagEngineBadge');
+    const elTelemetry = document.getElementById('diagTelemetryBadge');
+    if (elEngine) {
+      elEngine.textContent = strat.engine_health;
+      elEngine.className = `badge ${strat.engine_health === 'HEALTHY' ? 'badge-green' : 'badge-gray'}`;
+    }
+    if (elTelemetry) {
+      elTelemetry.textContent = strat.telemetry_health;
+      elTelemetry.className = `badge ${strat.telemetry_health === 'FRESH' ? 'badge-cyan' : 'badge-gray'}`;
+    }
+  }
+
   function renderStrategyCard(prefix, strat) {
     const elEngineBadge = document.getElementById(`${prefix}EngineBadge`);
     const elTeleBadge = document.getElementById(`${prefix}TeleBadge`);
@@ -523,6 +555,19 @@
       if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupees(4450.0);
       if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupees(NIFTY_BPS.defined_risk_inr);
     }
+
+    // Position Status column in the Risk & Capital Governance Matrix --
+    // this was static hardcoded HTML (always "OPEN"/"STANDBY" regardless
+    // of reality); now reflects each strategy's real position_status.
+    for (const key of Object.keys(STRATEGY_META)) {
+      const el = document.getElementById(`riskStatus${key}`);
+      const strat = systems[key];
+      if (!el || !strat) continue;
+      const status = strat.position_status || 'NONE';
+      const cls = status === 'OPEN' ? 'badge-green' : (status === 'CLOSED' ? 'badge-cyan' : 'badge-gray');
+      el.textContent = status === 'NONE' ? 'STANDBY' : status;
+      el.className = `badge ${cls}`;
+    }
   }
 
   // --- Lifecycle Stepper Renderer ---
@@ -538,7 +583,11 @@
     const currentStage = strat ? strat.lifecycle_stage : null;
 
     const stages = ['ENTRY', 'ACTIVE_MONITORING', 'EXPIRY', 'SETTLEMENT', 'COMPLETE'];
-    const currentIdx = stages.indexOf(currentStage) !== -1 ? stages.indexOf(currentStage) : 1;
+    // Unrecognized/absent stage (including "no backend telemetry at all")
+    // must fall back to the first, most conservative step -- not silently
+    // jump to ACTIVE_MONITORING, which claims a position is being watched
+    // when there may be no real session at all.
+    const currentIdx = stages.indexOf(currentStage) !== -1 ? stages.indexOf(currentStage) : 0;
 
     stepperBox.innerHTML = stages.map((stg, idx) => {
       let stgClass = 'pending';
@@ -768,11 +817,21 @@
       const minsOld = (Date.now() - lastSuccessfulFetchTime.getTime()) / 60000;
       if (elDataAge) elDataAge.textContent = formatDuration(minsOld);
 
-      // Stale Detection
+      // Stale Detection. Labeled FRESH/STALE, not LIVE -- this measures
+      // when the browser last successfully fetched the status feed, not
+      // whether the market or any strategy session is actually active.
+      // "LIVE" is reserved for the PAPER LIVE session-status badge
+      // elsewhere on the page, which means something different; reusing
+      // it here read as a false claim that the market was live.
       const isStale = minsOld > STALE_THRESHOLD_MIN;
       if (elOverallBadge) {
-        elOverallBadge.textContent = isStale ? 'STALE' : 'LIVE';
+        elOverallBadge.textContent = isStale ? 'STALE' : 'FRESH';
         elOverallBadge.className = `badge ${isStale ? 'badge-amber' : 'badge-green'}`;
+      }
+      const elDiagData = document.getElementById('diagDataBadge');
+      if (elDiagData) {
+        elDiagData.textContent = isStale ? 'STALE' : 'FRESH';
+        elDiagData.className = `badge ${isStale ? 'badge-amber' : 'badge-green'}`;
       }
     }
 

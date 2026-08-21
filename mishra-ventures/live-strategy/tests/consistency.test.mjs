@@ -187,6 +187,42 @@ check('16. Command Center has no dead strategy-card links', () => {
   }
 });
 
+// 17. No strategy defaults to a false-positive OPEN/healthy state when it
+// has no real backend data (regression guard for the SIC1 bug: a console
+// with no live telemetry showed "OPEN" with a green badge instead of an
+// honest empty state).
+check('17. Absent backend data renders an honest empty state, never a fabricated positive', () => {
+  assert(
+    js.includes("const isSic1Open = sic1Raw ? (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN') : false;"),
+    'SIC1 position defaults to OPEN when no backend data exists -- must default to false/NONE'
+  );
+  assert(
+    !js.includes(": 'HEALTHY') : 'HEALTHY'") && !js.includes(": 'FRESH') : 'FRESH'"),
+    'a strategy engine/telemetry health still defaults to a positive state with no backend data'
+  );
+  // engine_health must never be an unconditional literal -- that was the
+  // exact shape of the BPS1/NIFTY_BPS bug (always "HEALTHY" whether or not
+  // any raw telemetry existed).
+  const unconditionalEngineHealth = /engine_health:\s*'HEALTHY',/;
+  assert(!unconditionalEngineHealth.test(js), 'engine_health is hardcoded to a literal instead of being conditional on real data');
+});
+
+// 18. Data-freshness badge is never labeled "LIVE" (collides with the
+// PAPER LIVE session-status badge, which means something different).
+check('18. Fetch-freshness badges say FRESH/STALE, never the ambiguous "LIVE"', () => {
+  assert(!js.includes("isStale ? 'STALE' : 'LIVE'"), 'fetch-freshness badge still uses the ambiguous "LIVE" label');
+  assert(js.includes("isStale ? 'STALE' : 'FRESH'"), 'fetch-freshness badge should read FRESH when not stale');
+});
+
+// 19. Health & Diagnostics tables are wired to real state, not static markup
+check('19. Console diagnostics tables are driven by computed state, not hardcoded green', () => {
+  for (const key of CONSOLES) {
+    assert(html[key].includes('id="diagEngineBadge"'), `${key}: Engine row is not wired to real state`);
+    assert(html[key].includes('id="diagDataBadge"'), `${key}: Data row is not wired to real state`);
+  }
+  assert(js.includes('function renderDiagnosticsTable'), 'renderDiagnosticsTable is missing');
+});
+
 console.log(`\n${passed}/${passed + failures.length} passed`);
 if (failures.length) {
   console.log(`\n${failures.length} FAILURE(S):`);
