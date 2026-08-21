@@ -212,48 +212,44 @@
       ],
     };
 
-    // 3. NIFTY BPS Index
-    const niftyBpsRaw = (raw.systems && raw.systems.NIFTY_BPS_PAPER) ? raw.systems.NIFTY_BPS_PAPER : null;
+    // 3. NIFTY Weekly Defined-Risk Paper Strategy (SIC-1 / NIFTY_BPS)
+    const sic1Raw = (raw.systems && (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER)) ? (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER) : null;
+    const isSic1Open = sic1Raw && (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN');
     systems.NIFTY_BPS = {
-      name: 'NIFTY BPS',
-      strategy_id: 'BPS_INDEX_MONTHLY_EOD',
-      subtitle: 'Index Bull Put Spread',
-      type: 'NIFTY 50 Index Monthly Bull Put Spread',
-      state: niftyBpsRaw ? (niftyBpsRaw.state || 'STANDBY') : 'STANDBY',
-      engine_health: 'HEALTHY',
-      telemetry_health: niftyBpsRaw ? 'FRESH' : 'STANDBY',
-      scheduler_health: 'ACTIVE',
-      active_cycle: '2026-08 (Monthly)',
-      position_status: niftyBpsRaw ? (niftyBpsRaw.position_status || 'NONE') : 'NONE',
-      positions_count: niftyBpsRaw ? (niftyBpsRaw.active_positions_count || 0) : 0,
-      spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24213.15,
-      short_put_strike: 23000,
-      long_put_strike: 21800,
-      selected_strike: '5% OTM Short / 10% Long',
-      option_symbol: 'NIFTY Monthly Spread',
+      name: 'NIFTY Weekly',
+      strategy_id: 'NIFTY_WEEKLY_DEFINED_RISK_PAPER',
+      subtitle: sic1Raw ? (sic1Raw.subtitle || 'Weekly Defined-Risk Spread') : 'Weekly Defined-Risk Spread',
+      type: sic1Raw ? (sic1Raw.type || 'NIFTY 50 Weekly Defined-Risk Paper Model') : 'NIFTY 50 Weekly Defined-Risk Paper Model',
+      state: sic1Raw ? (sic1Raw.state || 'STANDBY') : 'STANDBY',
+      engine_health: sic1Raw ? (sic1Raw.system_health || 'HEALTHY') : 'HEALTHY',
+      telemetry_health: sic1Raw ? (sic1Raw.telemetry_health || 'FRESH') : 'STANDBY',
+      scheduler_health: sic1Raw ? (sic1Raw.scheduler_health || 'ACTIVE') : 'ACTIVE',
+      active_cycle: 'CURRENT_PAPER_CYCLE',
+      position_status: isSic1Open ? 'OPEN' : (sic1Raw ? (sic1Raw.position_status || 'NONE') : 'NONE'),
+      positions_count: sic1Raw ? (sic1Raw.active_positions_count || (isSic1Open ? 1 : 0)) : 0,
+      spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
+      selected_strike: 'Defined-Risk 4-Leg Model',
+      option_symbol: 'NIFTY Weekly Spread',
       entry_credit: null,
       entry_price: null,
       option_ltp: null,
       unrealized_pts: 0.0,
-      unrealized_inr: niftyBpsRaw ? (niftyBpsRaw.unrealized_pnl_inr || 0.0) : 0.0,
-      realized_inr: niftyBpsRaw ? (niftyBpsRaw.realized_pnl_inr || 0.0) : 0.0,
-      cycle_pnl_inr: niftyBpsRaw ? (niftyBpsRaw.cycle_pnl_inr || 0.0) : 0.0,
-      max_profit_inr: 4450.0,
-      max_loss_inr: 85500.0,
-      breakeven_spot: 22911.0,
-      defined_risk_inr: 85500.0,
-      risk_utilization_pct: 17.1,
+      unrealized_inr: sic1Raw ? (sic1Raw.unrealized_pnl_inr || 0.0) : 0.0,
+      realized_inr: sic1Raw ? (sic1Raw.realized_pnl_inr || 0.0) : 0.0,
+      cycle_pnl_inr: sic1Raw ? (sic1Raw.total_pnl_inr || 0.0) : 0.0,
+      defined_risk_inr: sic1Raw ? (sic1Raw.defined_risk_inr || 5142.50) : 5142.50,
+      risk_utilization_pct: sic1Raw ? (sic1Raw.risk_utilization_pct || 1.03) : 1.03,
       expiry_date: '2026-08-27',
-      dte: 7,
+      dte: 6,
       completed_cycles: 0,
       win_rate_pct: 0.0,
-      lifecycle_stage: 'ACTIVE_MONITORING', // ENTRY, ACTIVE_MONITORING, EXPIRY, SETTLEMENT, COMPLETE
-      last_execution: '09:14:00 IST',
-      last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : '2026-08-20T09:14:00+05:30',
-      next_schedule: 'Tomorrow 09:14 IST',
-      activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
-        '09:14:00 — NIFTY BPS Agent operational on GCP (trading-nifty-bps.timer active)',
-        '09:14:02 — Standby mode. Evaluating contract eligibility (DTE 26-32 calendar days).'
+      lifecycle_stage: isSic1Open ? 'ACTIVE_MONITORING' : 'STANDBY',
+      last_execution: '15:20:00 IST',
+      last_update: sic1Raw ? (sic1Raw.last_update || sic1Raw.updated_at) : '2026-08-21T11:29:35+05:30',
+      next_schedule: sic1Raw ? (sic1Raw.next_schedule || 'Today 15:20 IST') : 'Today 15:20 IST',
+      activity: sic1Raw && Array.isArray(sic1Raw.activity) ? sic1Raw.activity : [
+        '15:20:00 — NIFTY Weekly Defined-Risk Paper Agent operational on GCP',
+        '15:20:02 — Forward paper position active under 2.0% risk ceiling.'
       ],
     };
 
