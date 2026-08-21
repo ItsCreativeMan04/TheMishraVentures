@@ -172,13 +172,13 @@
         </div>
       </div>
 
-      <!-- 3. NIFTY Weekly Defined-Risk Paper -->
+      <!-- 3. NIFTY BPS Index (Monthly) -->
       <div class="strat-card">
         <div>
           <div class="strat-header">
             <div class="strat-title-group">
-              <h3>NIFTY Weekly</h3>
-              <div class="strat-type">Weekly Defined-Risk Paper</div>
+              <h3>NIFTY BPS</h3>
+              <div class="strat-type">Index Bull Put Spread</div>
             </div>
             <div style="display: flex; gap: 4px;">
               <span id="niftybpsEngineBadge" class="badge badge-green">HEALTHY</span>
@@ -189,7 +189,7 @@
           <div class="strat-body">
             <div class="stat-row">
               <span class="stat-name">Active Cycle</span>
-              <span id="niftybpsCycle" class="stat-val mono">CURRENT_PAPER_CYCLE</span>
+              <span id="niftybpsCycle" class="stat-val mono">2026-08 (Monthly)</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Position</span>
@@ -211,8 +211,52 @@
         </div>
 
         <div class="strat-footer">
-          <span class="badge badge-green">Defined-Risk 4-Leg Model</span>
+          <span class="badge badge-green">5% OTM Short / 10% Long</span>
           <a href="nifty-bps/" class="btn-detail">View Strategy →</a>
+        </div>
+      </div>
+
+      <!-- 4. NIFTY Weekly Defined-Risk Paper (SIC1) -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>NIFTY Weekly</h3>
+              <div class="strat-type">Weekly Defined-Risk Paper</div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <span id="sic1EngineBadge" class="badge badge-green">HEALTHY</span>
+              <span id="sic1TeleBadge" class="badge badge-cyan">FRESH</span>
+            </div>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle</span>
+              <span id="sic1Cycle" class="stat-val mono">CURRENT_PAPER_CYCLE</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Position</span>
+              <span id="sic1Position" class="stat-val mono">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Current P&L</span>
+              <span id="sic1Pnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Cycle P&L</span>
+              <span id="sic1TodayPnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Expiry & DTE</span>
+              <span id="sic1Expiry" class="stat-val mono" style="font-size: 0.78rem;">2026-08-27 (6 DTE)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-green">Defined-Risk 4-Leg Model</span>
+          <a href="#" class="btn-detail">Paper Live →</a>
         </div>
       </div>
 
@@ -248,7 +292,7 @@
 
       <div class="kpi-card">
         <div class="kpi-label">System Architecture</div>
-        <div class="kpi-value" style="font-size: 1.25rem; color: var(--cmd-accent2);">3 Isolated Agents</div>
+        <div class="kpi-value" style="font-size: 1.25rem; color: var(--cmd-accent2);">4 Isolated Agents</div>
         <div class="kpi-sub">
           <span>GCP VM · Read-Only Broker API</span>
         </div>
@@ -264,6 +308,7 @@
           <div class="legend-pill"><span class="legend-dot" style="background: #f59e0b;"></span> SELL-CE</div>
           <div class="legend-pill"><span class="legend-dot" style="background: #06b6d4;"></span> BPS-1</div>
           <div class="legend-pill"><span class="legend-dot" style="background: #22c55e;"></span> NIFTY BPS</div>
+          <div class="legend-pill"><span class="legend-dot" style="background: #3b82f6;"></span> NIFTY Weekly</div>
         </div>
       </div>
 
@@ -319,6 +364,15 @@
               <td><span class="badge badge-cyan">STANDBY</span></td>
               <td class="mono">2026-08-27 (Monthly)</td>
             </tr>
+            <tr>
+              <td><strong>NIFTY_WEEKLY_DEFINED_RISK_PAPER</strong></td>
+              <td>NIFTY 50 Index (OPTIDX)</td>
+              <td>Defined-Risk 4-Leg Model</td>
+              <td class="mono">₹5,142.50</td>
+              <td class="mono">1.0%</td>
+              <td><span class="badge badge-green">OPEN</span></td>
+              <td class="mono">2026-08-27 (Weekly)</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -333,6 +387,7 @@
           <button class="filter-btn" data-filter="SELL_CE">SELL-CE</button>
           <button class="filter-btn" data-filter="BPS1">BPS-1</button>
           <button class="filter-btn" data-filter="NIFTY_BPS">NIFTY BPS</button>
+          <button class="filter-btn" data-filter="SIC1">NIFTY Weekly</button>
         </div>
       </div>
 
@@ -347,6 +402,6 @@
     <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; Paper Trading Command Center &nbsp;·&nbsp; /live-strategy/my/
   </footer>
 
-  <script src="shared/my-dashboard.js?v=20260821a"></script>
+  <script src="shared/my-dashboard.js?v=20260821b"></script>
 </body>
 </html>

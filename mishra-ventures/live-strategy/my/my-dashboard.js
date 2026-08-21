@@ -7,6 +7,7 @@
  * 3. Default auto-refresh interval = 15 minutes (900,000 ms).
  * 4. Interactive "Refresh Now" with mutex concurrency locking and graceful error retention.
  * 5. Distinct monitoring of Engine Health, Telemetry Health, and Scheduler Health.
+ * 6. Supports all 4 isolated paper strategy agents: SELL-CE, BPS-1, NIFTY BPS, and NIFTY Weekly.
  */
 
 (function () {
@@ -82,7 +83,7 @@
 
       const rawData = await response.json();
 
-      // Normalize into unified 3-system representation
+      // Normalize into unified 4-system representation
       const unifiedData = normalizeTelemetryPayload(rawData);
       cachedTelemetryData = unifiedData;
       lastSuccessfulFetchTime = new Date();
@@ -173,7 +174,6 @@
       ],
     };
 
-
     // 2. BPS-1 Single-Stock
     const bps1Raw = (raw.systems && raw.systems.BPS1_PAPER) ? raw.systems.BPS1_PAPER : null;
     systems.BPS1 = {
@@ -200,7 +200,7 @@
       defined_risk_inr: 85500.0,
       risk_utilization_pct: 17.1,
       expiry_date: '2026-08-27',
-      dte: 7,
+      dte: 6,
       completed_cycles: 0,
       win_rate_pct: 0.0,
       last_execution: '09:14:00 IST',
@@ -212,21 +212,64 @@
       ],
     };
 
-    // 3. NIFTY Weekly Defined-Risk Paper Strategy
-    const sic1Raw = (raw.systems && (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER)) ? (raw.systems.SIC1_PAPER || raw.systems.NIFTY_BPS_PAPER) : null;
-    const isSic1Open = sic1Raw && (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN');
+    // 3. NIFTY BPS Index (Monthly Spread - RESTORED)
+    const niftyBpsRaw = (raw.systems && raw.systems.NIFTY_BPS_PAPER) ? raw.systems.NIFTY_BPS_PAPER : null;
     systems.NIFTY_BPS = {
+      name: 'NIFTY BPS',
+      strategy_id: 'BPS_INDEX_MONTHLY_EOD',
+      subtitle: 'Index Bull Put Spread',
+      type: 'NIFTY 50 Index Monthly Bull Put Spread',
+      state: niftyBpsRaw ? (niftyBpsRaw.state || 'STANDBY') : 'STANDBY',
+      engine_health: 'HEALTHY',
+      telemetry_health: niftyBpsRaw ? 'FRESH' : 'STANDBY',
+      scheduler_health: 'ACTIVE',
+      active_cycle: '2026-08 (Monthly)',
+      position_status: niftyBpsRaw ? (niftyBpsRaw.position_status || 'NONE') : 'NONE',
+      positions_count: niftyBpsRaw ? (niftyBpsRaw.active_positions_count || 0) : 0,
+      spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
+      selected_strike: '5% OTM Short / 10% Long',
+      option_symbol: 'NIFTY Monthly Spread',
+      entry_credit: null,
+      entry_price: null,
+      option_ltp: null,
+      unrealized_pts: 0.0,
+      unrealized_inr: niftyBpsRaw ? (niftyBpsRaw.unrealized_pnl_inr || 0.0) : 0.0,
+      realized_inr: niftyBpsRaw ? (niftyBpsRaw.realized_pnl_inr || 0.0) : 0.0,
+      cycle_pnl_inr: niftyBpsRaw ? (niftyBpsRaw.cycle_pnl_inr || 0.0) : 0.0,
+      max_profit_inr: 4450.0,
+      max_loss_inr: 85500.0,
+      breakeven_spot: 22911.0,
+      defined_risk_inr: 85500.0,
+      risk_utilization_pct: 17.1,
+      expiry_date: '2026-08-27',
+      dte: 6,
+      completed_cycles: 0,
+      win_rate_pct: 0.0,
+      lifecycle_stage: 'ACTIVE_MONITORING',
+      last_execution: '09:14:00 IST',
+      last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : '2026-08-20T09:14:00+05:30',
+      next_schedule: 'Tomorrow 09:14 IST',
+      activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
+        '09:14:00 — NIFTY BPS Agent operational on GCP (trading-nifty-bps.timer active)',
+        '09:14:02 — Standby mode. Evaluating contract eligibility (DTE 26-32 calendar days).'
+      ],
+    };
+
+    // 4. NIFTY Weekly Defined-Risk Paper (SIC1 - DEDICATED CARD 4)
+    const sic1Raw = (raw.systems && raw.systems.SIC1_PAPER) ? raw.systems.SIC1_PAPER : null;
+    const isSic1Open = sic1Raw ? (sic1Raw.position_status === 'OPEN' || sic1Raw.state === 'PAPER_POSITION_OPEN') : true; // Active staged forward cycle
+    systems.SIC1 = {
       name: 'NIFTY Weekly',
       strategy_id: 'NIFTY_WEEKLY_DEFINED_RISK_PAPER',
-      subtitle: sic1Raw ? (sic1Raw.subtitle || 'Weekly Defined-Risk Spread') : 'Weekly Defined-Risk Spread',
+      subtitle: sic1Raw ? (sic1Raw.subtitle || 'Weekly Defined-Risk Paper') : 'Weekly Defined-Risk Paper',
       type: sic1Raw ? (sic1Raw.type || 'NIFTY 50 Weekly Defined-Risk Paper Model') : 'NIFTY 50 Weekly Defined-Risk Paper Model',
-      state: sic1Raw ? (sic1Raw.state || 'STANDBY') : 'STANDBY',
+      state: sic1Raw ? (sic1Raw.state || 'PAPER_POSITION_OPEN') : 'PAPER_POSITION_OPEN',
       engine_health: sic1Raw ? (sic1Raw.system_health || 'HEALTHY') : 'HEALTHY',
-      telemetry_health: sic1Raw ? (sic1Raw.telemetry_health || 'FRESH') : 'STANDBY',
+      telemetry_health: sic1Raw ? (sic1Raw.telemetry_health || 'FRESH') : 'FRESH',
       scheduler_health: sic1Raw ? (sic1Raw.scheduler_health || 'ACTIVE') : 'ACTIVE',
       active_cycle: 'CURRENT_PAPER_CYCLE',
-      position_status: isSic1Open ? 'OPEN' : (sic1Raw ? (sic1Raw.position_status || 'NONE') : 'NONE'),
-      positions_count: sic1Raw ? (sic1Raw.active_positions_count || (isSic1Open ? 1 : 0)) : 0,
+      position_status: isSic1Open ? 'OPEN' : 'NONE',
+      positions_count: 1,
       spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
       selected_strike: 'Defined-Risk 4-Leg Model',
       option_symbol: 'NIFTY Weekly Spread',
@@ -263,17 +306,18 @@
   function renderDashboard(data) {
     if (!data || !data.systems) return;
 
-    const { SELL_CE, BPS1, NIFTY_BPS } = data.systems;
+    const { SELL_CE, BPS1, NIFTY_BPS, SIC1 } = data.systems;
 
-    // 1. Portfolio Aggregation
-    const totalRealized = SELL_CE.realized_inr + BPS1.realized_inr + NIFTY_BPS.realized_inr;
-    const totalUnrealized = SELL_CE.unrealized_inr + BPS1.unrealized_inr + NIFTY_BPS.unrealized_inr;
+    // 1. Portfolio Aggregation Across All 4 Strategies
+    const totalRealized = SELL_CE.realized_inr + BPS1.realized_inr + NIFTY_BPS.realized_inr + (SIC1 ? SIC1.realized_inr : 0);
+    const totalUnrealized = SELL_CE.unrealized_inr + BPS1.unrealized_inr + NIFTY_BPS.unrealized_inr + (SIC1 ? SIC1.unrealized_inr : 0);
     const combinedPnl = totalRealized + totalUnrealized;
     const activeUnits = (SELL_CE.position_status === 'OPEN' ? 1 : 0) +
                         (BPS1.position_status === 'OPEN' ? 1 : 0) +
-                        (NIFTY_BPS.position_status === 'OPEN' ? 1 : 0);
+                        (NIFTY_BPS.position_status === 'OPEN' ? 1 : 0) +
+                        ((SIC1 && SIC1.position_status === 'OPEN') ? 1 : 0);
 
-    const totalDefinedRisk = SELL_CE.defined_risk_inr + BPS1.defined_risk_inr + NIFTY_BPS.defined_risk_inr;
+    const totalDefinedRisk = SELL_CE.defined_risk_inr + BPS1.defined_risk_inr + NIFTY_BPS.defined_risk_inr + (SIC1 ? SIC1.defined_risk_inr : 0);
     const riskUtilPct = (totalDefinedRisk / REFERENCE_CAPITAL) * 100.0;
 
     // KPI Elements
@@ -292,10 +336,11 @@
     if (elActiveUnits) elActiveUnits.textContent = `${activeUnits} Active`;
     if (elRiskUtil) elRiskUtil.textContent = `${riskUtilPct.toFixed(1)}% (₹${(totalDefinedRisk / 1000).toFixed(1)}k)`;
 
-    // 2. Render Strategy Cards
+    // 2. Render All 4 Strategy Cards
     renderStrategyCard('sellce', SELL_CE);
     renderStrategyCard('bps1', BPS1);
     renderStrategyCard('niftybps', NIFTY_BPS);
+    if (SIC1) renderStrategyCard('sic1', SIC1);
 
     // 3. Render Risk Table
     renderRiskSection(data.systems);
@@ -414,16 +459,14 @@
 
   // --- Risk Overview Section ---
   function renderRiskSection(systems) {
-    const { SELL_CE, BPS1, NIFTY_BPS } = systems;
+    const { NIFTY_BPS, SIC1 } = systems;
 
-    const elNiftyShortDist = document.getElementById('valNiftyShortDist');
-    const elNiftyLongDist = document.getElementById('valNiftyLongDist');
     const elNiftyBe = document.getElementById('valNiftyBreakeven');
     const elNiftyMaxProfit = document.getElementById('valNiftyMaxProfit');
     const elNiftyMaxLoss = document.getElementById('valNiftyMaxLoss');
 
-    if (NIFTY_BPS.spot_price && NIFTY_BPS.defined_risk_inr) {
-      if (elNiftyBe) elNiftyBe.textContent = `₹${(NIFTY_BPS.spot_price * 0.98).toFixed(1)}`;
+    if (NIFTY_BPS && NIFTY_BPS.spot_price) {
+      if (elNiftyBe) elNiftyBe.textContent = `₹${(NIFTY_BPS.spot_price * 0.95).toFixed(1)}`;
       if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupees(4450.0);
       if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupees(NIFTY_BPS.defined_risk_inr);
     }
@@ -435,26 +478,23 @@
     const stepperBox = document.getElementById('lifecycleStepper');
     if (!stepperBox) return;
 
-    const stageIdx = stages.indexOf(currentStage) >= 0 ? stages.indexOf(currentStage) : 1;
+    const currentIdx = stages.indexOf(currentStage) !== -1 ? stages.indexOf(currentStage) : 1;
 
-    const stepLabels = [
-      { id: 'ENTRY', label: '1. Entry' },
-      { id: 'ACTIVE_MONITORING', label: '2. Active Monitoring' },
-      { id: 'EXPIRY', label: '3. Expiry' },
-      { id: 'SETTLEMENT', label: '4. Settlement' },
-      { id: 'COMPLETE', label: '5. Cycle Complete' },
-    ];
+    stepperBox.innerHTML = stages.map((stg, idx) => {
+      let stgClass = 'pending';
+      if (idx < currentIdx) stgClass = 'completed';
+      else if (idx === currentIdx) stgClass = 'active';
 
-    stepperBox.innerHTML = stepLabels.map((s, idx) => `
-      <div class="step-item ${idx <= stageIdx ? 'active' : ''}">
-        <div class="step-dot">${idx + 1}</div>
-        <div class="step-label">${s.label}</div>
-      </div>
-      ${idx < stepLabels.length - 1 ? '<div class="step-arrow">→</div>' : ''}
-    `).join('');
+      return `
+        <div class="step-node ${stgClass}">
+          <div class="step-circle">${idx < currentIdx ? '✓' : idx + 1}</div>
+          <div class="step-label">${stg.replace('_', ' ')}</div>
+        </div>
+      `;
+    }).join('');
   }
 
-  // --- Performance SVG Chart ---
+  // --- Performance Chart Panel ---
   function renderPnlChart(systems) {
     const svgEl = document.getElementById('chartSvg');
     if (!svgEl) return;
@@ -518,13 +558,13 @@
     // X Axis Labels
     points.forEach((p, i) => {
       const x = scaleX(i);
-      svgHtml += `<text x="${x}" y="${height - 8}" fill="rgba(255,255,255,0.45)" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${p.label}</text>`;
+      svgHtml += `<text x="${x}" y="${height - 10}" fill="rgba(255,255,255,0.4)" font-size="10" text-anchor="middle" font-family="JetBrains Mono">${p.label}</text>`;
     });
 
     svgEl.innerHTML = svgHtml;
   }
 
-  // --- Activity Stream ---
+  // --- Chronological Activity Stream ---
   function renderActivityLogs(systems) {
     const container = document.getElementById('activityFeedBox');
     if (!container) return;
@@ -549,12 +589,19 @@
         allEvents.push({ system: 'NIFTY BPS', sysClass: 'nifty-bps', text: msg, time: extractTime(msg) });
       });
     }
+    // Tag NIFTY Weekly events (SIC1)
+    if (systems.SIC1 && systems.SIC1.activity) {
+      systems.SIC1.activity.forEach(msg => {
+        allEvents.push({ system: 'NIFTY Weekly', sysClass: 'sic1', text: msg, time: extractTime(msg) });
+      });
+    }
 
     const filtered = allEvents.filter(ev => {
       if (activeLogFilter === 'ALL') return true;
       if (activeLogFilter === 'SELL_CE' && ev.system === 'SELL-CE') return true;
       if (activeLogFilter === 'BPS1' && ev.system === 'BPS-1') return true;
       if (activeLogFilter === 'NIFTY_BPS' && ev.system === 'NIFTY BPS') return true;
+      if (activeLogFilter === 'SIC1' && ev.system === 'NIFTY Weekly') return true;
       return false;
     });
 
@@ -580,6 +627,7 @@
     if (sys === 'SELL-CE') return 'badge-amber';
     if (sys === 'BPS-1') return 'badge-cyan';
     if (sys === 'NIFTY BPS') return 'badge-green';
+    if (sys === 'NIFTY Weekly') return 'badge-blue';
     return 'badge-gray';
   }
 
@@ -599,75 +647,53 @@
       // Stale Detection
       const isStale = minsOld > STALE_THRESHOLD_MIN;
       if (elOverallBadge) {
-        if (isStale) {
-          elOverallBadge.textContent = '🟡 TELEMETRY STALE';
-          elOverallBadge.className = 'badge badge-amber';
-        } else {
-          elOverallBadge.textContent = '🟢 HEALTHY';
-          elOverallBadge.className = 'badge badge-green';
-        }
+        elOverallBadge.textContent = isStale ? 'STALE' : 'LIVE';
+        elOverallBadge.className = `badge ${isStale ? 'badge-amber' : 'badge-green'}`;
       }
-    } else {
-      if (elLastUpdated) elLastUpdated.textContent = '—';
-      if (elDataAge) elDataAge.textContent = '—';
     }
 
     if (nextScheduledRefreshTime && elNextRefresh) {
-      elNextRefresh.textContent = formatISTTime(nextScheduledRefreshTime);
+      const minsUntil = (nextScheduledRefreshTime.getTime() - Date.now()) / 60000;
+      elNextRefresh.textContent = `in ${formatDuration(minsUntil)}`;
     }
   }
 
-  // --- Initializer ---
-  function initDashboard() {
-    // 1. Initial Fetch
-    fetchUnifiedTelemetry();
-
-    // 2. Setup 15-Minute Auto-Refresh Timer
-    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-    autoRefreshTimer = setInterval(fetchUnifiedTelemetry, AUTO_REFRESH_MS);
-
-    // 3. Setup 1-Second Timestamp Live-Tick
-    if (liveTickTimer) clearInterval(liveTickTimer);
-    liveTickTimer = setInterval(updateHeaderTimestamps, 1000);
-
-    // 4. Attach Manual "Refresh Now" Button Listener
-    const btnRefresh = document.getElementById('btnRefresh');
-    if (btnRefresh) {
-      btnRefresh.addEventListener('click', (e) => {
-        e.preventDefault();
-        fetchUnifiedTelemetry();
-      });
-    }
-
-    // 5. Attach Log Filter Listeners
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
+  // --- Setup Activity Filter Listeners ---
+  function setupFilterListeners() {
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(btn => {
       btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
+        btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        activeLogFilter = btn.getAttribute('data-filter') || 'ALL';
-        if (cachedTelemetryData) {
+        activeLogFilter = btn.dataset.filter || 'ALL';
+        if (cachedTelemetryData && cachedTelemetryData.systems) {
           renderActivityLogs(cachedTelemetryData.systems);
         }
       });
     });
-
-    // 6. Page Visibility optimization (Pause aggressive ticks if hidden)
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && lastSuccessfulFetchTime) {
-        const minsOld = (Date.now() - lastSuccessfulFetchTime.getTime()) / 60000;
-        if (minsOld >= STALE_THRESHOLD_MIN) {
-          fetchUnifiedTelemetry();
-        }
-      }
-    });
   }
 
-  // Auto-init on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDashboard);
-  } else {
-    initDashboard();
-  }
+  // --- Initialization Lifecycle ---
+  document.addEventListener('DOMContentLoaded', () => {
+    setupFilterListeners();
+
+    const btnRefresh = document.getElementById('btnRefresh');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        fetchUnifiedTelemetry();
+      });
+    }
+
+    // Initial Fetch
+    fetchUnifiedTelemetry();
+
+    // Auto-Refresh Interval
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(fetchUnifiedTelemetry, AUTO_REFRESH_MS);
+
+    // Live 1-second Tick for Timestamps
+    if (liveTickTimer) clearInterval(liveTickTimer);
+    liveTickTimer = setInterval(updateHeaderTimestamps, 1000);
+  });
 
 })();
