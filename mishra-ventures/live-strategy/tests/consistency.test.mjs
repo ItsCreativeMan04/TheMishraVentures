@@ -223,6 +223,21 @@ check('19. Console diagnostics tables are driven by computed state, not hardcode
   assert(js.includes('function renderDiagnosticsTable'), 'renderDiagnosticsTable is missing');
 });
 
+// 20. Mobile layout doesn't force page-level horizontal overflow.
+// Regression guard for a real bug: .kpi-grid's mobile override forced a
+// rigid 2-column layout, and grid items don't shrink below their
+// content's intrinsic width by default, so a long mono value (an option
+// symbol, "₹76.50 → Exit: ₹152.05") pushed the whole page wider than a
+// phone viewport. Confirmed fixed by measuring actual scrollWidth in a
+// real browser at 390px on every page (0px overflow after the fix) --
+// this check guards the CSS mechanism so it can't silently regress.
+check('20. KPI grid cannot force page-level horizontal overflow on phone widths', () => {
+  assert(css.includes('.kpi-card {') && /\.kpi-card\s*{[^}]*min-width:\s*0;/s.test(css),
+    '.kpi-card lost min-width:0 -- grid items will refuse to shrink below content width again');
+  assert(/@media \(max-width:\s*480px\)\s*{[^}]*\.kpi-grid\s*{\s*grid-template-columns:\s*1fr;/s.test(css),
+    '.kpi-grid has no single-column fallback below 480px');
+});
+
 console.log(`\n${passed}/${passed + failures.length} passed`);
 if (failures.length) {
   console.log(`\n${failures.length} FAILURE(S):`);

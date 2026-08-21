@@ -212,6 +212,13 @@ body {
   flex-direction: column;
   justify-content: space-between;
   transition: border-color 0.2s ease;
+  /* Grid items default to min-width:auto, which floors their width at
+     their content's min-content size -- a long unbroken mono value
+     (option symbols, "₹76.50 → Exit: ₹152.05") then refuses to shrink
+     with the grid track and pushes the whole page wider on narrow
+     screens instead of wrapping. min-width:0 releases that floor so
+     wrapping (below) can actually take effect. */
+  min-width: 0;
 }
 .kpi-card:hover { border-color: var(--cmd-border-strong); }
 
@@ -230,6 +237,7 @@ body {
   color: var(--cmd-text-strong);
   line-height: 1.1;
   margin-bottom: 0.4rem;
+  overflow-wrap: anywhere;
 }
 
 .kpi-sub {
@@ -623,3 +631,19 @@ body {
   .strategy-grid { grid-template-columns: 1fr; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Below ~480px, even two KPI columns don't leave enough room for mono
+   values (option symbols, "₹76.50 → Exit: ₹152.05") to sit on one line
+   without forcing the page wider -- confirmed by measuring real
+   scrollWidth overflow on phone-width viewports. Single column here. */
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}
+
+/* risk-table columns (Component/Status/Details, or the wider payoff and
+   governance tables) get unreadably cramped if forced to fit a phone's
+   width by wrapping every cell. A table needs to stay wide enough to
+   read and scroll horizontally WITHIN its own .table-responsive box
+   (already overflow-x:auto) rather than being squeezed -- contained
+   scrolling here is intentional, unlike page-level overflow. */
+.risk-table { min-width: 560px; }
