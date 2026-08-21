@@ -348,8 +348,9 @@
     // 3. Render Risk Table
     renderRiskSection(data.systems);
 
-    // 4. Render Lifecycle Stepper (for NIFTY BPS page)
-    renderLifecycleStepper(NIFTY_BPS.lifecycle_stage);
+    // 4. Render Lifecycle Stepper (any console with a #lifecycleStepper +
+    //    data-strategy-scope; not hardcoded to one strategy)
+    renderLifecycleStepper(data.systems);
 
     // 5. Render Chart
     renderPnlChart(data.systems);
@@ -361,8 +362,10 @@
     //    is currently on a "_RECOVERY" session id)
     renderRecoveryBanner(data.systems);
 
-    // 8. Render Strategy Subpage Elements (SELL-CE specific)
+    // 8. Render Strategy Subpage Elements (strategy-specific KPI cards that
+    //    don't fit the generic renderStrategyCard() contract)
     renderSellCeSubpage(SELL_CE);
+    if (SIC1) renderSic1Subpage(SIC1);
   }
 
   // Generalized OPEN -> CLOSED terminal-state swap (Part 10): once a
@@ -417,6 +420,39 @@
         elPnlSub.innerHTML = `Exit: <strong>${escapeHtml(strat.exit_reason || 'SESSION_COMPLETE')}</strong>`
           + (exitTimeStr ? ` &nbsp;·&nbsp; Completed <strong class="mono">${exitTimeStr}</strong>` : '');
       }
+    }
+  }
+
+  // NIFTY Weekly (SIC1) console KPI cards. No-op on pages without these
+  // ids (i.e. every page except the SIC1 console).
+  function renderSic1Subpage(strat) {
+    const elSpot = document.getElementById('valSic1Spot');
+    const elPosition = document.getElementById('valSic1Position');
+    const elCyclePnl = document.getElementById('valSic1CyclePnl');
+    const elExpiry = document.getElementById('valSic1Expiry');
+    const elRisk = document.getElementById('valSic1Risk');
+    const elRiskPct = document.getElementById('valSic1RiskPct');
+    if (!elSpot && !elCyclePnl) return;
+
+    if (elSpot && strat.spot_price) {
+      elSpot.textContent = Number(strat.spot_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (elPosition) {
+      elPosition.textContent = strat.position_status === 'OPEN' ? 'OPEN' : (strat.position_status || 'NONE');
+    }
+    if (elCyclePnl) {
+      const pnl = strat.cycle_pnl_inr || 0;
+      elCyclePnl.textContent = formatRupees(pnl);
+      elCyclePnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+    }
+    if (elExpiry) {
+      elExpiry.textContent = strat.expiry_date ? `${strat.expiry_date} (${strat.dte} DTE)` : '—';
+    }
+    if (elRisk && strat.defined_risk_inr !== undefined) {
+      elRisk.textContent = `₹${strat.defined_risk_inr.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    }
+    if (elRiskPct && strat.risk_utilization_pct !== undefined) {
+      elRiskPct.textContent = `${strat.risk_utilization_pct.toFixed(1)}%`;
     }
   }
 
@@ -490,11 +526,18 @@
   }
 
   // --- Lifecycle Stepper Renderer ---
-  function renderLifecycleStepper(currentStage) {
-    const stages = ['ENTRY', 'ACTIVE_MONITORING', 'EXPIRY', 'SETTLEMENT', 'COMPLETE'];
+  // Scoped the same way as the activity log: reads which strategy this
+  // page is showing from data-strategy-scope on the stepper container
+  // itself, rather than being hardcoded to one strategy.
+  function renderLifecycleStepper(systems) {
     const stepperBox = document.getElementById('lifecycleStepper');
     if (!stepperBox) return;
 
+    const scope = stepperBox.dataset.strategyScope || 'NIFTY_BPS';
+    const strat = systems[scope];
+    const currentStage = strat ? strat.lifecycle_stage : null;
+
+    const stages = ['ENTRY', 'ACTIVE_MONITORING', 'EXPIRY', 'SETTLEMENT', 'COMPLETE'];
     const currentIdx = stages.indexOf(currentStage) !== -1 ? stages.indexOf(currentStage) : 1;
 
     stepperBox.innerHTML = stages.map((stg, idx) => {

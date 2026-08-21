@@ -24,8 +24,9 @@ const PAGES = {
   sellce: 'my/sell-ce/index.html',
   bps1: 'my/bps1/index.html',
   niftybps: 'my/nifty-bps/index.html',
+  niftyweekly: 'my/nifty-weekly/index.html',
 };
-const CONSOLES = ['sellce', 'bps1', 'niftybps'];
+const CONSOLES = ['sellce', 'bps1', 'niftybps', 'niftyweekly'];
 
 const html = Object.fromEntries(Object.entries(PAGES).map(([k, p]) => [k, read(p)]));
 const css = read('my/shared/my-dashboard.css');
@@ -103,7 +104,7 @@ check('5/6. Every dark-mode token has a light-mode override (and vice versa)', (
 
 // 7. Activity log is session-scoped
 check('7. Every console scopes its activity feed to its own strategy', () => {
-  const scopeOf = { sellce: 'SELL_CE', bps1: 'BPS1', niftybps: 'NIFTY_BPS' };
+  const scopeOf = { sellce: 'SELL_CE', bps1: 'BPS1', niftybps: 'NIFTY_BPS', niftyweekly: 'SIC1' };
   for (const [key, expected] of Object.entries(scopeOf)) {
     const m = html[key].match(/id="activityFeedBox"[^>]*data-strategy-scope="([^"]+)"/);
     assert(m, `${key}: activityFeedBox missing data-strategy-scope`);
@@ -173,6 +174,16 @@ check('15. Command Center stays a summary view; only consoles carry diagnostics 
       html[key].includes('Operational Health & Diagnostics'),
       `${key}: console should carry its own diagnostics panel`
     );
+  }
+});
+
+// 16. Every Command Center card links to a real console (no dead "#" links)
+check('16. Command Center has no dead strategy-card links', () => {
+  const cardLinks = [...html.home.matchAll(/class="btn-detail"[^>]*href="([^"]*)"|href="([^"]*)"[^>]*class="btn-detail"/g)];
+  assert(cardLinks.length >= 4, `expected at least 4 strategy-card links, found ${cardLinks.length}`);
+  for (const m of cardLinks) {
+    const href = m[1] || m[2];
+    assert(href && href !== '#', `Command Center has a dead/placeholder strategy-card link: "${href}"`);
   }
 });
 

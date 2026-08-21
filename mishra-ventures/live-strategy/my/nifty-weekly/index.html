@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NIFTY BPS Strategy Console – The Mishra Ventures</title>
+  <title>NIFTY Weekly Strategy Console – The Mishra Ventures</title>
   <meta name="robots" content="noindex, nofollow, noarchive" />
 
   <script>
@@ -29,7 +29,7 @@
     <a href="../" class="nav-brand">
       <div class="nav-logo">⚡</div>
       <div>
-        <div class="nav-brand-text">NIFTY BPS Console</div>
+        <div class="nav-brand-text">NIFTY Weekly Console</div>
         <div class="nav-brand-sub">Live Strategy / Command Center</div>
       </div>
     </a>
@@ -54,8 +54,8 @@
         <div class="banner-shield">
           <span>🛡️</span> PAPER TRADING — ZERO REAL BROKER ORDERS
         </div>
-        <div class="banner-heading">NIFTY BPS (v1.0.0)</div>
-        <div class="banner-sub">Systematic Monthly Defined-Risk Bull Put Spread on NIFTY 50 Index Options (26–32 DTE Window)</div>
+        <div class="banner-heading">NIFTY Weekly (v1.0.0)</div>
+        <div class="banner-sub">Weekly Defined-Risk 4-Leg Options Structure on NIFTY 50 Index — Forward Paper Cycle</div>
         <div id="recoveryBanner" class="recovery-banner hidden"></div>
       </div>
 
@@ -66,11 +66,11 @@
         </div>
         <div class="time-item">
           <span class="time-label">Engine Health</span>
-          <span id="niftybpsEngineBadge" class="badge badge-green" style="margin-top: 2px;">HEALTHY</span>
+          <span id="sic1EngineBadge" class="badge badge-green" style="margin-top: 2px;">HEALTHY</span>
         </div>
         <div class="time-item">
           <span class="time-label">Telemetry</span>
-          <span id="niftybpsTeleBadge" class="badge badge-cyan" style="margin-top: 2px;">FRESH</span>
+          <span id="sic1TeleBadge" class="badge badge-cyan" style="margin-top: 2px;">FRESH</span>
         </div>
         <div class="time-item">
           <span class="time-label">Last Updated</span>
@@ -95,7 +95,7 @@
       <div class="panel-header" style="margin-bottom: 0.75rem;">
         <div class="panel-title">Strategy Execution Lifecycle</div>
       </div>
-      <div id="lifecycleStepper" class="stepper-container" data-strategy-scope="NIFTY_BPS">
+      <div id="lifecycleStepper" class="stepper-container" data-strategy-scope="SIC1">
         <!-- Injected dynamically by my-dashboard.js -->
       </div>
     </div>
@@ -109,73 +109,27 @@
       <div class="kpi-grid" style="margin-bottom: 1.5rem;">
         <div class="kpi-card">
           <div class="kpi-label">NIFTY Spot Index</div>
-          <div class="kpi-value mono">24,213.15</div>
+          <div id="valSic1Spot" class="kpi-value mono">—</div>
           <div class="kpi-sub">Dataset: <strong class="mono">NSE OPTIDX EOD</strong></div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-label">Short Put Wing (~5% OTM)</div>
-          <div class="kpi-value mono" style="font-size: 1.35rem;">23000 PE</div>
-          <div class="kpi-sub">Distance: <strong id="valNiftyShortDist" class="mono pnl-positive">+1,213 pts (+5.0%)</strong></div>
+          <div class="kpi-label">Structure</div>
+          <div class="kpi-value" style="font-size: 1.25rem;">Defined-Risk 4-Leg</div>
+          <div class="kpi-sub">Position: <strong id="valSic1Position" class="mono">—</strong></div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-label">Long Put Wing (~10% OTM)</div>
-          <div class="kpi-value mono" style="font-size: 1.35rem;">21800 PE</div>
-          <div class="kpi-sub">Distance: <strong id="valNiftyLongDist" class="mono pnl-positive">+2,413 pts (+10.0%)</strong></div>
+          <div class="kpi-label">Current Cycle P&L</div>
+          <div id="valSic1CyclePnl" class="kpi-value mono">₹0.00</div>
+          <div class="kpi-sub">Expiry: <strong id="valSic1Expiry" class="mono">—</strong></div>
         </div>
 
         <div class="kpi-card">
-          <div class="kpi-label">Current Cycle MTM P&L</div>
-          <div class="kpi-value mono pnl-positive">₹0.00</div>
-          <div class="kpi-sub">Expiry: <strong class="mono">2026-08-27 (7 DTE)</strong></div>
+          <div class="kpi-label">Defined Risk Allocation</div>
+          <div id="valSic1Risk" class="kpi-value mono">—</div>
+          <div class="kpi-sub">Risk Utilization: <strong id="valSic1RiskPct" class="mono">—</strong></div>
         </div>
-      </div>
-    </div>
-
-    <!-- Risk & Defined Payoff Parameters -->
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">Risk Governance & Payoff Envelope</div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="risk-table">
-          <thead>
-            <tr>
-              <th>Payoff Parameter</th>
-              <th>Value</th>
-              <th>Economic Significance</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Maximum Profit Potential</strong></td>
-              <td id="valNiftyMaxProfit" class="mono pnl-positive">+₹4,450.00</td>
-              <td>Gross credit received from short spread less long wing protection</td>
-            </tr>
-            <tr>
-              <td><strong>Maximum Defined Risk</strong></td>
-              <td id="valNiftyMaxLoss" class="mono pnl-negative">-₹85,500.00</td>
-              <td>100% loss-capped by long wing; zero tail-risk / zero unlimited loss</td>
-            </tr>
-            <tr>
-              <td><strong>Spread Breakeven (At Expiry)</strong></td>
-              <td id="valNiftyBreakeven" class="mono">₹22,911.00</td>
-              <td>Spot level below which spread enters net loss at terminal settlement</td>
-            </tr>
-            <tr>
-              <td><strong>Risk Utilization Ratio</strong></td>
-              <td class="mono">17.1%</td>
-              <td>₹85,500 max defined loss against ₹5,00,000 reference capital (>11x buffer)</td>
-            </tr>
-            <tr>
-              <td><strong>Backtest Profit Factor</strong></td>
-              <td class="mono pnl-positive">22.28</td>
-              <td>Validated on 30 official monthly contract cycles (29 Wins / 1 Loss)</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
@@ -203,7 +157,7 @@
             <tr>
               <td><strong>Scheduler</strong></td>
               <td><span class="badge badge-green">ACTIVE</span></td>
-              <td>Mon–Fri 09:14 IST daily execution timer</td>
+              <td>Daily forward-cycle timer</td>
             </tr>
             <tr>
               <td><strong>Data</strong></td>
@@ -230,15 +184,15 @@
       <div class="panel-header">
         <div class="panel-title">Session Activity Log</div>
       </div>
-      <div id="activityFeedBox" class="activity-feed-box" data-strategy-scope="NIFTY_BPS">
-        <!-- Injected dynamically -- NIFTY_BPS session events only, see Session Activity Architecture -->
+      <div id="activityFeedBox" class="activity-feed-box" data-strategy-scope="SIC1">
+        <!-- Injected dynamically -- SIC1 session events only, see Session Activity Architecture -->
       </div>
     </div>
 
   </div>
 
   <footer class="sub-footer">
-    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; NIFTY BPS Console &nbsp;·&nbsp; /live-strategy/my/nifty-bps/
+    <a href="/mishra-ventures/">The Mishra Ventures</a> &nbsp;·&nbsp; NIFTY Weekly Console &nbsp;·&nbsp; /live-strategy/my/nifty-weekly/
   </footer>
 
   <script src="/mishra-ventures/shared/theme.js"></script>
