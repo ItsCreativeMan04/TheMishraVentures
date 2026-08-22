@@ -268,6 +268,50 @@
         </div>
       </div>
 
+      <!-- 5. Systematic Equity Swing Model (QUANT_EQUITY_SWING_SYSTEM_V1) -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>Equity Swing</h3>
+              <div class="strat-type">NIFTY 50 Cash Equities Model</div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <span id="nifty50mrEngineBadge" class="badge badge-green">HEALTHY</span>
+              <span id="nifty50mrTeleBadge" class="badge badge-cyan">FRESH</span>
+            </div>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle</span>
+              <span id="nifty50mrCycle" class="stat-val mono">WEEKLY_SWING_COHORT</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Positions</span>
+              <span id="nifty50mrPosition" class="stat-val mono">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Current P&L</span>
+              <span id="nifty50mrPnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Cycle P&L</span>
+              <span id="nifty50mrTodayPnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Holding Horizon</span>
+              <span id="nifty50mrExpiry" class="stat-val mono" style="font-size: 0.78rem;">20 Sessions</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-cyan">NIFTY 50 Equities</span>
+          <span class="badge badge-gray" style="font-size: 0.72rem;">Paper Only</span>
+        </div>
+      </div>
+
     </div>
 
     <!-- Portfolio Summary Section -->
@@ -300,7 +344,7 @@
 
       <div class="kpi-card">
         <div class="kpi-label">System Architecture</div>
-        <div class="kpi-value" style="font-size: 1.25rem; color: var(--cmd-accent2);">4 Isolated Agents</div>
+        <div class="kpi-value" style="font-size: 1.25rem; color: var(--cmd-accent2);">5 Isolated Agents</div>
         <div class="kpi-sub">
           <span>GCP VM · Read-Only Broker API</span>
         </div>
@@ -381,6 +425,15 @@
               <td><span id="riskStatusSIC1" class="badge badge-gray">—</span></td>
               <td class="mono">2026-08-27 (Weekly)</td>
             </tr>
+            <tr>
+              <td><strong>QUANT_EQUITY_SWING_SYSTEM_V1</strong></td>
+              <td>NIFTY 50 Cash Equities</td>
+              <td>100% Cash-Backed (No Leverage)</td>
+              <td class="mono">₹3,00,000</td>
+              <td class="mono" id="riskUtilNIFTY50_MR">0.0%</td>
+              <td><span id="riskStatusNIFTY50_MR" class="badge badge-gray">—</span></td>
+              <td class="mono">20 Trading Days</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -396,6 +449,7 @@
           <button class="filter-btn" data-filter="BPS1">BPS-1</button>
           <button class="filter-btn" data-filter="NIFTY_BPS">NIFTY BPS</button>
           <button class="filter-btn" data-filter="SIC1">NIFTY Weekly</button>
+          <button class="filter-btn" data-filter="NIFTY50_MR">Equity Swing</button>
         </div>
       </div>
 

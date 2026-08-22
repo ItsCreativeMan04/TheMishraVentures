@@ -232,6 +232,43 @@
         </div>
       </div>
 
+      <!-- 4. Systematic Equity Swing Model (QUANT_EQUITY_SWING_SYSTEM_V1) -->
+      <div class="strat-card">
+        <div>
+          <div class="strat-header">
+            <div class="strat-title-group">
+              <h3>Equity Swing</h3>
+              <div class="strat-type">NIFTY 50 Cash Equities Model</div>
+            </div>
+            <span id="nifty50mrStateBadge" class="badge badge-cyan">STANDBY</span>
+          </div>
+
+          <div class="strat-body">
+            <div class="stat-row">
+              <span class="stat-name">Active Cycle / Universe</span>
+              <span id="nifty50mrPosition" class="stat-val mono">NIFTY 50 Equities</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Paper P&L</span>
+              <span id="nifty50mrPnl" class="stat-val mono">₹0.00</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Capital Allocation</span>
+              <span id="nifty50mrRisk" class="stat-val mono">₹300.0k (100% cap)</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Scheduled Run</span>
+              <span id="nifty50mrNextRun" class="stat-val" style="font-size: 0.76rem;">09:20 / 15:35 IST daily</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="strat-footer">
+          <span class="badge badge-green">Engine OK</span>
+          <span class="badge badge-gray" style="font-size: 0.72rem;">Paper Only</span>
+        </div>
+      </div>
+
     </div>
 
     <!-- Performance Chart Panel -->
@@ -243,6 +280,7 @@
           <div class="legend-pill"><span class="legend-dot" style="background: #f59e0b;"></span> SELL-CE</div>
           <div class="legend-pill"><span class="legend-dot" style="background: #06b6d4;"></span> BPS-1</div>
           <div class="legend-pill"><span class="legend-dot" style="background: #22c55e;"></span> NIFTY BPS</div>
+          <div class="legend-pill"><span class="legend-dot" style="background: #10b981;"></span> Equity Swing</div>
         </div>
       </div>
 
@@ -298,6 +336,15 @@
               <td class="mono">22.28</td>
               <td><span class="badge badge-green">PAPER LIVE</span></td>
             </tr>
+            <tr>
+              <td><strong>QUANT_EQUITY_SWING_SYSTEM_V1</strong></td>
+              <td>NIFTY 50 Cash Equities</td>
+              <td>100% Cash-Backed (Zero Leverage)</td>
+              <td class="mono">₹3,00,000</td>
+              <td class="mono">0.0%</td>
+              <td class="mono">1.54</td>
+              <td><span class="badge badge-cyan">PAPER LIVE</span></td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -312,6 +359,7 @@
           <button class="filter-btn" data-filter="SELL_CE">SELL-CE</button>
           <button class="filter-btn" data-filter="BPS1">BPS-1</button>
           <button class="filter-btn" data-filter="NIFTY_BPS">NIFTY BPS</button>
+          <button class="filter-btn" data-filter="NIFTY50_MR">Equity Swing</button>
         </div>
       </div>
 

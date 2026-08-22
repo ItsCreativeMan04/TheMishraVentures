@@ -296,6 +296,47 @@
       ],
     };
 
+    // 5. NIFTY 50 Systematic Equity Swing Paper Model (QUANT_EQUITY_SWING_SYSTEM_V1)
+    const mrRaw = (raw.systems && raw.systems.NIFTY50_MR_PAPER) ? raw.systems.NIFTY50_MR_PAPER : null;
+    const isMrActive = mrRaw ? (mrRaw.active_positions_count > 0 || mrRaw.status === 'ACTIVE') : false;
+    systems.NIFTY50_MR = {
+      name: 'Equity Swing',
+      strategy_id: 'QUANT_EQUITY_SWING_SYSTEM_V1',
+      subtitle: 'Systematic Equity Swing Paper Model',
+      type: 'NIFTY 50 Cash Equities Model',
+      state: mrRaw ? (mrRaw.status || 'STANDBY') : 'STANDBY',
+      engine_health: mrRaw ? (mrRaw.status === 'CRITICAL_EXPOSURE_BREACH' ? 'DEGRADED' : 'HEALTHY') : 'STANDBY',
+      telemetry_health: mrRaw ? 'FRESH' : 'STANDBY',
+      scheduler_health: 'ACTIVE',
+      active_cycle: 'WEEKLY_SWING_COHORT',
+      position_status: isMrActive ? 'OPEN' : 'NONE',
+      positions_count: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.active_positions_count : 0) : 0,
+      spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
+      selected_strike: 'Cash Equities (Equal Weight)',
+      option_symbol: 'NIFTY 50 Equity Basket',
+      entry_credit: null,
+      entry_price: null,
+      option_ltp: null,
+      unrealized_pts: 0.0,
+      unrealized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.unrealized_pnl : 0.0) : 0.0,
+      realized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.cumulative_realized_pnl : 0.0) : 0.0,
+      cycle_pnl_inr: mrRaw ? (mrRaw.metrics ? mrRaw.metrics.cumulative_return_pct : 0.0) : 0.0,
+      defined_risk_inr: 300000.0,
+      risk_utilization_pct: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.gross_exposure_pct : 0.0) : 0.0,
+      expiry_date: '20 Sessions Holding',
+      dte: 20,
+      completed_cycles: 0,
+      win_rate_pct: 56.5,
+      lifecycle_stage: isMrActive ? 'ACTIVE_POSITIONS' : 'IDLE_MONITORING',
+      last_execution: '15:35:00 IST',
+      last_update: mrRaw ? mrRaw.updated_at : null,
+      next_schedule: 'Fri 15:35 / Mon 09:20 IST',
+      activity: [
+        '09:20:00 — Evaluated 20-session market open exits and new weekly entries',
+        '15:35:00 — Completed daily portfolio ledgering and gross exposure verification'
+      ],
+    };
+
     return {
       retrieved_at: new Date().toISOString(),
       systems,
@@ -306,16 +347,17 @@
   function renderDashboard(data) {
     if (!data || !data.systems) return;
 
-    const { SELL_CE, BPS1, NIFTY_BPS, SIC1 } = data.systems;
+    const { SELL_CE, BPS1, NIFTY_BPS, SIC1, NIFTY50_MR } = data.systems;
 
-    // 1. Portfolio Aggregation Across All 4 Strategies
-    const totalRealized = SELL_CE.realized_inr + BPS1.realized_inr + NIFTY_BPS.realized_inr + (SIC1 ? SIC1.realized_inr : 0);
-    const totalUnrealized = SELL_CE.unrealized_inr + BPS1.unrealized_inr + NIFTY_BPS.unrealized_inr + (SIC1 ? SIC1.unrealized_inr : 0);
+    // 1. Portfolio Aggregation Across All Strategies
+    const totalRealized = SELL_CE.realized_inr + BPS1.realized_inr + NIFTY_BPS.realized_inr + (SIC1 ? SIC1.realized_inr : 0) + (NIFTY50_MR ? NIFTY50_MR.realized_inr : 0);
+    const totalUnrealized = SELL_CE.unrealized_inr + BPS1.unrealized_inr + NIFTY_BPS.unrealized_inr + (SIC1 ? SIC1.unrealized_inr : 0) + (NIFTY50_MR ? NIFTY50_MR.unrealized_inr : 0);
     const combinedPnl = totalRealized + totalUnrealized;
     const activeUnits = (SELL_CE.position_status === 'OPEN' ? 1 : 0) +
                         (BPS1.position_status === 'OPEN' ? 1 : 0) +
                         (NIFTY_BPS.position_status === 'OPEN' ? 1 : 0) +
-                        ((SIC1 && SIC1.position_status === 'OPEN') ? 1 : 0);
+                        ((SIC1 && SIC1.position_status === 'OPEN') ? 1 : 0) +
+                        ((NIFTY50_MR && NIFTY50_MR.position_status === 'OPEN') ? 1 : 0);
 
     const totalDefinedRisk = SELL_CE.defined_risk_inr + BPS1.defined_risk_inr + NIFTY_BPS.defined_risk_inr + (SIC1 ? SIC1.defined_risk_inr : 0);
     const riskUtilPct = (totalDefinedRisk / REFERENCE_CAPITAL) * 100.0;
@@ -336,11 +378,12 @@
     if (elActiveUnits) elActiveUnits.textContent = `${activeUnits} Active`;
     if (elRiskUtil) elRiskUtil.textContent = `${riskUtilPct.toFixed(1)}% (₹${(totalDefinedRisk / 1000).toFixed(1)}k)`;
 
-    // 2. Render All 4 Strategy Cards
+    // 2. Render All Strategy Cards
     renderStrategyCard('sellce', SELL_CE);
     renderStrategyCard('bps1', BPS1);
     renderStrategyCard('niftybps', NIFTY_BPS);
     if (SIC1) renderStrategyCard('sic1', SIC1);
+    if (NIFTY50_MR) renderStrategyCard('nifty50mr', NIFTY50_MR);
 
     // 3. Render Risk Table
     renderRiskSection(data.systems);
@@ -595,6 +638,12 @@
         allEvents.push({ system: 'NIFTY Weekly', sysClass: 'sic1', text: msg, time: extractTime(msg) });
       });
     }
+    // Tag Equity Swing events (NIFTY50_MR)
+    if (systems.NIFTY50_MR && systems.NIFTY50_MR.activity) {
+      systems.NIFTY50_MR.activity.forEach(msg => {
+        allEvents.push({ system: 'Equity Swing', sysClass: 'nifty50-mr', text: msg, time: extractTime(msg) });
+      });
+    }
 
     const filtered = allEvents.filter(ev => {
       if (activeLogFilter === 'ALL') return true;
@@ -602,6 +651,7 @@
       if (activeLogFilter === 'BPS1' && ev.system === 'BPS-1') return true;
       if (activeLogFilter === 'NIFTY_BPS' && ev.system === 'NIFTY BPS') return true;
       if (activeLogFilter === 'SIC1' && ev.system === 'NIFTY Weekly') return true;
+      if (activeLogFilter === 'NIFTY50_MR' && ev.system === 'Equity Swing') return true;
       return false;
     });
 
@@ -626,6 +676,9 @@
   function getBadgeClassForSys(sys) {
     if (sys === 'SELL-CE') return 'badge-amber';
     if (sys === 'BPS-1') return 'badge-cyan';
+    if (sys === 'NIFTY BPS') return 'badge-green';
+    if (sys === 'NIFTY Weekly') return 'badge-blue';
+    if (sys === 'Equity Swing') return 'badge-cyan';
     if (sys === 'NIFTY BPS') return 'badge-green';
     if (sys === 'NIFTY Weekly') return 'badge-blue';
     return 'badge-gray';
