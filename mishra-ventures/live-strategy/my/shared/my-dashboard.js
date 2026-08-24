@@ -227,8 +227,7 @@
       session_id: bps1Raw ? bps1Raw.session_id : null,
       next_schedule: bps1Raw ? 'Tomorrow 09:14 IST' : null,
       activity: bps1Raw && Array.isArray(bps1Raw.activity) ? bps1Raw.activity : [
-        '09:14:00 — BPS-1 session initialized',
-        '09:14:02 — 0 active positions. Monitoring 10 stock universe for monthly cycle window.'
+        'No live session data yet — this strategy has no backend telemetry connected.',
       ],
     };
 
@@ -274,8 +273,7 @@
       session_id: niftyBpsRaw ? niftyBpsRaw.session_id : null,
       next_schedule: niftyBpsRaw ? 'Tomorrow 09:14 IST' : null,
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
-        '09:14:00 — NIFTY BPS session initialized',
-        '09:14:02 — Standby mode. Evaluating contract eligibility (DTE 26-32 calendar days).'
+        'No live session data yet — this strategy has no backend telemetry connected.',
       ],
     };
 
@@ -360,9 +358,8 @@
       last_execution: mrRaw ? '15:35:00 IST' : null,
       last_update: mrRaw ? mrRaw.updated_at : null,
       next_schedule: mrRaw ? 'Fri 15:35 / Mon 09:20 IST' : null,
-      activity: [
-        '09:20:00 — Evaluated 20-session market open exits and new weekly entries',
-        '15:35:00 — Completed daily portfolio ledgering and gross exposure verification'
+      activity: mrRaw && Array.isArray(mrRaw.activity) ? mrRaw.activity : [
+        'No live session data yet — this strategy has no backend telemetry connected.',
       ],
     };
 
