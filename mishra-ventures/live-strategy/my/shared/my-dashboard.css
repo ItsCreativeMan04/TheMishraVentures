@@ -267,7 +267,12 @@ body {
   box-shadow: var(--shadow-panel);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /* flex-start (not space-between): the footer is pinned to the bottom
+     via its own margin-top:auto below, which -- unlike space-between --
+     leaves room for the expand-in-place .strat-detail panel to sit
+     directly under the footer instead of being squeezed into the
+     leftover inter-child gap. */
+  justify-content: flex-start;
   position: relative;
   overflow: hidden;
   transition: transform 0.2s ease, border-color 0.2s ease;
@@ -313,6 +318,7 @@ body {
 .badge-cyan { background: var(--stat-cyan-bg); color: var(--stat-cyan); border: 1px solid rgba(6,182,212,0.3); }
 .badge-purple { background: var(--stat-purple-bg); color: var(--stat-purple); border: 1px solid rgba(168,85,247,0.3); }
 .badge-gray { background: rgba(226,232,240,0.1); color: var(--cmd-muted); border: 1px solid var(--cmd-border); }
+.badge-blue { background: rgba(59,130,246,0.12); color: var(--cmd-accent2); border: 1px solid rgba(59,130,246,0.3); }
 
 .strat-body {
   margin-bottom: 1.25rem;
@@ -334,11 +340,14 @@ body {
 .stat-val { font-weight: 600; color: var(--cmd-text-strong); }
 
 .strat-footer {
+  margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid var(--cmd-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .btn-detail {
@@ -354,6 +363,112 @@ body {
 .btn-detail:hover {
   color: var(--cmd-accent);
   transform: translateX(2px);
+}
+
+/* ── Strategy Card: Risk Utilization mini-bar ── */
+.risk-bar-track {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--cmd-surface2);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--cmd-accent);
+  transition: width 0.3s ease;
+}
+.risk-bar-fill.risk-high { background: var(--stat-amber, #f59e0b); }
+
+/* ── Strategy Card: position-status pill on the Position row ── */
+.pos-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.pos-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pos-dot.is-open { background: var(--pnl-pos); box-shadow: 0 0 0 3px var(--pnl-pos-bg); }
+.pos-dot.is-closed { background: var(--stat-cyan, #06b6d4); }
+.pos-dot.is-none { background: var(--cmd-faint); }
+
+/* ── Strategy Card: expand-in-place detail toggle + panel ── */
+.card-toggle {
+  background: transparent;
+  border: 1px solid var(--cmd-border);
+  color: var(--cmd-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 100px;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.card-toggle:hover { color: var(--cmd-text-strong); border-color: var(--cmd-border-strong); }
+.card-toggle .chevron { transition: transform 0.2s ease; display: inline-block; }
+.card-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+.strat-detail {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: max-height 0.25s ease, opacity 0.2s ease, margin-top 0.25s ease;
+}
+.strat-detail.open {
+  max-height: 400px;
+  opacity: 1;
+  margin-top: 0.9rem;
+}
+
+/* ── Lightweight CSS-only tooltip for stat labels ── */
+.tt {
+  border-bottom: 1px dotted var(--cmd-faint);
+  cursor: help;
+  position: relative;
+}
+.tt::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  /* Opens downward, not upward: several tooltip triggers sit near the
+     top of a .strat-card, and that card has overflow:hidden -- an
+     upward-opening popup would get clipped by the card's own edge. */
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  width: max-content;
+  max-width: 220px;
+  background: var(--cmd-surface2);
+  color: var(--cmd-text);
+  border: 1px solid var(--cmd-border-strong);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: var(--shadow-panel);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 20;
+}
+.tt:hover::after, .tt:focus::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* ── Performance Chart Panel ── */

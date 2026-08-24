@@ -112,27 +112,55 @@
               <span id="sellcePosition" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-name">Current P&L</span>
-              <span id="sellcePnl" class="stat-val mono">₹0.00</span>
+              <span class="stat-name tt" data-tooltip="Total realized + open unrealized P&L for this strategy since it started, not just today.">Current P&L</span>
+              <span id="sellcePnl" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Today's P&L</span>
-              <span id="sellceTodayPnl" class="stat-val mono">₹0.00</span>
+              <span id="sellceTodayPnl" class="stat-val mono">—</span>
+            </div>
+            <div id="sellceRiskRow" class="stat-row" style="display: none;">
+              <span class="stat-name tt" data-tooltip="This strategy's defined max loss as a share of the ₹5,00,000 reference capital pool.">Risk Utilization</span>
+              <div class="stat-val mono">
+                <span id="sellceRiskLabel">—</span>
+                <div class="risk-bar-track" style="width: 90px;"><div id="sellceRiskBarFill" class="risk-bar-fill" style="width: 0%;"></div></div>
+              </div>
             </div>
             <div class="stat-row">
               <span class="stat-name">Last Execution</span>
-              <span id="sellceLastExec" class="stat-val mono" style="font-size: 0.78rem;">09:30:19 IST</span>
+              <span id="sellceLastExec" class="stat-val mono" style="font-size: 0.78rem;">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Next Expected Run</span>
-              <span id="sellceNextRun" class="stat-val" style="font-size: 0.78rem;">09:14 IST daily</span>
+              <span id="sellceNextRun" class="stat-val" style="font-size: 0.78rem;">—</span>
             </div>
           </div>
         </div>
 
         <div class="strat-footer">
           <span class="badge badge-amber">Dynamic ATR Stop</span>
-          <a href="sell-ce/" class="btn-detail">View Strategy →</a>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="card-toggle" data-target="sellceDetail" aria-expanded="false">Details <span class="chevron">▾</span></button>
+            <a href="sell-ce/" class="btn-detail">View Strategy →</a>
+          </div>
+        </div>
+        <div id="sellceDetail" class="strat-detail">
+          <div class="stat-row">
+            <span class="stat-name tt" data-tooltip="Share of completed sessions that closed profitable.">Win Rate</span>
+            <span id="sellceWinRate" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Completed Cycles</span>
+            <span id="sellceCycles" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Session ID</span>
+            <span id="sellceSessionId" class="stat-val mono" style="font-size: 0.72rem;">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Telemetry Updated</span>
+            <span id="sellceLastUpdate" class="stat-val mono">—</span>
+          </div>
         </div>
       </div>
 
@@ -160,23 +188,59 @@
               <span id="bps1Position" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-name">Current P&L</span>
-              <span id="bps1Pnl" class="stat-val mono">₹0.00</span>
+              <span class="stat-name tt" data-tooltip="Total realized + open unrealized P&L for this strategy since it started, not just this cycle.">Current P&L</span>
+              <span id="bps1Pnl" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Cycle P&L</span>
-              <span id="bps1TodayPnl" class="stat-val mono">₹0.00</span>
+              <span id="bps1TodayPnl" class="stat-val mono">—</span>
+            </div>
+            <div id="bps1RiskRow" class="stat-row" style="display: none;">
+              <span class="stat-name tt" data-tooltip="This strategy's defined max loss as a share of the ₹5,00,000 reference capital pool.">Risk Utilization</span>
+              <div class="stat-val mono">
+                <span id="bps1RiskLabel">—</span>
+                <div class="risk-bar-track" style="width: 90px;"><div id="bps1RiskBarFill" class="risk-bar-fill" style="width: 0%;"></div></div>
+              </div>
             </div>
             <div class="stat-row">
               <span class="stat-name">Expiry & DTE</span>
-              <span id="bps1Expiry" class="stat-val mono" style="font-size: 0.78rem;">2026-08-27 (7 DTE)</span>
+              <span id="bps1Expiry" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Last Execution</span>
+              <span id="bps1LastExec" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Expected Run</span>
+              <span id="bps1NextRun" class="stat-val" style="font-size: 0.78rem;">—</span>
             </div>
           </div>
         </div>
 
         <div class="strat-footer">
           <span class="badge badge-cyan">10 Equities Universe</span>
-          <a href="bps1/" class="btn-detail">View Strategy →</a>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="card-toggle" data-target="bps1Detail" aria-expanded="false">Details <span class="chevron">▾</span></button>
+            <a href="bps1/" class="btn-detail">View Strategy →</a>
+          </div>
+        </div>
+        <div id="bps1Detail" class="strat-detail">
+          <div class="stat-row">
+            <span class="stat-name tt" data-tooltip="Share of completed cycles that closed profitable.">Win Rate</span>
+            <span id="bps1WinRate" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Completed Cycles</span>
+            <span id="bps1Cycles" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Session ID</span>
+            <span id="bps1SessionId" class="stat-val mono" style="font-size: 0.72rem;">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Telemetry Updated</span>
+            <span id="bps1LastUpdate" class="stat-val mono">—</span>
+          </div>
         </div>
       </div>
 
@@ -204,23 +268,59 @@
               <span id="niftybpsPosition" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-name">Current P&L</span>
-              <span id="niftybpsPnl" class="stat-val mono">₹0.00</span>
+              <span class="stat-name tt" data-tooltip="Total realized + open unrealized P&L for this strategy since it started, not just this cycle.">Current P&L</span>
+              <span id="niftybpsPnl" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Cycle P&L</span>
-              <span id="niftybpsTodayPnl" class="stat-val mono">₹0.00</span>
+              <span id="niftybpsTodayPnl" class="stat-val mono">—</span>
+            </div>
+            <div id="niftybpsRiskRow" class="stat-row" style="display: none;">
+              <span class="stat-name tt" data-tooltip="This strategy's defined max loss as a share of the ₹5,00,000 reference capital pool.">Risk Utilization</span>
+              <div class="stat-val mono">
+                <span id="niftybpsRiskLabel">—</span>
+                <div class="risk-bar-track" style="width: 90px;"><div id="niftybpsRiskBarFill" class="risk-bar-fill" style="width: 0%;"></div></div>
+              </div>
             </div>
             <div class="stat-row">
               <span class="stat-name">Expiry & DTE</span>
-              <span id="niftybpsExpiry" class="stat-val mono" style="font-size: 0.78rem;">2026-08-27 (6 DTE)</span>
+              <span id="niftybpsExpiry" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Last Execution</span>
+              <span id="niftybpsLastExec" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Expected Run</span>
+              <span id="niftybpsNextRun" class="stat-val" style="font-size: 0.78rem;">—</span>
             </div>
           </div>
         </div>
 
         <div class="strat-footer">
           <span class="badge badge-green">5% OTM Short / 10% Long</span>
-          <a href="nifty-bps/" class="btn-detail">View Strategy →</a>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="card-toggle" data-target="niftybpsDetail" aria-expanded="false">Details <span class="chevron">▾</span></button>
+            <a href="nifty-bps/" class="btn-detail">View Strategy →</a>
+          </div>
+        </div>
+        <div id="niftybpsDetail" class="strat-detail">
+          <div class="stat-row">
+            <span class="stat-name tt" data-tooltip="Share of completed cycles that closed profitable.">Win Rate</span>
+            <span id="niftybpsWinRate" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Completed Cycles</span>
+            <span id="niftybpsCycles" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Session ID</span>
+            <span id="niftybpsSessionId" class="stat-val mono" style="font-size: 0.72rem;">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Telemetry Updated</span>
+            <span id="niftybpsLastUpdate" class="stat-val mono">—</span>
+          </div>
         </div>
       </div>
 
@@ -248,23 +348,59 @@
               <span id="sic1Position" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-name">Current P&L</span>
-              <span id="sic1Pnl" class="stat-val mono">₹0.00</span>
+              <span class="stat-name tt" data-tooltip="Total realized + open unrealized P&L for this strategy since it started, not just this cycle.">Current P&L</span>
+              <span id="sic1Pnl" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Cycle P&L</span>
-              <span id="sic1TodayPnl" class="stat-val mono">₹0.00</span>
+              <span id="sic1TodayPnl" class="stat-val mono">—</span>
+            </div>
+            <div id="sic1RiskRow" class="stat-row" style="display: none;">
+              <span class="stat-name tt" data-tooltip="This strategy's defined max loss as a share of the ₹5,00,000 reference capital pool.">Risk Utilization</span>
+              <div class="stat-val mono">
+                <span id="sic1RiskLabel">—</span>
+                <div class="risk-bar-track" style="width: 90px;"><div id="sic1RiskBarFill" class="risk-bar-fill" style="width: 0%;"></div></div>
+              </div>
             </div>
             <div class="stat-row">
               <span class="stat-name">Expiry & DTE</span>
-              <span id="sic1Expiry" class="stat-val mono" style="font-size: 0.78rem;">2026-08-27 (6 DTE)</span>
+              <span id="sic1Expiry" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Last Execution</span>
+              <span id="sic1LastExec" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Expected Run</span>
+              <span id="sic1NextRun" class="stat-val" style="font-size: 0.78rem;">—</span>
             </div>
           </div>
         </div>
 
         <div class="strat-footer">
           <span class="badge badge-green">Defined-Risk 4-Leg Model</span>
-          <a href="nifty-weekly/" class="btn-detail">View Strategy →</a>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="card-toggle" data-target="sic1Detail" aria-expanded="false">Details <span class="chevron">▾</span></button>
+            <a href="nifty-weekly/" class="btn-detail">View Strategy →</a>
+          </div>
+        </div>
+        <div id="sic1Detail" class="strat-detail">
+          <div class="stat-row">
+            <span class="stat-name tt" data-tooltip="Share of completed cycles that closed profitable.">Win Rate</span>
+            <span id="sic1WinRate" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Completed Cycles</span>
+            <span id="sic1Cycles" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Session ID</span>
+            <span id="sic1SessionId" class="stat-val mono" style="font-size: 0.72rem;">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Telemetry Updated</span>
+            <span id="sic1LastUpdate" class="stat-val mono">—</span>
+          </div>
         </div>
       </div>
 
@@ -292,23 +428,59 @@
               <span id="nifty50mrPosition" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
-              <span class="stat-name">Current P&L</span>
-              <span id="nifty50mrPnl" class="stat-val mono">₹0.00</span>
+              <span class="stat-name tt" data-tooltip="Total realized + open unrealized P&L for this strategy since it started, not just this cycle.">Current P&L</span>
+              <span id="nifty50mrPnl" class="stat-val mono">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-name">Cycle P&L</span>
-              <span id="nifty50mrTodayPnl" class="stat-val mono">₹0.00</span>
+              <span id="nifty50mrTodayPnl" class="stat-val mono">—</span>
+            </div>
+            <div id="nifty50mrRiskRow" class="stat-row" style="display: none;">
+              <span class="stat-name tt" data-tooltip="This strategy's defined max loss as a share of the ₹5,00,000 reference capital pool.">Risk Utilization</span>
+              <div class="stat-val mono">
+                <span id="nifty50mrRiskLabel">—</span>
+                <div class="risk-bar-track" style="width: 90px;"><div id="nifty50mrRiskBarFill" class="risk-bar-fill" style="width: 0%;"></div></div>
+              </div>
             </div>
             <div class="stat-row">
               <span class="stat-name">Holding Horizon</span>
-              <span id="nifty50mrExpiry" class="stat-val mono" style="font-size: 0.78rem;">20 Sessions</span>
+              <span id="nifty50mrExpiry" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Last Execution</span>
+              <span id="nifty50mrLastExec" class="stat-val mono" style="font-size: 0.78rem;">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-name">Next Expected Run</span>
+              <span id="nifty50mrNextRun" class="stat-val" style="font-size: 0.78rem;">—</span>
             </div>
           </div>
         </div>
 
         <div class="strat-footer">
           <span class="badge badge-cyan">NIFTY 50 Equities</span>
-          <span class="badge badge-gray" style="font-size: 0.72rem;">Paper Only</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" class="card-toggle" data-target="nifty50mrDetail" aria-expanded="false">Details <span class="chevron">▾</span></button>
+            <span class="badge badge-gray" style="font-size: 0.72rem;">Paper Only</span>
+          </div>
+        </div>
+        <div id="nifty50mrDetail" class="strat-detail">
+          <div class="stat-row">
+            <span class="stat-name tt" data-tooltip="Share of completed cycles that closed profitable.">Win Rate</span>
+            <span id="nifty50mrWinRate" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Completed Cycles</span>
+            <span id="nifty50mrCycles" class="stat-val mono">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Session ID</span>
+            <span id="nifty50mrSessionId" class="stat-val mono" style="font-size: 0.72rem;">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name">Telemetry Updated</span>
+            <span id="nifty50mrLastUpdate" class="stat-val mono">—</span>
+          </div>
         </div>
       </div>
 
@@ -393,8 +565,8 @@
               <td><strong>SELL_CE</strong></td>
               <td>NIFTY Index Options</td>
               <td>Dynamic ATR Trailing Stop</td>
-              <td class="mono">₹8,000</td>
-              <td class="mono">1.6%</td>
+              <td class="mono" id="riskMaxLossSELL_CE">—</td>
+              <td class="mono" id="riskUtilPctSELL_CE">—</td>
               <td><span id="riskStatusSELL_CE" class="badge badge-gray">—</span></td>
               <td class="mono">15:10 IST Daily</td>
             </tr>
@@ -402,37 +574,37 @@
               <td><strong>BPS1_MONTHLY_BULL_PUT_SPREAD_EOD</strong></td>
               <td>10 Single-Stock Equities</td>
               <td>10-Spread Defined Max Loss</td>
-              <td class="mono">₹85,500</td>
-              <td class="mono">17.1%</td>
+              <td class="mono" id="riskMaxLossBPS1">—</td>
+              <td class="mono" id="riskUtilPctBPS1">—</td>
               <td><span id="riskStatusBPS1" class="badge badge-gray">—</span></td>
-              <td class="mono">2026-08-27 (Monthly)</td>
+              <td class="mono" id="riskExpiryBPS1">—</td>
             </tr>
             <tr>
               <td><strong>BPS_INDEX_MONTHLY_EOD</strong></td>
               <td>NIFTY 50 Index (OPTIDX)</td>
               <td>5% OTM Short / 10% Long Put Spread</td>
-              <td class="mono">₹85,500</td>
-              <td class="mono">17.1%</td>
+              <td class="mono" id="riskMaxLossNIFTY_BPS">—</td>
+              <td class="mono" id="riskUtilPctNIFTY_BPS">—</td>
               <td><span id="riskStatusNIFTY_BPS" class="badge badge-gray">—</span></td>
-              <td class="mono">2026-08-27 (Monthly)</td>
+              <td class="mono" id="riskExpiryNIFTY_BPS">—</td>
             </tr>
             <tr>
               <td><strong>NIFTY_WEEKLY_DEFINED_RISK_PAPER</strong></td>
               <td>NIFTY 50 Index (OPTIDX)</td>
               <td>Defined-Risk 4-Leg Model</td>
-              <td class="mono">₹5,142.50</td>
-              <td class="mono">1.0%</td>
+              <td class="mono" id="riskMaxLossSIC1">—</td>
+              <td class="mono" id="riskUtilPctSIC1">—</td>
               <td><span id="riskStatusSIC1" class="badge badge-gray">—</span></td>
-              <td class="mono">2026-08-27 (Weekly)</td>
+              <td class="mono" id="riskExpirySIC1">—</td>
             </tr>
             <tr>
               <td><strong>QUANT_EQUITY_SWING_SYSTEM_V1</strong></td>
               <td>NIFTY 50 Cash Equities</td>
               <td>100% Cash-Backed (No Leverage)</td>
-              <td class="mono">₹3,00,000</td>
-              <td class="mono" id="riskUtilNIFTY50_MR">0.0%</td>
+              <td class="mono" id="riskMaxLossNIFTY50_MR">—</td>
+              <td class="mono" id="riskUtilPctNIFTY50_MR">—</td>
               <td><span id="riskStatusNIFTY50_MR" class="badge badge-gray">—</span></td>
-              <td class="mono">20 Trading Days</td>
+              <td class="mono" id="riskExpiryNIFTY50_MR">—</td>
             </tr>
           </tbody>
         </table>

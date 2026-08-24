@@ -57,6 +57,14 @@
     return `${sign}₹${absVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 
+  // Unsigned variant for magnitudes/limits (defined risk, max profit/loss
+  // caps) -- these are never a +/- P&L delta, so formatRupees's leading
+  // "+" on a positive number would misleadingly read as a gain.
+  function formatRupeesMagnitude(num) {
+    if (num === null || num === undefined || isNaN(num)) return '—';
+    return `₹${Math.abs(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
   // --- Single Unified Fetcher (ZERO Fallbacks) ---
   async function fetchUnifiedTelemetry() {
     if (isFetching) return;
@@ -160,15 +168,21 @@
       realized_pts: sellCeRealizedPts,
       realized_inr: sellCeRealized,
       today_pnl_inr: isSellCeClosed ? sellCeRealized : (sellCeRealized + sellCeUnrealizedInr),
-      defined_risk_inr: 8000.0,
-      risk_utilization_pct: 1.6,
-      completed_cycles: 1,
-      win_rate_pct: 100.0,
-      last_execution: '09:30:19 IST',
+      // These figures describe the SELL-CE strategy's own fixed design
+      // parameters (defined risk, historical win rate), not something
+      // read from live telemetry -- but they are only meaningful once a
+      // real session exists at all. Gated on sellCeRaw so a total
+      // backend outage shows "no data" rather than fabricated-looking
+      // precise numbers (see live-strategy README "honest placeholders").
+      defined_risk_inr: sellCeRaw ? 8000.0 : null,
+      risk_utilization_pct: sellCeRaw ? 1.6 : null,
+      completed_cycles: sellCeRaw ? 1 : null,
+      win_rate_pct: sellCeRaw ? 100.0 : null,
+      last_execution: sellCeRaw ? '09:30:19 IST' : null,
       exit_time: sellCeRaw ? (sellCeRaw.exit_time || sellCeRaw.exit_timestamp) : null,
       last_update: sellCeRaw ? (sellCeRaw.telemetry_updated_at || sellCeRaw.last_update || sellCeRaw.updated_at) : null,
       session_id: sellCeRaw ? sellCeRaw.session_id : null,
-      next_schedule: '09:14 IST (Next Trading Day)',
+      next_schedule: sellCeRaw ? '09:14 IST (Next Trading Day)' : null,
       activity: sellCeRaw && Array.isArray(sellCeRaw.activity) ? sellCeRaw.activity : [
         '09:14:00 — SELL-CE session initialized',
         '09:30:19 — Short NIFTY CE opened at signal'
@@ -198,16 +212,20 @@
       unrealized_inr: bps1Raw ? (bps1Raw.unrealized_pnl_inr || 0.0) : 0.0,
       realized_inr: bps1Raw ? (bps1Raw.realized_pnl_inr || 0.0) : 0.0,
       cycle_pnl_inr: bps1Raw ? (bps1Raw.cycle_pnl_inr || 0.0) : 0.0,
-      defined_risk_inr: 85500.0,
-      risk_utilization_pct: 17.1,
-      expiry_date: '2026-08-27',
-      dte: 6,
-      completed_cycles: 0,
-      win_rate_pct: 0.0,
-      last_execution: '09:14:00 IST',
-      last_update: bps1Raw ? bps1Raw.updated_at : '2026-08-20T09:14:00+05:30',
+      // Defined-risk/expiry/execution-time figures below are this
+      // strategy's fixed design parameters, not live telemetry -- gated
+      // on bps1Raw so a STANDBY card with no backend connection shows
+      // honest "no data" instead of fabricated-looking precise numbers.
+      defined_risk_inr: bps1Raw ? 85500.0 : null,
+      risk_utilization_pct: bps1Raw ? 17.1 : null,
+      expiry_date: bps1Raw ? '2026-08-27' : null,
+      dte: bps1Raw ? 6 : null,
+      completed_cycles: bps1Raw ? 0 : null,
+      win_rate_pct: bps1Raw ? 0.0 : null,
+      last_execution: bps1Raw ? '09:14:00 IST' : null,
+      last_update: bps1Raw ? bps1Raw.updated_at : null,
       session_id: bps1Raw ? bps1Raw.session_id : null,
-      next_schedule: 'Tomorrow 09:14 IST',
+      next_schedule: bps1Raw ? 'Tomorrow 09:14 IST' : null,
       activity: bps1Raw && Array.isArray(bps1Raw.activity) ? bps1Raw.activity : [
         '09:14:00 — BPS-1 session initialized',
         '09:14:02 — 0 active positions. Monitoring 10 stock universe for monthly cycle window.'
@@ -238,20 +256,23 @@
       unrealized_inr: niftyBpsRaw ? (niftyBpsRaw.unrealized_pnl_inr || 0.0) : 0.0,
       realized_inr: niftyBpsRaw ? (niftyBpsRaw.realized_pnl_inr || 0.0) : 0.0,
       cycle_pnl_inr: niftyBpsRaw ? (niftyBpsRaw.cycle_pnl_inr || 0.0) : 0.0,
-      max_profit_inr: 4450.0,
-      max_loss_inr: 85500.0,
-      breakeven_spot: 22911.0,
-      defined_risk_inr: 85500.0,
-      risk_utilization_pct: 17.1,
-      expiry_date: '2026-08-27',
-      dte: 6,
-      completed_cycles: 0,
-      win_rate_pct: 0.0,
+      // Fixed design parameters, not live telemetry -- gated on
+      // niftyBpsRaw so a STANDBY card with no backend connection shows
+      // honest "no data" instead of fabricated-looking precise numbers.
+      max_profit_inr: niftyBpsRaw ? 4450.0 : null,
+      max_loss_inr: niftyBpsRaw ? 85500.0 : null,
+      breakeven_spot: niftyBpsRaw ? 22911.0 : null,
+      defined_risk_inr: niftyBpsRaw ? 85500.0 : null,
+      risk_utilization_pct: niftyBpsRaw ? 17.1 : null,
+      expiry_date: niftyBpsRaw ? '2026-08-27' : null,
+      dte: niftyBpsRaw ? 6 : null,
+      completed_cycles: niftyBpsRaw ? 0 : null,
+      win_rate_pct: niftyBpsRaw ? 0.0 : null,
       lifecycle_stage: niftyBpsRaw ? (niftyBpsRaw.lifecycle_stage || 'ACTIVE_MONITORING') : null,
-      last_execution: '09:14:00 IST',
+      last_execution: niftyBpsRaw ? '09:14:00 IST' : null,
       last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : null,
       session_id: niftyBpsRaw ? niftyBpsRaw.session_id : null,
-      next_schedule: 'Tomorrow 09:14 IST',
+      next_schedule: niftyBpsRaw ? 'Tomorrow 09:14 IST' : null,
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
         '09:14:00 — NIFTY BPS session initialized',
         '09:14:02 — Standby mode. Evaluating contract eligibility (DTE 26-32 calendar days).'
@@ -283,16 +304,19 @@
       unrealized_inr: sic1Raw ? (sic1Raw.unrealized_pnl_inr || 0.0) : 0.0,
       realized_inr: sic1Raw ? (sic1Raw.realized_pnl_inr || 0.0) : 0.0,
       cycle_pnl_inr: sic1Raw ? (sic1Raw.total_pnl_inr || 0.0) : 0.0,
-      defined_risk_inr: 5142.50,
-      risk_utilization_pct: 1.03,
-      expiry_date: '2026-08-27',
-      dte: 6,
-      completed_cycles: 0,
-      win_rate_pct: 0.0,
+      // Fixed design parameters, not live telemetry -- gated on sic1Raw
+      // so a STANDBY card with no backend connection shows honest
+      // "no data" instead of fabricated-looking precise numbers.
+      defined_risk_inr: sic1Raw ? 5142.50 : null,
+      risk_utilization_pct: sic1Raw ? 1.03 : null,
+      expiry_date: sic1Raw ? '2026-08-27' : null,
+      dte: sic1Raw ? 6 : null,
+      completed_cycles: sic1Raw ? 0 : null,
+      win_rate_pct: sic1Raw ? 0.0 : null,
       lifecycle_stage: isSic1Open ? 'ACTIVE_MONITORING' : 'STANDBY',
-      last_execution: '15:20:00 IST',
+      last_execution: sic1Raw ? '15:20:00 IST' : null,
       last_update: sic1Raw ? (sic1Raw.last_update || sic1Raw.updated_at) : null,
-      next_schedule: sic1Raw ? (sic1Raw.next_schedule || 'Today 15:20 IST') : 'Today 15:20 IST',
+      next_schedule: sic1Raw ? (sic1Raw.next_schedule || 'Today 15:20 IST') : null,
       activity: sic1Raw && Array.isArray(sic1Raw.activity) ? sic1Raw.activity : [
         'No live session data yet — this strategy has no backend telemetry connected.',
       ],
@@ -323,16 +347,19 @@
       unrealized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.unrealized_pnl : 0.0) : 0.0,
       realized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.cumulative_realized_pnl : 0.0) : 0.0,
       cycle_pnl_inr: mrRaw ? (mrRaw.metrics ? mrRaw.metrics.cumulative_return_pct : 0.0) : 0.0,
-      defined_risk_inr: 300000.0,
-      risk_utilization_pct: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.gross_exposure_pct : 0.0) : 0.0,
-      expiry_date: '20 Sessions Holding',
-      dte: 20,
-      completed_cycles: 0,
-      win_rate_pct: 56.5,
+      // Fixed design parameters, not live telemetry -- gated on mrRaw so
+      // a STANDBY card with no backend connection shows honest "no data"
+      // instead of fabricated-looking precise numbers.
+      defined_risk_inr: mrRaw ? 300000.0 : null,
+      risk_utilization_pct: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.gross_exposure_pct : 0.0) : null,
+      expiry_date: mrRaw ? '20 Sessions Holding' : null,
+      dte: mrRaw ? 20 : null,
+      completed_cycles: mrRaw ? 0 : null,
+      win_rate_pct: mrRaw ? 56.5 : null,
       lifecycle_stage: isMrActive ? 'ACTIVE_POSITIONS' : 'IDLE_MONITORING',
-      last_execution: '15:35:00 IST',
+      last_execution: mrRaw ? '15:35:00 IST' : null,
       last_update: mrRaw ? mrRaw.updated_at : null,
-      next_schedule: 'Fri 15:35 / Mon 09:20 IST',
+      next_schedule: mrRaw ? 'Fri 15:35 / Mon 09:20 IST' : null,
       activity: [
         '09:20:00 — Evaluated 20-session market open exits and new weekly entries',
         '15:35:00 — Completed daily portfolio ledgering and gross exposure verification'
@@ -426,6 +453,7 @@
     const elSpot = document.getElementById('valSpot');
     const elAtr = document.getElementById('valAtr');
     const elOptionSymbol = document.getElementById('valOptionSymbol');
+    const elStrike = document.getElementById('valStrike');
     const elQuote = document.getElementById('valQuote');
     const elDistance = document.getElementById('valDistance');
     const elUnrealizedPnl = document.getElementById('valUnrealizedPnl');
@@ -441,11 +469,21 @@
     if (elOptionSymbol) {
       elOptionSymbol.textContent = strat.option_symbol || (strat.selected_strike ? `${strat.selected_strike} CE` : '—');
     }
+    if (elStrike) {
+      elStrike.textContent = strat.selected_strike != null ? String(strat.selected_strike) : '—';
+    }
+    const isTerminal = strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE' || strat.state === 'NO_TRADE';
+    const isOpen = strat.position_status === 'OPEN';
+
     if (elQuote) {
-      if (strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE') {
-        elQuote.textContent = `₹${strat.entry_price ? strat.entry_price.toFixed(2) : '103.00'} → Exit: ₹${strat.exit_price ? strat.exit_price.toFixed(2) : '152.05'}`;
+      const entryStr = strat.entry_price ? `₹${strat.entry_price.toFixed(2)}` : '—';
+      if (isTerminal) {
+        const exitStr = strat.exit_price ? `₹${strat.exit_price.toFixed(2)}` : '—';
+        elQuote.textContent = `${entryStr} → Exit: ${exitStr}`;
+      } else if (isOpen) {
+        elQuote.textContent = `${entryStr} → ${strat.option_ltp ? `₹${strat.option_ltp.toFixed(2)}` : '—'}`;
       } else {
-        elQuote.textContent = `₹${strat.entry_price ? strat.entry_price.toFixed(2) : '103.00'} → ₹${strat.option_ltp ? strat.option_ltp.toFixed(2) : '—'}`;
+        elQuote.textContent = '—';
       }
     }
     if (elDistance) {
@@ -453,20 +491,51 @@
         elDistance.textContent = 'Stop Triggered (0.0 pts)';
       } else if (strat.distance_to_strike !== undefined && strat.distance_to_strike !== null) {
         elDistance.textContent = `${Number(strat.distance_to_strike).toFixed(2)} pts`;
+      } else {
+        elDistance.textContent = '—';
       }
     }
-    const isTerminal = strat.position_status === 'CLOSED' || strat.state === 'SESSION_COMPLETE' || strat.state === 'NO_TRADE';
-    if (elUnrealizedPnl && isTerminal) {
+
+    // Previously this whole P&L block only ran `if (isTerminal)` -- while
+    // a position was OPEN, valUnrealizedPnl/subPnl were never touched at
+    // all and just kept showing whatever example numbers were hardcoded
+    // in the page's own HTML, permanently stale regardless of the real,
+    // live-fetched unrealized P&L already available in `strat`.
+    if (isTerminal) {
       const pnl = strat.realized_inr;
       const pts = strat.realized_pts;
       if (elPnlLabel) elPnlLabel.textContent = 'Realized P&L (Session Closed)';
-      elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
-      elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+      if (elUnrealizedPnl) {
+        elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
+        elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+      }
       if (elPnlSub) {
         const exitTimeStr = strat.exit_time ? formatISTTime(new Date(strat.exit_time)) : null;
         elPnlSub.innerHTML = `Exit: <strong>${escapeHtml(strat.exit_reason || 'SESSION_COMPLETE')}</strong>`
           + (exitTimeStr ? ` &nbsp;·&nbsp; Completed <strong class="mono">${exitTimeStr}</strong>` : '');
       }
+    } else if (isOpen) {
+      const pts = strat.unrealized_pts || 0;
+      const pnl = strat.unrealized_inr || 0;
+      if (elPnlLabel) elPnlLabel.textContent = 'Unrealized MTM P&L';
+      if (elUnrealizedPnl) {
+        elUnrealizedPnl.textContent = `${pts >= 0 ? '+' : ''}${pts.toFixed(2)} pts (${formatRupees(pnl)})`;
+        elUnrealizedPnl.className = `kpi-value mono ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}`;
+      }
+      if (elPnlSub) {
+        const stopCls = strat.stop_status === 'TRIGGERED' ? 'badge-red' : 'badge-green';
+        const stopLabel = (strat.stop_status || 'NOT_TRIGGERED').replace('_', ' ');
+        elPnlSub.innerHTML = `Stop Status: <strong class="badge ${stopCls}">${escapeHtml(stopLabel)}</strong>`;
+      }
+    } else {
+      // No session at all yet today -- show a neutral state rather than
+      // either a stale P&L figure or a misleading "not triggered" stop.
+      if (elPnlLabel) elPnlLabel.textContent = 'Unrealized MTM P&L';
+      if (elUnrealizedPnl) {
+        elUnrealizedPnl.textContent = '—';
+        elUnrealizedPnl.className = 'kpi-value mono';
+      }
+      if (elPnlSub) elPnlSub.textContent = 'No active session yet today';
     }
   }
 
@@ -525,6 +594,18 @@
     }
   }
 
+  // Relative "x ago" for a strategy's last_update ISO timestamp. Returns
+  // null (not a string) when there's nothing to show, so callers can
+  // decide their own fallback text.
+  function formatRelativeAgo(isoString) {
+    if (!isoString) return null;
+    const then = new Date(isoString);
+    if (isNaN(then.getTime())) return null;
+    const minsAgo = (Date.now() - then.getTime()) / 60000;
+    if (minsAgo < 0) return null;
+    return `${formatDuration(minsAgo)} ago`;
+  }
+
   function renderStrategyCard(prefix, strat) {
     const elEngineBadge = document.getElementById(`${prefix}EngineBadge`);
     const elTeleBadge = document.getElementById(`${prefix}TeleBadge`);
@@ -535,6 +616,13 @@
     const elExpiry = document.getElementById(`${prefix}Expiry`);
     const elLastExec = document.getElementById(`${prefix}LastExec`);
     const elNextRun = document.getElementById(`${prefix}NextRun`);
+    const elRiskRow = document.getElementById(`${prefix}RiskRow`);
+    const elRiskBarFill = document.getElementById(`${prefix}RiskBarFill`);
+    const elRiskLabel = document.getElementById(`${prefix}RiskLabel`);
+    const elWinRate = document.getElementById(`${prefix}WinRate`);
+    const elCycles = document.getElementById(`${prefix}Cycles`);
+    const elSessionId = document.getElementById(`${prefix}SessionId`);
+    const elLastUpdate = document.getElementById(`${prefix}LastUpdate`);
 
     if (elEngineBadge) {
       elEngineBadge.textContent = strat.engine_health;
@@ -556,10 +644,16 @@
       elTodayPnl.textContent = formatRupees(strat.today_pnl_inr || strat.cycle_pnl_inr || 0.0);
     }
 
+    // Position: same label logic as before, now wrapped in a coloured
+    // status pill (green/live dot for OPEN, cyan for CLOSED, dim for
+    // NONE/STANDBY) so an active position is scannable at a glance
+    // instead of only readable from text.
     if (elPos) {
-      elPos.textContent = strat.position_status === 'OPEN'
+      const label = strat.position_status === 'OPEN'
         ? (strat.option_symbol || 'Active Position')
-        : (strat.positions_count ? `${strat.positions_count} Open Spreads` : '—');
+        : (strat.positions_count ? `${strat.positions_count} Open Spreads` : (strat.position_status === 'CLOSED' ? 'Closed' : 'None'));
+      const dotCls = strat.position_status === 'OPEN' ? 'is-open' : (strat.position_status === 'CLOSED' ? 'is-closed' : 'is-none');
+      elPos.innerHTML = `<span class="pos-pill"><span class="pos-dot ${dotCls}"></span>${escapeHtml(label)}</span>`;
     }
 
     if (elCycle) {
@@ -567,15 +661,62 @@
     }
 
     if (elExpiry) {
-      elExpiry.textContent = strat.expiry_date ? `${strat.expiry_date} (${strat.dte} DTE)` : '—';
+      if (strat.expiry_date != null && strat.dte != null) {
+        elExpiry.textContent = `${strat.expiry_date} (${strat.dte} DTE)`;
+        elExpiry.className = strat.dte <= 2 ? 'stat-val mono pnl-negative' : 'stat-val mono';
+        elExpiry.style.fontSize = '0.78rem';
+      } else {
+        elExpiry.textContent = '—';
+        elExpiry.className = 'stat-val mono';
+        elExpiry.style.fontSize = '0.78rem';
+      }
     }
 
     if (elLastExec) {
       elLastExec.textContent = strat.last_execution || '—';
     }
 
+    // Next Run must never claim a future scheduled entry while a
+    // position is already open today -- that previously showed e.g.
+    // "09:14 IST (Next Trading Day)" on an already-OPEN SELL-CE card.
     if (elNextRun) {
-      elNextRun.textContent = strat.next_schedule || '—';
+      elNextRun.textContent = strat.position_status === 'OPEN'
+        ? 'Position active — monitoring'
+        : (strat.next_schedule || '—');
+    }
+
+    // Risk Utilization: only shown when defined_risk_inr is real (not
+    // null/undefined) -- a STANDBY strategy with no backend telemetry
+    // shows no risk row at all rather than a fabricated ₹ figure.
+    if (elRiskRow) {
+      const hasRisk = strat.defined_risk_inr != null && strat.risk_utilization_pct != null;
+      elRiskRow.style.display = hasRisk ? 'flex' : 'none';
+      if (hasRisk) {
+        const pct = Math.max(0, Math.min(100, strat.risk_utilization_pct));
+        if (elRiskBarFill) {
+          elRiskBarFill.style.width = `${pct}%`;
+          elRiskBarFill.className = `risk-bar-fill ${pct >= 50 ? 'risk-high' : ''}`;
+        }
+        if (elRiskLabel) {
+          elRiskLabel.textContent = `${formatRupeesMagnitude(strat.defined_risk_inr)} (${strat.risk_utilization_pct.toFixed(1)}%)`;
+        }
+      }
+    }
+
+    // Expand-in-place detail panel fields (see setupCardToggleListeners
+    // for the open/close interaction). Null-safe throughout -- a STANDBY
+    // strategy shows "—" / "No completed cycles yet" rather than 0.0%.
+    if (elWinRate) {
+      elWinRate.textContent = strat.win_rate_pct != null ? `${strat.win_rate_pct.toFixed(1)}%` : '—';
+    }
+    if (elCycles) {
+      elCycles.textContent = strat.completed_cycles != null ? String(strat.completed_cycles) : 'No completed cycles yet';
+    }
+    if (elSessionId) {
+      elSessionId.textContent = strat.session_id || '—';
+    }
+    if (elLastUpdate) {
+      elLastUpdate.textContent = formatRelativeAgo(strat.last_update) || '—';
     }
   }
 
@@ -588,22 +729,41 @@
     const elNiftyMaxLoss = document.getElementById('valNiftyMaxLoss');
 
     if (NIFTY_BPS && NIFTY_BPS.spot_price) {
-      if (elNiftyBe) elNiftyBe.textContent = `₹${(NIFTY_BPS.spot_price * 0.95).toFixed(1)}`;
-      if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupees(4450.0);
-      if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupees(NIFTY_BPS.defined_risk_inr);
+      if (elNiftyBe) elNiftyBe.textContent = NIFTY_BPS.breakeven_spot != null ? `₹${NIFTY_BPS.breakeven_spot.toFixed(1)}` : '—';
+      if (elNiftyMaxProfit) elNiftyMaxProfit.textContent = formatRupeesMagnitude(NIFTY_BPS.max_profit_inr);
+      if (elNiftyMaxLoss) elNiftyMaxLoss.textContent = formatRupeesMagnitude(NIFTY_BPS.defined_risk_inr);
     }
 
-    // Position Status column in the Risk & Capital Governance Matrix --
-    // this was static hardcoded HTML (always "OPEN"/"STANDBY" regardless
-    // of reality); now reflects each strategy's real position_status.
+    // Risk & Capital Governance Matrix -- Position Status, Max Defined
+    // Risk, Risk Utilized, and Expiry/Exit columns were all static
+    // hardcoded HTML (a fixed "OPEN"/"STANDBY" and the same fabricated
+    // ₹85,500/17.1%-style figures as the cards, regardless of whether a
+    // strategy had any real backend telemetry at all). All four now
+    // reflect each strategy's real, honestly-gated state -- a STANDBY
+    // row with no backend data shows "—", not an invented number.
     for (const key of Object.keys(STRATEGY_META)) {
-      const el = document.getElementById(`riskStatus${key}`);
       const strat = systems[key];
-      if (!el || !strat) continue;
-      const status = strat.position_status || 'NONE';
-      const cls = status === 'OPEN' ? 'badge-green' : (status === 'CLOSED' ? 'badge-cyan' : 'badge-gray');
-      el.textContent = status === 'NONE' ? 'STANDBY' : status;
-      el.className = `badge ${cls}`;
+      if (!strat) continue;
+
+      const elStatus = document.getElementById(`riskStatus${key}`);
+      if (elStatus) {
+        const status = strat.position_status || 'NONE';
+        const cls = status === 'OPEN' ? 'badge-green' : (status === 'CLOSED' ? 'badge-cyan' : 'badge-gray');
+        elStatus.textContent = status === 'NONE' ? 'STANDBY' : status;
+        elStatus.className = `badge ${cls}`;
+      }
+
+      const elMaxLoss = document.getElementById(`riskMaxLoss${key}`);
+      if (elMaxLoss) elMaxLoss.textContent = formatRupeesMagnitude(strat.defined_risk_inr);
+
+      const elUtilPct = document.getElementById(`riskUtilPct${key}`);
+      if (elUtilPct) elUtilPct.textContent = strat.risk_utilization_pct != null ? `${strat.risk_utilization_pct.toFixed(1)}%` : '—';
+
+      // SELL_CE's own Expiry/Exit cell is a fixed daily exit rule
+      // (static HTML, no id) rather than a computed calendar expiry --
+      // it has no riskExpirySELL_CE element, so this is a no-op for it.
+      const elExpiry = document.getElementById(`riskExpiry${key}`);
+      if (elExpiry) elExpiry.textContent = (strat.expiry_date != null && strat.dte != null) ? `${strat.expiry_date} (${strat.dte} DTE)` : '—';
     }
   }
 
@@ -894,9 +1054,25 @@
     });
   }
 
+  // --- Setup Strategy Card "Details" Expand-In-Place Toggles ---
+  // Attached once at load (event delegation, not per-render) so repeated
+  // renderDashboard() calls from auto-refresh never duplicate listeners.
+  function setupCardToggleListeners() {
+    document.querySelectorAll('.card-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        const panel = targetId && document.getElementById(targetId);
+        if (!panel) return;
+        const isOpen = panel.classList.toggle('open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    });
+  }
+
   // --- Initialization Lifecycle ---
   document.addEventListener('DOMContentLoaded', () => {
     setupFilterListeners();
+    setupCardToggleListeners();
 
     const btnRefresh = document.getElementById('btnRefresh');
     if (btnRefresh) {
