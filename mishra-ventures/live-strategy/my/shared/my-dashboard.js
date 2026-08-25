@@ -190,6 +190,16 @@
     };
 
     // 2. BPS-1 Single-Stock
+    // Field names below match generate_cycle_report_data()'s ACTUAL
+    // payload shape (bps1_paper_agent/reporting/daily_report.py) -- a
+    // prior version of this mapping read fabricated-looking literal
+    // defaults (defined_risk_inr, expiry_date, dte, ...) even when real
+    // telemetry existed, and read several fields
+    // (unrealized_pnl_inr/realized_pnl_inr/cycle_pnl_inr/session_id/
+    // activity) that the real payload never sends at all. Also note:
+    // BPS-1 only publishes on days a real monthly cycle actually runs
+    // (see bps1_paper_agent/main.py's NO_ACTIVE_CYCLE gate), so bps1Raw
+    // being absent on most days is expected, not a fault.
     const bps1Raw = (raw.systems && raw.systems.BPS1_PAPER) ? raw.systems.BPS1_PAPER : null;
     systems.BPS1 = {
       name: 'BPS-1',
@@ -197,11 +207,11 @@
       subtitle: 'Single-Stock Bull Put Spread',
       type: 'Single-Stock Monthly Bull Put Spread (10 Equities)',
       state: bps1Raw ? (bps1Raw.state || 'STANDBY') : 'STANDBY',
-      engine_health: bps1Raw ? (bps1Raw.system_health || 'HEALTHY') : 'STANDBY',
+      engine_health: bps1Raw ? 'HEALTHY' : 'STANDBY',
       telemetry_health: bps1Raw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      active_cycle: '2026-08 (Monthly)',
-      position_status: bps1Raw ? (bps1Raw.position_status || 'NONE') : 'NONE',
+      active_cycle: bps1Raw ? (bps1Raw.cycle_month || '2026-08 (Monthly)') : '2026-08 (Monthly)',
+      position_status: bps1Raw ? ((bps1Raw.active_positions_count || 0) > 0 ? 'OPEN' : 'NONE') : 'NONE',
       positions_count: bps1Raw ? (bps1Raw.active_positions_count || 0) : 0,
       spot_price: null,
       selected_strike: null,
@@ -209,42 +219,46 @@
       entry_price: null,
       option_ltp: null,
       unrealized_pts: 0.0,
-      unrealized_inr: bps1Raw ? (bps1Raw.unrealized_pnl_inr || 0.0) : 0.0,
-      realized_inr: bps1Raw ? (bps1Raw.realized_pnl_inr || 0.0) : 0.0,
-      cycle_pnl_inr: bps1Raw ? (bps1Raw.cycle_pnl_inr || 0.0) : 0.0,
-      // Defined-risk/expiry/execution-time figures below are this
-      // strategy's fixed design parameters, not live telemetry -- gated
-      // on bps1Raw so a STANDBY card with no backend connection shows
-      // honest "no data" instead of fabricated-looking precise numbers.
-      defined_risk_inr: bps1Raw ? 85500.0 : null,
-      risk_utilization_pct: bps1Raw ? 17.1 : null,
-      expiry_date: bps1Raw ? '2026-08-27' : null,
-      dte: bps1Raw ? 6 : null,
-      completed_cycles: bps1Raw ? 0 : null,
-      win_rate_pct: bps1Raw ? 0.0 : null,
-      last_execution: bps1Raw ? '09:14:00 IST' : null,
+      unrealized_inr: 0.0,
+      realized_inr: bps1Raw ? (bps1Raw.cumulative_net_pnl_rupees || 0.0) : 0.0,
+      cycle_pnl_inr: bps1Raw ? (bps1Raw.cumulative_net_pnl_rupees || 0.0) : 0.0,
+      defined_risk_inr: bps1Raw ? bps1Raw.aggregate_defined_risk_rupees : null,
+      risk_utilization_pct: bps1Raw ? bps1Raw.capital_utilization_pct : null,
+      expiry_date: bps1Raw ? bps1Raw.target_expiry_date : null,
+      dte: bps1Raw ? bps1Raw.dte_at_entry : null,
+      completed_cycles: null,
+      win_rate_pct: null,
+      last_execution: bps1Raw && bps1Raw.completed_at ? formatISTTime(new Date(bps1Raw.completed_at)) : null,
       last_update: bps1Raw ? bps1Raw.updated_at : null,
-      session_id: bps1Raw ? bps1Raw.session_id : null,
+      session_id: bps1Raw ? bps1Raw.cycle_id : null,
       next_schedule: bps1Raw ? 'Tomorrow 09:14 IST' : null,
-      activity: bps1Raw && Array.isArray(bps1Raw.activity) ? bps1Raw.activity : [
-        'No live session data yet — this strategy has no backend telemetry connected.',
-      ],
+      activity: bps1Raw && Array.isArray(bps1Raw.events) && bps1Raw.events.length
+        ? bps1Raw.events.map(e => `${e.timestamp ? formatISTTime(new Date(e.timestamp)) : ''} — ${e.message || e.category || 'Event'}`)
+        : [
+          'No live session data yet — this strategy has no backend telemetry connected.',
+        ],
     };
 
     // 3. NIFTY BPS Index (Monthly Spread - RESTORED)
+    // Field names below match NiftyBpsStatusPublisher.build_sanitized_payload()'s
+    // ACTUAL payload shape (nifty_bps_paper_agent/dashboard/status_publisher.py)
+    // -- it does not report a defined-risk/max-profit/breakeven/expiry-date
+    // envelope at all (only remaining_dte), so those stay honestly null
+    // rather than the fabricated literals a prior version of this mapping
+    // used even when real telemetry was present.
     const niftyBpsRaw = (raw.systems && raw.systems.NIFTY_BPS_PAPER) ? raw.systems.NIFTY_BPS_PAPER : null;
     systems.NIFTY_BPS = {
       name: 'NIFTY BPS',
       strategy_id: 'BPS_INDEX_MONTHLY_EOD',
       subtitle: 'Index Bull Put Spread',
       type: 'NIFTY 50 Index Monthly Bull Put Spread',
-      state: niftyBpsRaw ? (niftyBpsRaw.state || 'STANDBY') : 'STANDBY',
+      state: niftyBpsRaw ? (niftyBpsRaw.position_status || 'STANDBY') : 'STANDBY',
       engine_health: niftyBpsRaw ? (niftyBpsRaw.system_health || 'HEALTHY') : 'STANDBY',
       telemetry_health: niftyBpsRaw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      active_cycle: '2026-08 (Monthly)',
+      active_cycle: niftyBpsRaw ? (niftyBpsRaw.current_cycle || '2026-08 (Monthly)') : '2026-08 (Monthly)',
       position_status: niftyBpsRaw ? (niftyBpsRaw.position_status || 'NONE') : 'NONE',
-      positions_count: niftyBpsRaw ? (niftyBpsRaw.active_positions_count || 0) : 0,
+      positions_count: niftyBpsRaw ? (niftyBpsRaw.position_status === 'OPEN' ? 1 : 0) : 0,
       spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
       selected_strike: '5% OTM Short / 10% Long',
       option_symbol: 'NIFTY Monthly Spread',
@@ -252,25 +266,27 @@
       entry_price: null,
       option_ltp: null,
       unrealized_pts: 0.0,
-      unrealized_inr: niftyBpsRaw ? (niftyBpsRaw.unrealized_pnl_inr || 0.0) : 0.0,
-      realized_inr: niftyBpsRaw ? (niftyBpsRaw.realized_pnl_inr || 0.0) : 0.0,
-      cycle_pnl_inr: niftyBpsRaw ? (niftyBpsRaw.cycle_pnl_inr || 0.0) : 0.0,
-      // Fixed design parameters, not live telemetry -- gated on
-      // niftyBpsRaw so a STANDBY card with no backend connection shows
-      // honest "no data" instead of fabricated-looking precise numbers.
-      max_profit_inr: niftyBpsRaw ? 4450.0 : null,
-      max_loss_inr: niftyBpsRaw ? 85500.0 : null,
-      breakeven_spot: niftyBpsRaw ? 22911.0 : null,
-      defined_risk_inr: niftyBpsRaw ? 85500.0 : null,
-      risk_utilization_pct: niftyBpsRaw ? 17.1 : null,
-      expiry_date: niftyBpsRaw ? '2026-08-27' : null,
-      dte: niftyBpsRaw ? 6 : null,
-      completed_cycles: niftyBpsRaw ? 0 : null,
-      win_rate_pct: niftyBpsRaw ? 0.0 : null,
-      lifecycle_stage: niftyBpsRaw ? (niftyBpsRaw.lifecycle_stage || 'ACTIVE_MONITORING') : null,
-      last_execution: niftyBpsRaw ? '09:14:00 IST' : null,
-      last_update: niftyBpsRaw ? niftyBpsRaw.updated_at : null,
-      session_id: niftyBpsRaw ? niftyBpsRaw.session_id : null,
+      unrealized_inr: niftyBpsRaw ? (niftyBpsRaw.unrealized_mtm_inr || 0.0) : 0.0,
+      realized_inr: niftyBpsRaw ? (niftyBpsRaw.total_realized_pnl_inr || 0.0) : 0.0,
+      cycle_pnl_inr: niftyBpsRaw ? (niftyBpsRaw.total_realized_pnl_inr || 0.0) : 0.0,
+      // The publisher does not report a defined-risk/max-profit/loss/
+      // breakeven envelope at all -- honestly null rather than fabricated.
+      max_profit_inr: null,
+      max_loss_inr: null,
+      breakeven_spot: null,
+      defined_risk_inr: null,
+      risk_utilization_pct: null,
+      // No exact expiry date is reported, only a remaining-DTE count --
+      // "Current Cycle" avoids implying a specific (unknown) date while
+      // still surfacing the one real number we do have.
+      expiry_date: (niftyBpsRaw && niftyBpsRaw.remaining_dte != null) ? 'Current Cycle' : null,
+      dte: niftyBpsRaw ? niftyBpsRaw.remaining_dte : null,
+      completed_cycles: niftyBpsRaw ? niftyBpsRaw.total_completed_trades : null,
+      win_rate_pct: niftyBpsRaw ? niftyBpsRaw.win_rate_pct : null,
+      lifecycle_stage: niftyBpsRaw ? (niftyBpsRaw.position_status === 'OPEN' ? 'ACTIVE_MONITORING' : 'STANDBY') : null,
+      last_execution: niftyBpsRaw && niftyBpsRaw.last_updated_utc ? formatISTTime(new Date(niftyBpsRaw.last_updated_utc)) : null,
+      last_update: niftyBpsRaw ? niftyBpsRaw.last_updated_utc : null,
+      session_id: null,
       next_schedule: niftyBpsRaw ? 'Tomorrow 09:14 IST' : null,
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
         'No live session data yet — this strategy has no backend telemetry connected.',
@@ -321,20 +337,26 @@
     };
 
     // 5. NIFTY 50 Systematic Equity Swing Paper Model (QUANT_EQUITY_SWING_SYSTEM_V1)
+    // Field names below match Nifty50MrStatusPublisher's ACTUAL flat
+    // payload shape (nifty50_mr_paper_agent/dashboard/status_publisher.py)
+    // -- a prior version of this mapping read mrRaw.portfolio.* /
+    // mrRaw.metrics.* nested objects the publisher never actually sends,
+    // so real P&L/position data would have silently rendered as zero
+    // even once telemetry was flowing correctly.
     const mrRaw = (raw.systems && raw.systems.NIFTY50_MR_PAPER) ? raw.systems.NIFTY50_MR_PAPER : null;
-    const isMrActive = mrRaw ? (mrRaw.active_positions_count > 0 || mrRaw.status === 'ACTIVE') : false;
+    const isMrActive = mrRaw ? (mrRaw.position_status === 'OPEN' || (mrRaw.positions_count || 0) > 0) : false;
     systems.NIFTY50_MR = {
       name: 'Equity Swing',
       strategy_id: 'QUANT_EQUITY_SWING_SYSTEM_V1',
       subtitle: 'Systematic Equity Swing Paper Model',
       type: 'NIFTY 50 Cash Equities Model',
-      state: mrRaw ? (mrRaw.status || 'STANDBY') : 'STANDBY',
-      engine_health: mrRaw ? (mrRaw.status === 'CRITICAL_EXPOSURE_BREACH' ? 'DEGRADED' : 'HEALTHY') : 'STANDBY',
-      telemetry_health: mrRaw ? 'FRESH' : 'STANDBY',
+      state: mrRaw ? (mrRaw.state || 'STANDBY') : 'STANDBY',
+      engine_health: mrRaw ? (mrRaw.system_health || 'HEALTHY') : 'STANDBY',
+      telemetry_health: mrRaw ? (mrRaw.telemetry_health || 'FRESH') : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      active_cycle: 'WEEKLY_SWING_COHORT',
+      active_cycle: mrRaw ? (mrRaw.active_cycle || 'WEEKLY_SWING_COHORT') : 'WEEKLY_SWING_COHORT',
       position_status: isMrActive ? 'OPEN' : 'NONE',
-      positions_count: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.active_positions_count : 0) : 0,
+      positions_count: mrRaw ? (mrRaw.positions_count || 0) : 0,
       spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
       selected_strike: 'Cash Equities (Equal Weight)',
       option_symbol: 'NIFTY 50 Equity Basket',
@@ -342,22 +364,28 @@
       entry_price: null,
       option_ltp: null,
       unrealized_pts: 0.0,
-      unrealized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.unrealized_pnl : 0.0) : 0.0,
-      realized_inr: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.cumulative_realized_pnl : 0.0) : 0.0,
-      cycle_pnl_inr: mrRaw ? (mrRaw.metrics ? mrRaw.metrics.cumulative_return_pct : 0.0) : 0.0,
-      // Fixed design parameters, not live telemetry -- gated on mrRaw so
-      // a STANDBY card with no backend connection shows honest "no data"
-      // instead of fabricated-looking precise numbers.
-      defined_risk_inr: mrRaw ? 300000.0 : null,
-      risk_utilization_pct: mrRaw ? (mrRaw.portfolio ? mrRaw.portfolio.gross_exposure_pct : 0.0) : null,
-      expiry_date: mrRaw ? '20 Sessions Holding' : null,
-      dte: mrRaw ? 20 : null,
-      completed_cycles: mrRaw ? 0 : null,
-      win_rate_pct: mrRaw ? 56.5 : null,
+      unrealized_inr: mrRaw ? (mrRaw.unrealized_inr || 0.0) : 0.0,
+      realized_inr: mrRaw ? (mrRaw.realized_inr || 0.0) : 0.0,
+      cycle_pnl_inr: mrRaw ? (mrRaw.cycle_pnl_inr || 0.0) : 0.0,
+      today_pnl_inr: mrRaw ? mrRaw.today_pnl_inr : undefined,
+      // defined_risk_inr/risk_utilization_pct/expiry_date/dte/last_execution/
+      // next_schedule are real values the publisher sends whenever mrRaw
+      // exists -- gated on mrRaw so a STANDBY card with no backend
+      // connection at all shows honest "no data" instead.
+      defined_risk_inr: mrRaw ? (mrRaw.defined_risk_inr != null ? mrRaw.defined_risk_inr : 300000.0) : null,
+      risk_utilization_pct: mrRaw ? (mrRaw.risk_utilization_pct != null ? mrRaw.risk_utilization_pct : 0.0) : null,
+      expiry_date: mrRaw ? (mrRaw.expiry_date || '20 Sessions Holding') : null,
+      dte: mrRaw ? (mrRaw.dte != null ? mrRaw.dte : 20) : null,
+      // The publisher does not currently report win-rate/completed-cycle
+      // statistics at all -- previously hardcoded to a fabricated 56.5%
+      // even when real telemetry was present. Honestly null until the
+      // publisher actually computes and sends these.
+      completed_cycles: null,
+      win_rate_pct: null,
       lifecycle_stage: isMrActive ? 'ACTIVE_POSITIONS' : 'IDLE_MONITORING',
-      last_execution: mrRaw ? '15:35:00 IST' : null,
+      last_execution: mrRaw ? (mrRaw.last_execution || null) : null,
       last_update: mrRaw ? mrRaw.updated_at : null,
-      next_schedule: mrRaw ? 'Fri 15:35 / Mon 09:20 IST' : null,
+      next_schedule: mrRaw ? (mrRaw.next_schedule || null) : null,
       activity: mrRaw && Array.isArray(mrRaw.activity) ? mrRaw.activity : [
         'No live session data yet — this strategy has no backend telemetry connected.',
       ],
