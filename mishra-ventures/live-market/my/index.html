@@ -294,6 +294,81 @@
             margin-top: 2px;
         }
 
+        /* 0. HERO VERDICT (PROMOTED DECISION SUPPORT) */
+        .hero-verdict {
+            border: 1px solid var(--border-highlight);
+            box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08), var(--shadow-glow);
+            padding: 26px 26px 22px;
+        }
+
+        .hero-verdict .card-title {
+            font-size: 1.15rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero-focus-pill {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            line-height: 1.15;
+        }
+
+        .hero-instruction {
+            font-size: 1.05rem;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        /* EXPANDABLE EVIDENCE CARDS (details/summary) */
+        .evidence-card > summary {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .evidence-card > summary::marker,
+        .evidence-card > summary::-webkit-details-marker {
+            color: var(--accent-blue);
+        }
+
+        .evidence-card > summary:hover .card-title {
+            color: var(--accent-blue);
+        }
+
+        .evidence-card.shadow-card > summary::marker,
+        .evidence-card.shadow-card > summary::-webkit-details-marker {
+            color: var(--accent-amber);
+        }
+
+        .evidence-card.shadow-card {
+            padding: 14px 20px;
+            opacity: 0.85;
+        }
+
+        .evidence-card.shadow-card .card-title {
+            font-size: 0.9rem;
+        }
+
+        /* Section grouping the low-priority cards at the bottom */
+        .details-section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 4px 2px;
+        }
+
+        .details-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
         /* 2. MARKET SNAPSHOT GRID */
         .snapshot-grid {
             display: grid;
@@ -683,17 +758,58 @@
         </div>
     </div>
 
-    <!-- GRID 1: ROW 1 (MARKET SNAPSHOT & COMPACT OI SUMMARY) -->
+    <!-- 0. DECISION SUPPORT — PROMOTED HERO VERDICT (WHAT DO I DO NOW?) -->
+    <div class="card hero-verdict">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">DECISION SUPPORT — WHAT DO I DO NOW?</h2>
+                <span class="card-subtitle">Operational directive. Everything below is supporting evidence — open a section only if you want the "why".</span>
+            </div>
+        </div>
+
+        <div>
+            <span class="metric-label">Current Focus</span><br>
+            <span class="hero-focus-pill status-badge badge-amber" id="val-ds-focus">STAND ASIDE</span>
+        </div>
+
+        <div class="hero-grid">
+            <div>
+                <span class="metric-label">Reason</span>
+                <div style="font-size: 0.95rem; color: var(--text-secondary);" id="val-ds-why">
+                    Evaluating live market context...
+                </div>
+            </div>
+
+            <div class="callout-box callout-blue">
+                <span class="metric-label" style="color: var(--accent-blue);">Next Level To Watch</span>
+                <div style="font-weight: 700; color: var(--accent-blue); font-size: 1.05rem;" id="val-ds-next">
+                    --
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="val-ds-next-why">
+                    Nearest important reference level. Watch reaction or acceptance.
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <span class="metric-label">Operational Instruction</span>
+            <div class="hero-instruction" style="font-weight: 800; color: var(--accent-amber);" id="val-ds-instruction">
+                WAIT FOR SETUP CONFIRMATION
+            </div>
+        </div>
+    </div>
+
+    <!-- EVIDENCE GRID A: MARKET SNAPSHOT & MARKET SUMMARY / OI (collapsed by default) -->
     <div class="grid-2col">
 
         <!-- 2. MARKET SNAPSHOT -->
-        <div class="card">
-            <div class="card-header">
+        <details class="card evidence-card">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title">MARKET SNAPSHOT</h2>
                     <span class="card-subtitle">Multi-timeframe structure & indicator status</span>
                 </div>
-            </div>
+            </summary>
 
             <div class="snapshot-grid">
                 <div class="snapshot-item">
@@ -732,11 +848,11 @@
                     NIFTY Spot is an unweighted index with zero traded volume. True session VWAP is tracked via Front-Month Futures.
                 </div>
             </div>
-        </div>
+        </details>
 
         <!-- 5. COMPACT MARKET SUMMARY / OI -->
-        <div class="card">
-            <div class="card-header">
+        <details class="card evidence-card">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title">MARKET SUMMARY / OI</h2>
                     <span class="card-subtitle" id="val-oi-subtitle">Current positioning & walls · Expiry: --</span>
@@ -745,7 +861,7 @@
                     <span class="status-badge badge-neutral" id="val-pcr-pill">CURRENT PCR --</span>
                     <a href="oi/" class="oi-btn-link" title="Open dedicated Options Chain & Open Interest Analytics">View Full OI →</a>
                 </div>
-            </div>
+            </summary>
 
             <div class="snapshot-grid" style="grid-template-columns: repeat(2, 1fr);">
                 <div class="snapshot-item">
@@ -782,22 +898,22 @@
                     OI distribution analysis loading...
                 </div>
             </div>
-        </div>
+        </details>
 
     </div>
 
-    <!-- GRID 2: ROW 2 (FUTURES VWAP & MORNING PLAN) -->
+    <!-- EVIDENCE GRID B: FUTURES VWAP & MORNING PLAN (collapsed by default) -->
     <div class="grid-2col">
 
         <!-- 3. FUTURES VWAP CARD (New E2 Card) -->
-        <div class="card" id="card-futures-vwap">
-            <div class="card-header">
+        <details class="card evidence-card" id="card-futures-vwap">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title">FUTURES VWAP</h2>
                     <span class="card-subtitle" id="val-fut-symbol">NIFTY Front-Month Future (NFO)</span>
                 </div>
                 <span class="status-badge badge-neutral" id="val-fut-pos-badge">--</span>
-            </div>
+            </summary>
 
             <div class="snapshot-grid" style="grid-template-columns: repeat(2, 1fr);">
                 <div class="snapshot-item">
@@ -821,17 +937,17 @@
                     Futures session VWAP calculating.
                 </div>
             </div>
-        </div>
+        </details>
 
         <!-- 4. MORNING PLAN (Canonical Conditional E2 View) -->
-        <div class="card" id="card-morning-plan">
-            <div class="card-header">
+        <details class="card evidence-card" id="card-morning-plan">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title">MORNING PLAN</h2>
                     <span class="card-subtitle" id="label-plan-subtitle">Thesis qualification & execution status</span>
                 </div>
                 <span class="status-badge badge-neutral" id="val-plan-status">--</span>
-            </div>
+            </summary>
 
             <div style="display: flex; gap: 16px; align-items: center;">
                 <span class="metric-label">Original Thesis:</span>
@@ -855,21 +971,21 @@
                     • Follow qualified playbook rules.
                 </div>
             </div>
-        </div>
+        </details>
 
     </div>
 
-    <!-- GRID 3: KEY LEVELS & DECISION SUPPORT -->
+    <!-- EVIDENCE GRID C: KEY LEVELS & ORDER FLOW (demoted, collapsed by default) -->
     <div class="grid-2col">
 
         <!-- 6. KEY LEVELS -->
-        <div class="card">
-            <div class="card-header">
+        <details class="card evidence-card">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title">KEY LEVELS</h2>
                     <span class="card-subtitle">Where price matters (Deterministic Area References)</span>
                 </div>
-            </div>
+            </summary>
 
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div class="level-row">
@@ -902,61 +1018,17 @@
             <div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; border-top: 1px solid var(--card-border); padding-top: 6px;">
                 Levels are reference areas, not automatic entry signals.
             </div>
-        </div>
+        </details>
 
-        <!-- 7. DECISION SUPPORT -->
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">DECISION SUPPORT</h2>
-                    <span class="card-subtitle">WHAT NOW? Operational directive</span>
-                </div>
-            </div>
-
-            <div>
-                <span class="metric-label">Current Focus</span>
-                <div class="metric-value" style="color: var(--accent-amber); font-size: 1.4rem;" id="val-ds-focus">STAND ASIDE</div>
-            </div>
-
-            <div>
-                <span class="metric-label">Reason</span>
-                <div style="font-size: 0.85rem; color: var(--text-secondary);" id="val-ds-why">
-                    Evaluating live market context...
-                </div>
-            </div>
-
-            <div class="callout-box callout-blue">
-                <span class="metric-label" style="color: var(--accent-blue);">Next Level To Watch</span>
-                <div style="font-weight: 700; color: var(--accent-blue); font-size: 0.95rem;" id="val-ds-next">
-                    --
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="val-ds-next-why">
-                    Nearest important reference level. Watch reaction or acceptance.
-                </div>
-            </div>
-
-            <div>
-                <span class="metric-label">Operational Instruction</span>
-                <div style="font-weight: 700; color: var(--accent-amber); font-size: 0.9rem;" id="val-ds-instruction">
-                    WAIT FOR SETUP CONFIRMATION
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- GRID 4: ORDER FLOW SHADOW & TIMELINE -->
-    <div class="grid-2col">
-
-        <!-- 8. ORDER FLOW — RESEARCH ONLY -->
-        <div class="card shadow-card">
-            <div class="card-header">
+        <!-- 8. ORDER FLOW — RESEARCH ONLY (further demoted: smaller, muted, disclaimer visible even collapsed) -->
+        <details class="card shadow-card evidence-card">
+            <summary class="card-header">
                 <div>
                     <h2 class="card-title" style="color: var(--accent-amber);">ORDER FLOW</h2>
-                    <span class="card-subtitle">Shadow Mode · Research Only</span>
+                    <span class="card-subtitle" style="color: var(--accent-amber);">Shadow Mode · Research Only · CONTEXT ONLY — NOT A TRADING SIGNAL</span>
                 </div>
                 <span class="status-badge badge-amber" id="val-of-badge">SHADOW MODE</span>
-            </div>
+            </summary>
 
             <div class="of-grid">
                 <div>
@@ -985,31 +1057,17 @@
             <div class="disclaimer-banner">
                 ORDER FLOW IS RESEARCH CONTEXT ONLY — NOT A TRADING SIGNAL
             </div>
-        </div>
-
-        <!-- 9. SESSION INTELLIGENCE TIMELINE -->
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <h2 class="card-title">SESSION INTELLIGENCE TIMELINE</h2>
-                    <span class="card-subtitle" id="val-timeline-count">0 events today (Newest first)</span>
-                </div>
-            </div>
-
-            <div class="timeline-scroll-box">
-                <div class="timeline-container" id="timeline-list">
-                    <div class="timeline-item">
-                        <span class="timeline-meaning">Loading session timeline...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </details>
 
     </div>
 
+    <!-- DETAILS & SESSION HISTORY (collapsed by default) -->
+    <div class="details-section-label">Details &amp; Session History</div>
+    <div class="details-stack">
+
     <!-- 10. LIVE MARKET COMMENTARY (FACTS -> MEANING -> DECISION) -->
-    <div class="card">
-        <div class="card-header">
+    <details class="card evidence-card">
+        <summary class="card-header">
             <div>
                 <h2 class="card-title">MARKET COMMENTARY</h2>
                 <span class="card-subtitle">FACTS → MEANING → DECISION (Full Session Synthesis)</span>
@@ -1018,7 +1076,7 @@
                 <span class="dot green"></span>
                 <span id="val-comm-time">LIVE</span>
             </span>
-        </div>
+        </summary>
 
         <div class="commentary-section">
             <div class="facts-box">
@@ -1048,32 +1106,61 @@
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- 11. COMPACT DATA FEED HEALTH BAR (Replaces bulky diagnostic table) -->
-    <div class="feed-health-bar" id="section-feed-health">
-        <div class="health-item">
-            <span class="dot green" id="health-mkt-dot"></span>
-            <span class="metric-label">Market Feed:</span>
-            <span class="health-val" id="health-mkt-val">LIVE</span>
+    <!-- 9. SESSION INTELLIGENCE TIMELINE -->
+    <details class="card evidence-card">
+        <summary class="card-header">
+            <div>
+                <h2 class="card-title">SESSION INTELLIGENCE TIMELINE</h2>
+                <span class="card-subtitle" id="val-timeline-count">0 events today (Newest first)</span>
+            </div>
+        </summary>
+
+        <div class="timeline-scroll-box">
+            <div class="timeline-container" id="timeline-list">
+                <div class="timeline-item">
+                    <span class="timeline-meaning">Loading session timeline...</span>
+                </div>
+            </div>
         </div>
-        <div class="health-divider"></div>
-        <div class="health-item">
-            <span class="dot green" id="health-oi-dot"></span>
-            <span class="metric-label">OI Data:</span>
-            <span class="health-val" id="health-oi-val">SYNCED</span>
+    </details>
+
+    <!-- 11. DATA FEED HEALTH (Replaces bulky diagnostic table) -->
+    <details class="card evidence-card">
+        <summary class="card-header">
+            <div>
+                <h2 class="card-title">DATA FEED HEALTH</h2>
+                <span class="card-subtitle">Feed metrics, provenance & connection status</span>
+            </div>
+        </summary>
+
+        <div class="feed-health-bar" id="section-feed-health" style="border: none; box-shadow: none; padding: 0; backdrop-filter: none; background: transparent;">
+            <div class="health-item">
+                <span class="dot green" id="health-mkt-dot"></span>
+                <span class="metric-label">Market Feed:</span>
+                <span class="health-val" id="health-mkt-val">LIVE</span>
+            </div>
+            <div class="health-divider"></div>
+            <div class="health-item">
+                <span class="dot green" id="health-oi-dot"></span>
+                <span class="metric-label">OI Data:</span>
+                <span class="health-val" id="health-oi-val">SYNCED</span>
+            </div>
+            <div class="health-divider"></div>
+            <div class="health-item">
+                <span class="dot green" id="health-of-dot"></span>
+                <span class="metric-label">Order Flow:</span>
+                <span class="health-val" id="health-of-val">LIVE</span>
+            </div>
+            <div class="health-divider"></div>
+            <div class="health-item">
+                <span class="metric-label">Feed Clock:</span>
+                <span class="health-val" id="health-clock-val">--:--:-- IST</span>
+            </div>
         </div>
-        <div class="health-divider"></div>
-        <div class="health-item">
-            <span class="dot green" id="health-of-dot"></span>
-            <span class="metric-label">Order Flow:</span>
-            <span class="health-val" id="health-of-val">LIVE</span>
-        </div>
-        <div class="health-divider"></div>
-        <div class="health-item">
-            <span class="metric-label">Feed Clock:</span>
-            <span class="health-val" id="health-clock-val">--:--:-- IST</span>
-        </div>
+    </details>
+
     </div>
 
 </div>
