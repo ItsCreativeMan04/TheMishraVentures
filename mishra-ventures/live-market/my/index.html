@@ -1168,7 +1168,10 @@
 <script>
     const WORKER_URL = 'https://live-market-status.itscreativeman04.workers.dev';
     const READ_TOKEN = 'be69f6721a158dc73492425725a4f8bc047f84ef132e7111';
-    const REFRESH_MS = 30000;
+    // 2026-08-25: matched to status_publisher.py's 300s publish cadence --
+    // polling faster than the agent publishes was just extra unauthenticated
+    // GETs against the same Cloudflare account for no fresher data.
+    const REFRESH_MS = 300000;
 
     // SAFE NUMERIC FORMATTER
     function isFiniteNum(val) {
