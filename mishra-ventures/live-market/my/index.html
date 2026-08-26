@@ -232,6 +232,87 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
+        /* INFO TOOLTIP (2026-08-26 UX pass): a small "i" mark next to jargon
+           labels (CPR, PCR, ATR%, Invalidation...) -- hover/tap to explain
+           without leaving the page or hunting for the legend. CSS-only, no
+           JS: content lives in the data-tip attribute. */
+        .info-tip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 13px;
+            height: 13px;
+            margin-left: 4px;
+            border-radius: 50%;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            font-size: 9px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: help;
+            position: relative;
+            vertical-align: middle;
+        }
+        .info-tip::before { content: "i"; }
+        .info-tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 240px;
+            padding: 7px 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-glow);
+            color: var(--text-primary);
+            font-size: 0.72rem;
+            font-weight: 400;
+            line-height: 1.4;
+            text-transform: none;
+            letter-spacing: normal;
+            font-family: 'Inter', sans-serif;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.12s ease;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .info-tip:hover::after,
+        .info-tip:focus::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ALIGNMENT STRIP (hero card): one chip per monitored timeframe/
+           context input, colour-coded to its OWN bias. */
+        .alignment-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 2px;
+        }
+        .align-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px 4px 7px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid transparent;
+        }
+        .align-chip .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .align-chip.align-bull { background: rgba(34, 197, 94, 0.14); color: var(--accent-green); border-color: rgba(34, 197, 94, 0.3); }
+        .align-chip.align-bull .dot { background: var(--accent-green); }
+        .align-chip.align-bear { background: rgba(239, 68, 68, 0.14); color: var(--accent-red); border-color: rgba(239, 68, 68, 0.3); }
+        .align-chip.align-bear .dot { background: var(--accent-red); }
+        .align-chip.align-neutral { background: rgba(100, 116, 139, 0.14); color: var(--text-muted); border-color: rgba(100, 116, 139, 0.3); }
+        .align-chip.align-neutral .dot { background: var(--text-muted); }
+
         /* STATUS BADGES */
         .status-badge {
             display: inline-block;
@@ -772,6 +853,11 @@
             <span class="hero-focus-pill status-badge badge-amber" id="val-ds-focus">STAND ASIDE</span>
         </div>
 
+        <!-- 2026-08-26 UX pass: quick-alignment strip -- one chip per
+             monitored timeframe + CPR position, colour-coded to ITS OWN
+             reading. -->
+        <div class="alignment-strip" id="val-alignment-strip"></div>
+
         <div class="hero-grid">
             <div>
                 <span class="metric-label">Reason</span>
@@ -825,7 +911,7 @@
                     <span class="snapshot-val" id="val-5m-bias">--</span>
                 </div>
                 <div class="snapshot-item">
-                    <span class="metric-label">CPR Range</span>
+                    <span class="metric-label">CPR Range<span class="info-tip" tabindex="0" data-tip="Central Pivot Range — yesterday's pivot band. Price above it leans bullish, below leans bearish; a wide CPR often means a choppier, range-bound day."></span></span>
                     <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-snapshot">--</span>
                 </div>
                 <div class="snapshot-item">
@@ -833,7 +919,7 @@
                     <span class="snapshot-val" style="font-size: 0.85rem;" id="val-cpr-width">--</span>
                 </div>
                 <div class="snapshot-item">
-                    <span class="metric-label">ATR Utilization</span>
+                    <span class="metric-label">ATR Utilization<span class="info-tip" tabindex="0" data-tip="How much of today's typical daily range (Average True Range) has already been used. Low = room left to move; high = today may already be near its usual extent."></span></span>
                     <span class="snapshot-val" id="val-atr-used">--%</span>
                 </div>
             </div>
@@ -1008,7 +1094,7 @@
 
                 <div class="level-row">
                     <div class="level-header">
-                        <span class="metric-label" style="color: var(--accent-amber);">Morning Invalidation</span>
+                        <span class="metric-label" style="color: var(--accent-amber);">Morning Invalidation<span class="info-tip" tabindex="0" data-tip="The level that kills today's morning plan if price closes through it. Not a trade stop-loss — it's a thesis stop: if this breaks, the plan is dead for the day, regardless of any position you're in."></span></span>
                         <span class="level-price" id="val-inval-price">--</span>
                     </div>
                     <div class="level-meaning" id="val-inval-meaning">Break of this level invalidates today's morning plan.</div>
@@ -1040,11 +1126,11 @@
                     <div style="font-weight: 700;" id="val-of-pressure">--</div>
                 </div>
                 <div>
-                    <span class="metric-label">Estimated CVD</span>
+                    <span class="metric-label">Estimated CVD<span class="info-tip" tabindex="0" data-tip="Cumulative Volume Delta — our estimate of net buying vs selling pressure since this research stream started. It is NOT exchange-reported CVD, and it's shadow-mode: context only, not a trading signal."></span></span>
                     <div style="font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-blue);" id="val-of-cvd">--</div>
                 </div>
                 <div>
-                    <span class="metric-label">Alignment</span>
+                    <span class="metric-label">Alignment<span class="info-tip" tabindex="0" data-tip="Whether this shadow order-flow reading agrees or disagrees with the existing structure-based bias above. Research context only — never required for, or used to make, the Decision Support call."></span></span>
                     <div style="font-weight: 700;" id="val-of-align">--</div>
                 </div>
             </div>
@@ -1832,6 +1918,28 @@
 
         document.getElementById('val-inval-price').textContent = isFiniteNum(inv.price) ? fmtPrice(inv.price) : (isFiniteNum(data.levels?.invalidation) ? fmtPrice(data.levels.invalidation) : 'N/A');
         document.getElementById('val-inval-meaning').textContent = inv.meaning || "Break of this level invalidates today's morning plan.";
+
+        // ALIGNMENT STRIP (2026-08-26 UX pass): built entirely from fields
+        // already in the payload (timeframe_structure + price_vs_cpr) -- no
+        // backend change needed. Each chip colours to ITS OWN reading, not
+        // to whether it agrees with anything else, so a glance answers
+        // "what does each input actually say" directly.
+        (function renderAlignmentStrip() {
+            const strip = document.getElementById('val-alignment-strip');
+            if (!strip) return;
+            const cprPos = String(data.price_vs_cpr || '').toLowerCase();
+            const chips = [
+                ['1H', tf.bias_1h],
+                ['15m', tf.bias_15m],
+                ['5m', tf.bias_5m],
+                ['CPR', cprPos === 'above' ? 'Bullish' : cprPos === 'below' ? 'Bearish' : null],
+            ];
+            strip.innerHTML = chips.map(([label, bias]) => {
+                const cls = bias === 'Bullish' ? 'align-bull' : bias === 'Bearish' ? 'align-bear' : 'align-neutral';
+                const text = bias || 'forming';
+                return `<span class="align-chip ${cls}"><span class="dot"></span>${label} ${text}</span>`;
+            }).join('');
+        })();
 
         // 7. DECISION SUPPORT (Strict Single-Source Consistency with canonicalStatus and Session State)
         const ds = wi.decision_support || {};
