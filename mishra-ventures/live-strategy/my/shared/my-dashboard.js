@@ -305,7 +305,15 @@
       engine_health: niftyBpsRaw ? (niftyBpsRaw.system_health || 'HEALTHY') : 'STANDBY',
       telemetry_health: niftyBpsRaw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      active_cycle: niftyBpsRaw ? (niftyBpsRaw.current_cycle || '2026-08 (Monthly)') : '2026-08 (Monthly)',
+      // Same fix as BPS-1's active_cycle: the '2026-08 (Monthly)' literal
+      // used to show even when position_status made clear there was no
+      // active cycle, implying a live monthly position existed when there
+      // wasn't one.
+      active_cycle: niftyBpsRaw
+        ? (niftyBpsRaw.current_cycle && niftyBpsRaw.current_cycle !== 'NONE'
+            ? niftyBpsRaw.current_cycle
+            : (niftyBpsRaw.position_status === 'NONE' ? 'No active cycle' : '2026-08 (Monthly)'))
+        : '2026-08 (Monthly)',
       position_status: niftyBpsRaw ? (niftyBpsRaw.position_status || 'NONE') : 'NONE',
       positions_count: niftyBpsRaw ? (niftyBpsRaw.position_status === 'OPEN' ? 1 : 0) : 0,
       spot_price: sellCeRaw ? sellCeRaw.nifty_spot : 24850.00,
