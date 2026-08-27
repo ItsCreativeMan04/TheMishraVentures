@@ -1465,14 +1465,46 @@
         return 'MARKET_OPEN';
     }
 
+    // 2026-08-27: futures_vwap has been observed coming back null/missing
+    // on an otherwise-fresh-looking payload (updated_at close to "now")
+    // even though the backend has been confirmed (via its own publish log)
+    // to send a valid futures_vwap on every single publish -- consistent
+    // with Cloudflare KV occasionally serving a stale edge replica to a
+    // given reader rather than an application bug. One quiet retry after a
+    // couple of seconds self-heals that without ever showing a false
+    // "UNAVAILABLE" to a real person watching the page.
+    async function fetchStatusOnce() {
+        const res = await fetch(`${WORKER_URL}?symbol=NIFTY&t=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { 'Authorization': `Bearer ${READ_TOKEN}` }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    }
+
+    function looksLikeStaleEdgeRead(data) {
+        const wi = data.web_intelligence || {};
+        const fvMissing = !data.futures_vwap && !wi.futures_vwap;
+        const ofsMissing = !data.order_flow_shadow && !wi.order_flow_shadow;
+        const ageMin = calcAgeMinutes(data.updated_at);
+        // Only worth a retry if the rest of the snapshot looks otherwise
+        // healthy (fresh updated_at) -- a genuinely stale/offline backend
+        // shouldn't get retried into looking falsely fine.
+        return (fvMissing || ofsMissing) && isFiniteNum(ageMin) && ageMin < 3;
+    }
+
     async function refreshDashboard() {
         try {
-            const res = await fetch(`${WORKER_URL}?symbol=NIFTY&t=${Date.now()}`, {
-                cache: 'no-store',
-                headers: { 'Authorization': `Bearer ${READ_TOKEN}` }
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            let data = await fetchStatusOnce();
+            if (looksLikeStaleEdgeRead(data)) {
+                await new Promise(r => setTimeout(r, 2500));
+                try {
+                    const retried = await fetchStatusOnce();
+                    if (!looksLikeStaleEdgeRead(retried)) data = retried;
+                } catch (retryErr) {
+                    console.warn('[live-market] stale-read retry failed, using original response:', retryErr);
+                }
+            }
             renderDashboard(data);
         } catch (err) {
             console.error('[live-market] fetch failed:', err);
