@@ -40,6 +40,41 @@
     }) + ' IST';
   }
 
+  // 2026-08-27: BPS-1 and NIFTY BPS both used to show a hardcoded literal
+  // 'Tomorrow 09:14 IST' for next_schedule regardless of the actual date or
+  // time -- neither backend reports a real next-run field (confirmed via
+  // bps1_paper_agent/reporting/daily_report.py and
+  // nifty_bps_paper_agent/dashboard/status_publisher.py's payload shapes),
+  // but BOTH engines run on a known, fixed schedule (their systemd timers:
+  // OnCalendar=Mon..Fri *-*-* 09:14:00 Asia/Kolkata), so it's safe to
+  // compute a genuinely correct label from that real cadence instead of a
+  // string that never changes.
+  function nextWeekdayRunLabel(hour, minute) {
+    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const cutoffToday = new Date(istNow);
+    cutoffToday.setHours(hour, minute, 0, 0);
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let target = new Date(istNow);
+    if (istNow >= cutoffToday) {
+      target.setDate(target.getDate() + 1);
+    }
+    // Skip forward past Sat/Sun to the next weekday (Mon..Fri schedule).
+    while (target.getDay() === 0 || target.getDay() === 6) {
+      target.setDate(target.getDate() + 1);
+    }
+
+    const isTomorrowCalendarDay = target.getDate() !== istNow.getDate()
+      && (target - istNow) < 36 * 60 * 60 * 1000; // within the next day, not a weekend skip
+    const label = target.getDate() === istNow.getDate()
+      ? 'Today'
+      : (isTomorrowCalendarDay ? 'Tomorrow' : dayNames[target.getDay()]);
+
+    const hh = String(hour).padStart(2, '0');
+    const mm = String(minute).padStart(2, '0');
+    return `${label} ${hh}:${mm} IST`;
+  }
+
   function formatDuration(mins) {
     if (mins === null || mins === undefined || isNaN(mins) || mins < 0) return '—';
     const totalSec = Math.floor(mins * 60);
@@ -231,7 +266,7 @@
       last_execution: bps1Raw && bps1Raw.completed_at ? formatISTTime(new Date(bps1Raw.completed_at)) : null,
       last_update: bps1Raw ? bps1Raw.updated_at : null,
       session_id: bps1Raw ? bps1Raw.cycle_id : null,
-      next_schedule: bps1Raw ? 'Tomorrow 09:14 IST' : null,
+      next_schedule: bps1Raw ? nextWeekdayRunLabel(9, 14) : null,
       activity: bps1Raw && Array.isArray(bps1Raw.events) && bps1Raw.events.length
         ? bps1Raw.events.map(e => `${e.timestamp ? formatISTTime(new Date(e.timestamp)) : ''} — ${e.message || e.category || 'Event'}`)
         : [
@@ -287,7 +322,7 @@
       last_execution: niftyBpsRaw && niftyBpsRaw.last_updated_utc ? formatISTTime(new Date(niftyBpsRaw.last_updated_utc)) : null,
       last_update: niftyBpsRaw ? niftyBpsRaw.last_updated_utc : null,
       session_id: null,
-      next_schedule: niftyBpsRaw ? 'Tomorrow 09:14 IST' : null,
+      next_schedule: niftyBpsRaw ? nextWeekdayRunLabel(9, 14) : null,
       activity: niftyBpsRaw && Array.isArray(niftyBpsRaw.activity) ? niftyBpsRaw.activity : [
         'No live session data yet — this strategy has no backend telemetry connected.',
       ],
