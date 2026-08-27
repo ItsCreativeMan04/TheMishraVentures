@@ -245,7 +245,15 @@
       engine_health: bps1Raw ? 'HEALTHY' : 'STANDBY',
       telemetry_health: bps1Raw ? 'FRESH' : 'STANDBY',
       scheduler_health: 'ACTIVE',
-      active_cycle: bps1Raw ? (bps1Raw.cycle_month || '2026-08 (Monthly)') : '2026-08 (Monthly)',
+      // 2026-08-27: cycle_month used to fall back to a hardcoded
+      // '2026-08 (Monthly)' literal whenever the backend didn't report one
+      // -- including on a genuine no-active-cycle day, which misleadingly
+      // implied a live monthly cycle was open. Now that the backend
+      // publishes an honest heartbeat with state: 'NO_ACTIVE_CYCLE' on
+      // those days (bps1_paper_agent/main.py), show that plainly instead.
+      active_cycle: bps1Raw
+        ? (bps1Raw.cycle_month || (bps1Raw.state === 'NO_ACTIVE_CYCLE' ? 'No active cycle' : '2026-08 (Monthly)'))
+        : '2026-08 (Monthly)',
       position_status: bps1Raw ? ((bps1Raw.active_positions_count || 0) > 0 ? 'OPEN' : 'NONE') : 'NONE',
       positions_count: bps1Raw ? (bps1Raw.active_positions_count || 0) : 0,
       spot_price: null,
@@ -263,7 +271,13 @@
       dte: bps1Raw ? bps1Raw.dte_at_entry : null,
       completed_cycles: null,
       win_rate_pct: null,
-      last_execution: bps1Raw && bps1Raw.completed_at ? formatISTTime(new Date(bps1Raw.completed_at)) : null,
+      // Prefer completed_at (a real cycle actually finished) but fall back
+      // to updated_at (the engine ran and checked today, even if there was
+      // nothing to do) rather than showing "--" as if it never ran at all
+      // -- same pattern NIFTY BPS already uses for its own last_execution.
+      last_execution: bps1Raw && (bps1Raw.completed_at || bps1Raw.updated_at)
+        ? formatISTTime(new Date(bps1Raw.completed_at || bps1Raw.updated_at))
+        : null,
       last_update: bps1Raw ? bps1Raw.updated_at : null,
       session_id: bps1Raw ? bps1Raw.cycle_id : null,
       next_schedule: bps1Raw ? nextWeekdayRunLabel(9, 14) : null,
