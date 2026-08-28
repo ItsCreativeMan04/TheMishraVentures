@@ -1482,6 +1482,73 @@
         return res.json();
     }
 
+    // 2026-08-28: the retry above helps sometimes but not reliably --
+    // Cloudflare can keep routing the SAME browser to the SAME lagging
+    // edge replica within one short retry window, so a second request a
+    // couple seconds later can hit the exact same stale copy. Rather than
+    // keep chasing a read-layer timing issue that isn't fully within this
+    // app's control, hold the last known-good value for these two fields
+    // client-side and fall back to it (clearly marked as cached, using the
+    // dashboard's EXISTING "STALE" badge styling -- not a silent lie) when
+    // a fetch comes back missing them but the rest of the payload still
+    // looks live. Purely additive: when a fetch is actually complete,
+    // nothing here changes what gets rendered.
+    const LAST_GOOD_MAX_AGE_MS = 15 * 60 * 1000; // beyond this, it's genuinely gone -- show real UNAVAILABLE
+    function saveLastGood(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify({ value, cachedAtMs: Date.now() }));
+        } catch (e) { /* private mode / storage disabled -- caching is a bonus, not a requirement */ }
+    }
+    function loadLastGood(key) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed.cachedAtMs !== 'number') return null;
+            if (Date.now() - parsed.cachedAtMs > LAST_GOOD_MAX_AGE_MS) return null;
+            return parsed;
+        } catch (e) { return null; }
+    }
+    function applyLastGoodFallback(data) {
+        const wi = data.web_intelligence || {};
+
+        // Distinguish "field genuinely absent" (the read-layer symptom this
+        // exists for -- FuturesVWAPTracker.get_state() always returns a
+        // real object, confirmed via its own source and the backend's
+        // publish log, so absence here isn't a backend report at all) from
+        // "field present, backend honestly says UNAVAILABLE/STALE" (e.g.
+        // pre-market, a genuine feed outage) -- the latter must render
+        // as-is, never get silently replaced by a stale cached value.
+        const fv = data.futures_vwap || wi.futures_vwap;
+        if (fv) {
+            if (isFiniteNum(fv.ltp) || isFiniteNum(fv.vwap)) {
+                saveLastGood('lmi_last_good_futures_vwap_v1', fv);
+            }
+        } else {
+            const cached = loadLastGood('lmi_last_good_futures_vwap_v1');
+            if (cached) {
+                const ageMin = Math.max(0, Math.round((Date.now() - cached.cachedAtMs) / 60000));
+                data.futures_vwap = {
+                    ...cached.value,
+                    is_stale: true,
+                    state: 'STALE',
+                    status_text: `Cached ${ageMin < 1 ? '<1' : ageMin}m ago — latest read hit a delayed data replica.`,
+                };
+            }
+        }
+
+        const ofs = wi.order_flow_shadow || data.order_flow_shadow;
+        if (ofs && ofs.feed_status) {
+            saveLastGood('lmi_last_good_order_flow_shadow_v1', ofs);
+        } else {
+            const cachedOfs = loadLastGood('lmi_last_good_order_flow_shadow_v1');
+            if (cachedOfs) {
+                data.order_flow_shadow = { ...cachedOfs.value, feed_status: 'STALE' };
+            }
+        }
+        return data;
+    }
+
     function looksLikeStaleEdgeRead(data) {
         const wi = data.web_intelligence || {};
         const fvMissing = !data.futures_vwap && !wi.futures_vwap;
@@ -1505,6 +1572,7 @@
                     console.warn('[live-market] stale-read retry failed, using original response:', retryErr);
                 }
             }
+            data = applyLastGoodFallback(data);
             renderDashboard(data);
         } catch (err) {
             console.error('[live-market] fetch failed:', err);
