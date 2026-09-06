@@ -470,6 +470,33 @@
         </div>
       </div>
 
+      <div class="dash-card" id="cardShadowV2">
+        <div class="dash-card-header">
+          <span class="dash-card-title">🔬 V2 Shadow (observational)</span>
+          <span class="badge purple" id="badgeShadowV2">PENDING</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Filter</span>
+          <span class="metric-val mono" id="valShadowRule">open ≤ prior-day high</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Prior-day high</span>
+          <span class="metric-val mono" id="valShadowPrevHigh">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">V2 decision</span>
+          <span class="metric-val" id="valShadowDecision">--</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">V2 net (this session)</span>
+          <span class="metric-val mono" id="valShadowNet">--</span>
+        </div>
+        <p class="disclaimer" style="margin-top:10px">
+          Candidate entry filter under live shadow evaluation. Does not change
+          V1's strike, entry, stop, exit, cost, sizing, or result.
+        </p>
+      </div>
+
       <div class="dash-card card-activity" id="cardActivity">
         <div class="dash-card-header">
           <span class="dash-card-title">📜 Activity &amp; Decision Stream</span>
@@ -683,6 +710,49 @@
         ? `${Number(data.final_net_points) >= 0 ? '+' : ''}${Number(data.final_net_points).toFixed(2)} pts` : '--';
       document.getElementById('valFinalRupees').textContent = data.final_net_rupees !== null && data.final_net_rupees !== undefined
         ? `${Number(data.final_net_rupees) >= 0 ? '+' : ''}₹${Number(data.final_net_rupees).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '--';
+
+      // ---- V2 shadow variant (observational only; never affects V1) ----
+      (function renderShadowV2() {
+        const card = document.getElementById('cardShadowV2');
+        if (!card) return;
+        const passed = data.shadow_v2_filter_passed;
+        const prevHigh = data.shadow_v2_prev_day_high;
+        const net = data.shadow_v2_net_points;
+        const badge = document.getElementById('badgeShadowV2');
+        const hasAny = passed !== undefined || prevHigh !== undefined || net !== undefined;
+
+        document.getElementById('valShadowPrevHigh').textContent =
+          (prevHigh !== undefined && prevHigh !== null)
+            ? Number(prevHigh).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '--';
+
+        const decEl = document.getElementById('valShadowDecision');
+        if (passed === true) {
+          decEl.innerHTML = '<span class="badge green">TAKE</span>';
+        } else if (passed === false) {
+          decEl.innerHTML = '<span class="badge amber">SKIP</span>';
+        } else {
+          decEl.textContent = hasAny ? 'not evaluable' : '--';
+        }
+
+        document.getElementById('valShadowNet').textContent =
+          (net !== undefined && net !== null)
+            ? `${Number(net) >= 0 ? '+' : ''}${Number(net).toFixed(2)} pts`
+            + (data.shadow_v2_net_rupees !== undefined && data.shadow_v2_net_rupees !== null
+                ? `  /  ${Number(data.shadow_v2_net_rupees) >= 0 ? '+' : ''}₹${Number(data.shadow_v2_net_rupees).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`
+                : '')
+            : '--';
+
+        if (!hasAny) {
+          badge.textContent = 'PENDING';
+          badge.className = 'badge purple';
+        } else if (passed === false) {
+          badge.textContent = 'SKIPPED';
+          badge.className = 'badge amber';
+        } else {
+          badge.textContent = 'ACTIVE';
+          badge.className = 'badge cyan';
+        }
+      })();
 
       const outcomeBadge = document.getElementById('badgeOutcome');
       if (data.state === 'SESSION_COMPLETE' || data.state === 'TEST_COMPLETED') {
